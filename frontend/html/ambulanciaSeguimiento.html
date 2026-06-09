@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Ambulancias | SIGSM</title>
+    <link rel="stylesheet" href="/frontend/css/stylesgestionAmbulancias.css">
+    <link rel="stylesheet" href="/frontend/css/stylesnotificaciones.css">
+    <link rel="stylesheet" href="/frontend/css/stylesambulanciaSeguimiento.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <img src="/frontend/logo/hospital de clinicaslogo.png" alt="Logo de SIGSM">
+        <h1>Seguimiento de ambulancia</h1>
+
+    </header>
+
+    <hr>
+
+    <div class="layout">
+
+        <aside class="sidebar">
+
+            <div class="logo">
+                <img src="logo.png" alt="">
+                <h2>SIGSM</h2>
+            </div>
+            <nav>
+
+                <a href="gestionAmbulancias.html" class="active">
+                    <i class="fa-solid fa-truck-medical"></i>
+                    Ambulancias
+                </a>
+
+                <a href="documentosAdmin.html">
+                    <i class="fa-solid fa-file-lines"></i>
+                    Documentación
+                </a>
+
+                <a href="notificaciones.html">
+                    <i class="fa-solid fa-bell"></i>
+                    Notificaciones
+                    <span class="badge">3</span>
+                </a>
+
+                <a href="#">
+                    <i class="fa-solid fa-user-doctor"></i>
+                    Personal
+                </a>
+
+                <a href="#">
+                    <i class="fa-solid fa-chart-line"></i>
+                    Estadísticas
+                </a>
+
+                <a href="#">
+                    <i class="fa-solid fa-gear"></i>
+                    Configuración
+                </a>
+
+            </nav>
+
+        </aside>
+        <main>
+
+    <section class="seguimiento-container">
+
+        <h2>Seguimiento de Ambulancia</h2>
+
+        <div class="info-ambulancia">
+
+            <h3>🚑 Ambulancia ABC-123</h3>
+
+            <p><strong>Estado:</strong> En traslado</p>
+
+            <p><strong>Paciente:</strong> Juan Pérez</p>
+
+            <p><strong>Conductor:</strong> Pedro Gómez</p>
+
+            <p><strong>Enfermero:</strong> María Rodríguez</p>
+
+            <p><strong>Origen:</strong> Hospital de Clínicas</p>
+
+            <p><strong>Destino:</strong> CASMU</p>
+
+            <p><strong>Hora de salida:</strong> 13:00</p>
+
+            <p><strong>Hora estimada de llegada:</strong> 13:40</p>
+
+        </div>
+
+        <div class="progreso-container">
+
+            <h3>Progreso del traslado</h3>
+
+            <div class="barra-progreso">
+
+                <div class="progreso"></div>
+
+            </div>
+
+            <p>80% completado</p>
+
+        </div>
+
+        <div class="estados-container">
+
+            <p class="completado">✓ Solicitud recibida</p>
+
+            <p class="completado">✓ Ambulancia asignada</p>
+
+            <p class="completado">✓ Salida del hospital</p>
+
+            <p class="activo">🚑 En traslado</p>
+
+            <p class="pendiente">○ Llegada al destino</p>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+
+</body>
+
+</html>

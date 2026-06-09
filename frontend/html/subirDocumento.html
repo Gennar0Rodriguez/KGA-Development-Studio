@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Documento | SIGSM</title>
+    <link rel="stylesheet" href="/frontend/css/stylesgestionAmbulancias.css">
+    <link rel="stylesheet" href="/frontend/css/stylesdocumentosAdmin.css">
+    <link rel="stylesheet" href="/frontend/css/stylesnotificaciones.css">
+    <link rel="stylesheet" href="/frontend/css/stylessubirDocumentos.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+    <body>
+        <header>
+            <img src="/frontend/logo/hospital de clinicaslogo.png" alt="Logo de SIGSM">
+            <h1>Subir Documento</h1>
+        </header>
+
+        <hr>
+
+    <div class="layout">
+
+        <aside class="sidebar">
+
+    <div class="logo">
+        <img src="logo.png" alt="">
+        <h2>SIGSM</h2>
+    </div>
+        <nav>
+
+    <a href="gestionAmbulancias.html">
+        <i class="fa-solid fa-truck-medical"></i>
+        Ambulancias
+    </a>
+
+    <a href="documentosAdmin.html" class="active">
+        <i class="fa-solid fa-file-lines"></i>
+        Documentación
+    </a>
+
+    <a href="notificaciones.html">
+        <i class="fa-solid fa-bell"></i>
+        Notificaciones
+        <span class="badge">3</span>
+    </a>
+
+    <a href="#">
+        <i class="fa-solid fa-user-doctor"></i>
+        Personal
+    </a>
+
+    <a href="#">
+        <i class="fa-solid fa-chart-line"></i>
+        Estadísticas
+    </a>
+
+    <a href="#">
+        <i class="fa-solid fa-gear"></i>
+        Configuración
+    </a>
+
+        
+</nav>
+    <div class="usuario">
+        <img src="/frontend/img/fotoejemplo.webp" alt="">
+        <div>
+            <strong>Administrador</strong>
+            <p>Hospital de Clínicas</p>
+        </div>
+    </div>
+    </aside>
+
+    <main>
+        <section class="upload-container">
+            <h2>Subir nuevo documento</h2>
+            <form action="/upload" method="POST" enctype="multipart/form-data">
+                <label for="documentTitle">Título del documento:</label>
+                <input type="text" id="documentTitle" name="documentTitle" required>
+
+                <label for="documentFile">Seleccionar archivo:</label>
+                <input type="file" id="documentFile" name="documentFile" required>
+
+                <button type="submit" class="btn-subir">Subir Documento</button>
+            </form>
+        </section>
+</body>
+</html>

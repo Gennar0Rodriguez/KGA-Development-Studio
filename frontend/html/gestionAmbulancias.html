@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Ambulancias | SIGSM</title>
+    <link rel="stylesheet" href="/frontend/css/stylesgestionAmbulancias.css">
+    <link rel="stylesheet" href="/frontend/css/stylesnotificaciones.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+    <body>
+        <header>
+            <img src="/frontend/logo/hospital de clinicaslogo.png" alt="Logo de SIGSM">
+            <h1>Administración de ambulancias</h1>
+
+        </header>
+
+        <hr>
+
+    <div class="layout">
+
+        <aside class="sidebar">
+
+    <div class="logo">
+        <img src="logo.png" alt="">
+        <h2>SIGSM</h2>
+    </div>
+        <nav>
+
+    <a href="gestionAmbulancias.html" class="active">
+        <i class="fa-solid fa-truck-medical"></i>
+        Ambulancias
+    </a>
+
+    <a href="documentosAdmin.html">
+        <i class="fa-solid fa-file-lines"></i>
+        Documentación
+    </a>
+
+    <a href="notificaciones.html">
+        <i class="fa-solid fa-bell"></i>
+        Notificaciones
+        <span class="badge">3</span>
+    </a>
+
+    <a href="#">
+        <i class="fa-solid fa-user-doctor"></i>
+        Personal
+    </a>
+
+    <a href="#">
+        <i class="fa-solid fa-chart-line"></i>
+        Estadísticas
+    </a>
+
+    <a href="#">
+        <i class="fa-solid fa-gear"></i>
+        Configuración
+    </a>
+
+</nav>
+    <div class="usuario">
+        <img src="/frontend/img/fotoejemplo.webp" alt="">
+        <div>
+            <strong>Administrador</strong>
+            <p>Hospital de Clínicas</p>
+        </div>
+    </div>
+
+</aside>
+    <main>
+        <!-- Tus cards de ambulancias -->
+        <section class="contenedor-ambulancias">
+            <div class="card-ambulancia">
+
+                <h3>Matrícula: ABC-123</h3>
+
+                <img src="/frontend/img/ambulanciaIMG.png" alt="Ambulancia">
+
+                    <div class="info-principal">
+                        <p><strong>Tipo:</strong> Ambulancia</p>
+                        <p><strong>Destino:</strong> #####</p>
+                        <p><strong>Estado:</strong> Programado</p>
+                        <p><strong>Hora salida APROXIMADA:</strong> 13:00</p>
+                        <p><strong>Hora llegada APROXIMADA:</strong> Pendiente</p>
+                
+                    </div>
+
+                    <div class="info-extra">
+                        <h3>INFORMACIÓN EXTRA</h3>
+                        <p><strong>Conductor:</strong> Nombre Apellido Conductor</p>
+                        <p><strong>Enfermero:</strong> Nombre Apellido Enfermero</p>
+                        <p><strong>Paciente:</strong> Nombre Apellido Paciente</p>
+                    </div>
+                    
+                    <div class="acciones">
+                        <button class="btn-editar">Editar</button>
+                        <button class="btn-eliminar">Eliminar</button>
+                        <button class="btn-seguimiento" onclick="window.location.href='ambulanciaSeguimiento.html'">Seguimiento</button>
+                    </div>
+                    
+                </div>
+                
+        </section>
+
+        <section class="btn-principal">
+            <button class="btn-agregar" onclick="window.location.href='nuevoTraslado.html'"><i class="fa-solid fa-plus"></i> Agregar nueva ambulancia</button>
+        </section>
+    </main>
+    </div>
+
+    </body>
+</html>

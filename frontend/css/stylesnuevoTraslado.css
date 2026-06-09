@@ -1,0 +1,99 @@
+body {
+    font-family: "lexend", sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.formulario-traslado {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 30px;
+
+    background-color: white;
+
+    border-radius: 15px;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.formulario-traslado form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.formulario-traslado input,
+.formulario-traslado select,
+.formulario-traslado textarea {
+    padding: 10px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 8px;
+}
+
+.btn-guardar{
+    background-color: #0ee93a;
+    color: white;
+
+    border: none;
+    border-radius: 12px;
+
+    padding: 15px 25px;
+
+    font-size: 1rem;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: all 0.3s ease;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-guardar:hover {
+    background-color: #0b5b00;
+
+    transform: translateY(-3px);
+
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.btn-cancelar {
+    background-color: #e90e0e;
+    color: white;
+
+    border: none;
+    border-radius: 12px;
+
+    padding: 15px 25px;
+
+    font-size: 1rem;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: all 0.3s ease;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-cancelar:hover {
+    background-color: #ff4444;
+
+    transform: translateY(-3px);
+
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.acciones-formulario {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.formulario-traslado textarea {
+    min-height: 100px;
+    resize: vertical;
+}

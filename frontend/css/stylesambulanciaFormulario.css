@@ -1,0 +1,117 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family: 'Lexend', sans-serif;
+
+    background: #F4F9FC;
+
+    min-height:100vh;
+}
+
+header{
+    padding:25px;
+}
+
+header img{
+    width:250px;
+}
+
+hr{
+    border:none;
+    height:6px;
+    background:#00E5B0;
+}
+
+.bienvenida{
+    text-align:center;
+
+    margin-top:60px;
+}
+
+.bienvenida h1{
+    font-size:2.5rem;
+
+    margin-bottom:15px;
+
+    color:#1F2937;
+}
+
+.bienvenida p{
+    color:#6B7280;
+
+    font-size:1.1rem;
+}
+
+.modulos{
+    display:flex;
+
+    justify-content:center;
+
+    gap:50px;
+
+    margin-top:70px;
+
+    flex-wrap:wrap;
+}
+
+
+.card{
+
+    width:420px;
+
+    min-height:480px;
+
+    background:white;
+
+    border-radius:20px;
+
+    padding:30px;
+
+    text-decoration:none;
+
+    color:black;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    box-shadow:0 8px 25px rgba(0,0,0,0.12);
+
+    transition:all 0.3s ease;
+}
+
+.card:hover{
+
+    transform:translateY(-12px);
+
+    box-shadow:0 18px 35px rgba(0,0,0,0.18);
+}
+
+.card img{
+
+    width:250px;
+
+    margin-bottom:25px;
+}
+
+.card h2{
+
+    margin-bottom:15px;
+
+    color:#0284C7;
+}
+
+.card p{
+
+    text-align:center;
+
+    line-height:1.6;
+
+    color:#555;
+}

@@ -1,0 +1,64 @@
+.notificaciones {
+    width: 90%;
+    max-width: 900px;
+
+    margin: 30px auto;
+}
+
+.notificacion {
+    background: white;
+
+    padding: 20px;
+
+    margin-bottom: 15px;
+
+    border-radius: 12px;
+
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+    transition: 0.3s;
+}
+
+.notificacion:hover {
+    transform: translateY(-2px);
+
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.badge {
+    margin-left: auto;
+
+    background: red;
+
+    color: white;
+
+    width: 22px;
+    height: 22px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 12px;
+}
+
+.btn-leido {
+    background-color: #00ff33;
+    color: white;
+
+    border: none;
+    border-radius: 12px;
+
+    padding: 10px 20px;
+
+    font-size: 0.9rem;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: all 0.3s ease;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

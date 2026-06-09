@@ -1,0 +1,104 @@
+body {
+    font-family: 'Lexend', sans-serif;
+    background-color: #f0f4f8;
+}
+
+.documentos-container {
+    width: 90%;
+    max-width: 1000px;
+
+    margin: 30px auto;
+    padding: 30px;
+
+    background-color: white;
+
+    border-radius: 15px;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.documentos-container h2 {
+    margin-bottom: 20px;
+}
+
+.btn-subir {
+    background-color: #00d084;
+    color: white;
+
+    border: none;
+    border-radius: 12px;
+
+    padding: 12px 20px;
+
+    font-size: 1rem;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    margin-bottom: 20px;
+
+    transition: 0.3s;
+}
+
+.btn-subir:hover {
+    background-color: #00a96b;
+}
+
+.buscador {
+    width: 100%;
+
+    padding: 12px;
+
+    margin-bottom: 20px;
+
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+.tabla-documentos {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+.tabla-documentos th {
+    background-color: #e0f2fe;
+
+    color: #0284c7;
+
+    text-align: left;
+
+    padding: 15px;
+}
+
+.tabla-documentos td {
+    padding: 15px;
+
+    border-bottom: 1px solid #ddd;
+}
+
+.tabla-documentos tr:hover {
+    background-color: #f8fafc;
+}
+
+
+.btn-eliminar-doc {
+    background-color: #ef4444;
+    color: white;
+
+    border: none;
+    border-radius: 8px;
+
+    padding: 8px 12px;
+
+    cursor: pointer;
+}
+
+.btn-qr:hover {
+    background-color: #0369a1;
+}
+
+.btn-eliminar-doc:hover {
+    background-color: #dc2626;
+}
+
