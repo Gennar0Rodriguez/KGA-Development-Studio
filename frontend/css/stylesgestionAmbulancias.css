@@ -170,10 +170,9 @@ hr {
 
 .contenedor-ambulancias {
     display: grid;
+    grid-template-columns: repeat(3, 1fr);
 
-    grid-template-columns:
-        repeat(auto-fill, minmax(300px, 1fr));
-
+    align-items: start;
     gap: 25px;
 
     padding: 25px;
@@ -268,3 +267,32 @@ hr {
     background-color: #d97706;
 }
 
+.buscador {
+    margin-left: 20px;
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    width: 250px;
+}
+
+.btn-buscar {
+    background-color: #0ea5e9;
+    color: white;
+
+    border: none;
+    border-radius: 8px;
+
+    padding: 10px 15px;
+
+    font-size: 1rem;
+    cursor: pointer;
+
+    transition: all 0.3s ease;
+}
+
+.btn-buscar:hover {
+    background-color: #0284c7;
+
+    transform: translateY(-3px);
+}

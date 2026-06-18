@@ -72,8 +72,15 @@
 
 </aside>
     <main>
-        <!-- Tus cards de ambulancias -->
+        
+        <section class="btn-principal">
+            <button class="btn-agregar" onclick="window.location.href='nuevoTraslado.html'"><i class="fa-solid fa-plus"></i> Agregar nueva ambulancia</button>
+            <input type="text" class="buscador" placeholder="Buscar por matricula...">
+            <button class="btn-buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </section>
+
         <section class="contenedor-ambulancias">
+            
             <div class="card-ambulancia">
 
                 <h3>Matrícula: ABC-123</h3>
@@ -94,6 +101,8 @@
                         <p><strong>Conductor:</strong> Nombre Apellido Conductor</p>
                         <p><strong>Enfermero:</strong> Nombre Apellido Enfermero</p>
                         <p><strong>Paciente:</strong> Nombre Apellido Paciente</p>
+                        <p><strong>Observaciones:</strong> Descripción de las observaciones relevantes</p>
+                        
                     </div>
                     
                     <div class="acciones">
@@ -104,11 +113,39 @@
                     
                 </div>
                 
+                <div class="card-ambulancia">
+
+                <h3>Matrícula: JKS-123</h3>
+
+                <img src="/frontend/img/ambulanciaIMG.png" alt="Ambulancia">
+
+                    <div class="info-principal">
+                        <p><strong>Tipo:</strong> Ambulancia</p>
+                        <p><strong>Destino:</strong> #####</p>
+                        <p><strong>Estado:</strong> Programado</p>
+                        <p><strong>Hora salida APROXIMADA:</strong> 13:00</p>
+                        <p><strong>Hora llegada APROXIMADA:</strong> Pendiente</p>
+                
+                    </div>
+
+                    <div class="info-extra">
+                        <h3>INFORMACIÓN EXTRA</h3>
+                        <p><strong>Conductor:</strong> Nombre Apellido Conductor</p>
+                        <p><strong>Enfermero:</strong> Nombre Apellido Enfermero</p>
+                        <p><strong>Paciente:</strong> Nombre Apellido Paciente</p>
+                        <p><strong>Observaciones:</strong> Descripción de las observaciones relevantes</p>
+                        
+                    </div>
+                    
+                    <div class="acciones">
+                        <button class="btn-editar">Editar</button>
+                        <button class="btn-eliminar">Eliminar</button>
+                        <button class="btn-seguimiento" onclick="window.location.href='ambulanciaSeguimiento.html'">Seguimiento</button>
+                    </div>
+                    
+                </div>
         </section>
 
-        <section class="btn-principal">
-            <button class="btn-agregar" onclick="window.location.href='nuevoTraslado.html'"><i class="fa-solid fa-plus"></i> Agregar nueva ambulancia</button>
-        </section>
     </main>
     </div>
 

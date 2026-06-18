@@ -102,3 +102,19 @@ body {
     background-color: #dc2626;
 }
 
+.busqueda-documentos {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn-buscar {
+    background-color: #0284c7;
+    color: white;
+    width: 60px;
+    height: 45px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
