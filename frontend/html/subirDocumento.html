@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subir Documento | SIGSM</title>
-    <link rel="stylesheet" href="/frontend/css/stylesgestionAmbulancias.css">
-    <link rel="stylesheet" href="/frontend/css/stylesdocumentosAdmin.css">
-    <link rel="stylesheet" href="/frontend/css/stylesnotificaciones.css">
-    <link rel="stylesheet" href="/frontend/css/stylessubirDocumentos.css">
+    <link rel="stylesheet" href="../css/stylesgestionAmbulancias.css">
+    <link rel="stylesheet" href="../css/stylesdocumentosAdmin.css">
+    <link rel="stylesheet" href="../css/stylesnotificaciones.css">
+    <link rel="stylesheet" href="../css/stylessubirDocumentos.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +15,7 @@
 </head>
     <body>
         <header>
-            <img src="/frontend/logo/hospital de clinicaslogo.png" alt="Logo de SIGSM">
+            <img src="../logo/hospital de clinicaslogo.png" alt="Logo de SIGSM">
             <h1>Subir Documento</h1>
         </header>
 
@@ -48,8 +48,8 @@
     </a>
 
     <a href="#">
-        <i class="fa-solid fa-user-doctor"></i>
-        Personal
+        <i class="fa-solid fa-user-plus"></i>
+        Administrar Usuarios    
     </a>
 
     <a href="#">
@@ -65,7 +65,7 @@
         
 </nav>
     <div class="usuario">
-        <img src="/frontend/img/fotoejemplo.webp" alt="">
+        <img src="../img/fotoejemplo.webp" alt="">
         <div>
             <strong>Administrador</strong>
             <p>Hospital de Clínicas</p>
@@ -76,9 +76,20 @@
     <main>
         <section class="upload-container">
             <h2>Subir nuevo documento</h2>
-            <form action="/upload" method="POST" enctype="multipart/form-data">
+            <form action="/backend" method="POST" enctype="multipart/form-data">
+                
                 <label for="documentTitle">Título del documento:</label>
                 <input type="text" id="documentTitle" name="documentTitle" required>
+
+                <label for="documentDescription">Descripcion del documento:</label>
+                <textarea type="text" id="documentDescription" name="documentDescription" required></textarea>
+                
+                <label for="documentTipe">Tipo</label>
+                <select id="documentTipe" required>
+                    <option>Laboratorio</option>
+                    <option>Emergencia</option>
+                </select>
+                
 
                 <label for="documentFile">Seleccionar archivo:</label>
                 <input type="file" id="documentFile" name="documentFile" required>

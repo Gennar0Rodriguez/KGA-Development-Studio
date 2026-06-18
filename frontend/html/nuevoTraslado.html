@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuevo Traslado | SIGSM</title>
-    <link rel="stylesheet" href="/frontend/css/stylesgestionAmbulancias.css">
-    <link rel="stylesheet" href="/frontend/css/stylesnuevoTraslado.css">
-    <link rel="stylesheet" href="/frontend/css/stylesnotificaciones.css">
+    <link rel="stylesheet" href="../css/stylesgestionAmbulancias.css">
+    <link rel="stylesheet" href="../css/stylesnuevoTraslado.css">
+    <link rel="stylesheet" href="../css/stylesnotificaciones.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
 </head>
     <body>
         <header>
-            <img src="/frontend/logo/hospital de clinicaslogo.png" alt="Logo de SIGSM">
+            <img src="../logo/hospital de clinicaslogo.png" alt="Logo de SIGSM">
             <h1>Administración de ambulancias</h1>
         </header>
 
@@ -47,8 +47,8 @@
     </a>
 
     <a href="#">
-        <i class="fa-solid fa-user-doctor"></i>
-        Personal
+        <i class="fa-solid fa-user-plus"></i>
+        Administrar Usuarios
     </a>
 
     <a href="#">
@@ -64,7 +64,7 @@
 </nav>
 
             <div class="usuario">
-                <img src="/frontend/img/fotoejemplo.webp" alt="">
+                <img src="../img/fotoejemplo.webp" alt="">
                 <div>
                     <strong>Administrador</strong>
                     <p>Hospital de Clínicas</p>
@@ -124,6 +124,18 @@
                         <option>Finalizado</option>
                     </select>
 
+                    <label for="oxigeno">Necesita Oxigeno</label>
+                    <select id="oxigeno" required>
+                        <option>No</option>
+                        <option>Si</option>
+                    </select>
+
+                    <label for="camilla">Tipo de Camilla</label>
+                    <select id="camilla" required>
+                        <option>Emergencia</option>
+                        <option>Comun</option>
+                    </select>
+                    
                     <label for="prioridad">Prioridad</label>
                     <select id="prioridad" required>
                         <option>Normal</option>
