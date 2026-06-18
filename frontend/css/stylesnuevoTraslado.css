@@ -33,7 +33,7 @@ body {
 }
 
 .btn-guardar{
-    background-color: #0ee93a;
+    background-color: #009c1f;
     color: white;
 
     border: none;
@@ -79,7 +79,7 @@ body {
 }
 
 .btn-cancelar:hover {
-    background-color: #ff4444;
+    background-color: #830000;
 
     transform: translateY(-3px);
 
