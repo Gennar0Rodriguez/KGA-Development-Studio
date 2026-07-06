@@ -38,7 +38,7 @@ Administración de Usuarios
 Frontend
 
 * HTML5
-* CSS3
+* CSS
 * JavaScript
 * Font Awesome
 
