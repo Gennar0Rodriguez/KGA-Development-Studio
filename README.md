@@ -40,7 +40,6 @@ Frontend
 * HTML5
 * CSS
 * JavaScript
-* Font Awesome
 
 Backend
 
