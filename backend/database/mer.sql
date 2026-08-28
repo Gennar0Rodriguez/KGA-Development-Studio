@@ -47,7 +47,7 @@ CREATE TABLE encuesta (
 CREATE TABLE pregunta (
     id_pregunta VARCHAR(50) PRIMARY KEY NOT NULL,
     nombre_pregunta VARCHAR(50) NOT NULL,
-    tipo ENUM('opcion multiple', 'texto') NOT NULLS
+    tipo ENUM('opcion multiple', 'texto') NOT NULL
 );
 
 CREATE TABLE contiene (
