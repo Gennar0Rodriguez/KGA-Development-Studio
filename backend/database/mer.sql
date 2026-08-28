@@ -1,8 +1,6 @@
 CREATE DATABASE Proyecto;
 USE Proyecto;
 
-
-
 CREATE TABLE administrativo (
     ci_admin VARCHAR(8) PRIMARY KEY NOT NULL,
     nombre_admin VARCHAR(50) NOT NULL,
@@ -133,69 +131,7 @@ INSERT INTO guarda (id_respuesta, id_pregunta) VALUES
 ('RESP2', 'PREG2'),
 ('RESP3', 'PREG3'),
 ('RESP4', 'PREG4'),
-('RESP5', 'PREG5');INSERT INTO administrativo (ci_admin, nombre_admin, apellido_admin, contraseña_admin, cargo) VALUES
-('12345678', 'Ezequiel', 'Matta', 'pass123', 'administrador'),
-('23456789', 'Juan', 'Perez', 'pass456', 'empleado'),
-('34567890', 'Maria', 'Gomez', 'pass789', 'empleado'),
-('45678901', 'Ana', 'Lopez', 'pass101', 'empleado'),
-('56789012', 'Carlos', 'Silva', 'pass202', 'empleado');
-
-INSERT INTO categoria (id_categoria, nombre_cat) VALUES
-('CAT1', 'Cardiologia'),
-('CAT2', 'Pediatria'),
-('CAT3', 'Traumatologia'),
-('CAT4', 'Neurologia'),
-('CAT5', 'Medicina General');
-
-INSERT INTO carga (ci_admin, id_categoria, hora, fecha) VALUES
-('12345678', 'CAT1', '08:00:00', '2026-01-10'),
-('23456789', 'CAT2', '09:30:00', '2026-01-11'),
-('34567890', 'CAT3', '11:15:00', '2026-01-12'),
-('45678901', 'CAT4', '14:00:00', '2026-01-13'),
-('56789012', 'CAT5', '16:45:00', '2026-01-14');
-
-INSERT INTO documentos (id_documentos, ci_admin, id_categoria, titulo_docs, descripcion_docs) VALUES
-('DOC1', '12345678', 'CAT1', 'Protocolo Cardiologia', 'Guia de urgencias cardiacas'),
-('DOC2', '23456789', 'CAT2', 'Ficha Pediatrica', 'Registro de vacunacion'),
-('DOC3', '34567890', 'CAT3', 'Informe Traumatologia', 'Inventario de protesis'),
-('DOC4', '45678901', 'CAT4', 'Guia Neurologia', 'Procedimiento de EEG'),
-('DOC5', '56789012', 'CAT5', 'Control Triaje', 'Manual de atencion rapida');
-
-INSERT INTO encuesta (id_encuesta, id_categoria, descripcion_enc, titulo_enc) VALUES
-('ENC1', 'CAT1', 'Evaluacion atencion en cardiologia', 'Satisfaccion Cardiologia'),
-('ENC2', 'CAT2', 'Encuesta a padres en pediatria', 'Atencion Pediatrica'),
-('ENC3', 'CAT3', 'Consulta sobre tiempos de espera', 'Tiempo Traumatologia'),
-('ENC4', 'CAT4', 'Evaluacion de insumos medicos', 'Estado Equipos Neurologia'),
-('ENC5', 'CAT5', 'Calidad de atencion general', 'Encuesta Medicina General');
-
-INSERT INTO pregunta (id_pregunta, nombre_pregunta, tipo) VALUES
-('PREG1', '¿Como evalua la atencion en el especialista?', 'opcion multiple'),
-('PREG2', 'Describa la comodidad de la sala de espera', 'texto'),
-('PREG3', '¿El medico explico bien el tratamiento?', 'opcion multiple'),
-('PREG4', 'Escriba sugerencias para mejorar el servicio', 'texto'),
-('PREG5', '¿Consiguio turno con rapidez?', 'opcion multiple');
-
-INSERT INTO contiene (id_pregunta, id_encuesta) VALUES
-('PREG1', 'ENC1'),
-('PREG2', 'ENC1'),
-('PREG3', 'ENC2'),
-('PREG4', 'ENC3'),
-('PREG5', 'ENC5');
-
-INSERT INTO respuesta (id_respuesta, informacion, tipo) VALUES
-('RESP1', 'Excelente', 'opcion multiple'),
-('RESP2', 'Hacen falta mas asientos en el pasillo', 'texto'),
-('RESP3', 'Bueno', 'opcion multiple'),
-('RESP4', 'Agilizar la entrega de resultados', 'texto'),
-('RESP5', 'Regular', 'opcion multiple');
-
-INSERT INTO guarda (id_respuesta, id_pregunta) VALUES
-('RESP1', 'PREG1'),
-('RESP2', 'PREG2'),
-('RESP3', 'PREG3'),
-('RESP4', 'PREG4'),
 ('RESP5', 'PREG5');
-
 
 
 
