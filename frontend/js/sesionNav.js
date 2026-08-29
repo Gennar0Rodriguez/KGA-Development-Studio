@@ -1,57 +1,40 @@
-async function controlarSidebarPorRol() {
-    try {
-        const response = await fetch('/kgade/KGA-Development-Studio/API/sesion.php');
+fetch("../components/sidebar.html")
+    .then(response => response.text())
+    .then(data => {
+        const sidebarElem = document.getElementById("sidebar");
+        if (sidebarElem) {
+            sidebarElem.innerHTML = data;
 
-        if (!response.ok) {
-            console.error(
-                'Error al conectar con la API de sesión. Status:',
-                response.status
-            );
-            return;
-        }
+            const paginaActual = window.location.pathname.split("/").pop();
+            const enlaces = document.querySelectorAll(".sidebar nav a");
 
-        const datos = await response.json();
+            enlaces.forEach(enlace => {
+                const paginaEnlace = enlace.getAttribute("href");
+                if (paginaEnlace === paginaActual) {
+                    enlace.classList.add("active");
+                }
+            });
 
-        if (!datos.autenticado) {
-            window.location.href = 'index.html';
-            return;
-        }
-
-        const usuario = datos.usuario;
-
-        const cargo = (
-            usuario.cargo || usuario.rol || ''
-        ).toLowerCase().trim();
-
-        const lblRol = document.getElementById('lblRolUsuario');
-        const lblNombre = document.getElementById('lblNombreUsuario');
-
-        if (lblRol) {
-            lblRol.textContent = cargo.toUpperCase();
-        }
-
-        if (lblNombre) {
-            lblNombre.textContent =
-                usuario.nombre_admin ||
-                usuario.nombre ||
-                'Hospital de Clínicas';
-        }
-
-        if (cargo !== 'administrador' && cargo !== 'admin') {
-
-            const navDoc = document.getElementById('navDocumentos');
-            const navUsu = document.getElementById('navUsuarios');
-
-            if (navDoc) {
-                navDoc.style.setProperty('display', 'none', 'important');
-            }
-
-            if (navUsu) {
-                navUsu.style.setProperty('display', 'none', 'important');
+            if (typeof controlarSidebarPorRol === "function") {
+                controlarSidebarPorRol();
             }
         }
+    })
+    .catch(err => console.error("Error al cargar sidebar:", err));
 
-    } catch (error) {
-        console.error('Error al verificar sesión:', error);
-    }
-}
+fetch("../components/header.html")
+    .then(response => response.text())
+    .then(data => {
+        const headerElem = document.getElementById("header");
+        if (headerElem) {
+            headerElem.innerHTML = data;
+
+            const titulo = document.body.dataset.titulo;
+            const tituloElem = document.getElementById("tituloPagina");
+
+            if (tituloElem && titulo) {
+                tituloElem.textContent = titulo;
+            }
+        }
+    })
+    .catch(err => console.error("Error al cargar header:", err));

@@ -4,13 +4,7 @@ let paginaActual = 1;
 const usuariosPorPagina = 10;
 
 document.addEventListener('DOMContentLoaded', () => {
-    cargarSesion();
     cargarUsuarios();
-    
-    const btnBuscar = document.getElementById('btnBuscar');
-    if (btnBuscar) {
-        btnBuscar.addEventListener('click', filtrarUsuarios);
-    }
 
     const inputBuscar = document.getElementById('inputBuscar');
     if (inputBuscar) {
@@ -20,12 +14,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const formAgregarUsuario = document.getElementById('formAgregarUsuario');
     if (formAgregarUsuario) {
         formAgregarUsuario.addEventListener('submit', crearUsuario);
+        
+        formAgregarUsuario.addEventListener('input', actualizarBotonFormulario);
+        
+        formAgregarUsuario.addEventListener('reset', () => {
+            setTimeout(actualizarBotonFormulario, 10);
+        });
     }
 });
 
 async function cargarSesion() {
     try {
-        const response = await fetch('/kgade/KGA-Development-Studio/API/sesion');
+        const response = await fetch('/kgade/KGA-Development-Studio/API/sesion.php');
         if (!response.ok) return;
 
         const datos = await response.json();
@@ -118,7 +118,6 @@ function renderizarTablaPaginada(lista) {
             editarUsuario(usuario);
         });
 
-        // Botón Eliminar (con ícono de basura)
         const botonEliminar = document.createElement('button');
         botonEliminar.className = 'btn-eliminar';
         botonEliminar.dataset.ci = ciVal;
@@ -129,7 +128,6 @@ function renderizarTablaPaginada(lista) {
             eliminarUsuario(ciVal);
         });
 
-        // Agregar botones a la celda de acciones
         celdaAcciones.appendChild(botonEditar);
         celdaAcciones.appendChild(botonEliminar);
         fila.appendChild(celdaAcciones);
@@ -187,10 +185,10 @@ function renderizarPaginador(lista) {
 function filtrarUsuarios() {
     const busqueda = (document.getElementById('inputBuscar')?.value || '').toLowerCase().trim();
 
-    const usuariosFiltrados = todosLosUsuarios.filter((u) => {
-        const ci = String(u.ci_admin || u.ci || '').toLowerCase();
-        const nombre = String(u.nombre_admin || u.nombre || '').toLowerCase();
-        const apellido = String(u.apellido_admin || u.apellido || '').toLowerCase();
+    const usuariosFiltrados = todosLosUsuarios.filter((asd) => {
+        const ci = String(asd.ci_admin || asd.ci || '').toLowerCase();
+        const nombre = String(asd.nombre_admin || asd.nombre || '').toLowerCase();
+        const apellido = String(asd.apellido_admin || asd.apellido || '').toLowerCase();
 
         return ci.includes(busqueda) || nombre.includes(busqueda) || apellido.includes(busqueda);
     });
@@ -206,14 +204,33 @@ function editarUsuario(usuario) {
     const userVal = usuario.user_name || usuario.user || '';
     const cargoVal = usuario.cargo || usuario.rol || '';
 
-    // Carga los datos seleccionados en el formulario lateral
     document.getElementById('ci').value = ciVal;
     document.getElementById('nombre').value = nomVal;
     document.getElementById('apellido').value = apeVal;
     document.getElementById('user').value = userVal;
-    
+
     const selectRol = document.getElementById('rol');
     if (selectRol) selectRol.value = cargoVal.toLowerCase();
+
+    const botonAgregar = document.getElementById('btn-agregar');
+    if (botonAgregar) {
+        botonAgregar.innerHTML = 'Editar Usuario <i class="fa-solid fa-pen"></i>';
+    }
+}
+
+function actualizarBotonFormulario() {
+    const ci = document.getElementById('ci')?.value.trim() || '';
+    const nombre = document.getElementById('nombre')?.value.trim() || '';
+    const apellido = document.getElementById('apellido')?.value.trim() || '';
+    const user = document.getElementById('user')?.value.trim() || '';
+
+    const botonAgregar = document.getElementById('btn-agregar');
+    if (!botonAgregar) return;
+
+    // Si TODOS los campos de texto están vacíos, vuelve a "Añadir Usuario"
+    if (ci === '' && nombre === '' && apellido === '' && user === '') {
+        botonAgregar.innerHTML = 'Añadir Usuario <i class="fa-solid fa-user-plus"></i>';
+    }
 }
 
 async function crearUsuario(event) {
@@ -229,7 +246,6 @@ async function crearUsuario(event) {
         ci: document.getElementById('ci').value,
         nombre: document.getElementById('nombre').value,
         apellido: document.getElementById('apellido').value,
-        user: document.getElementById('user').value,
         pass: document.getElementById('pass').value,
         rol: document.getElementById('rol').value
     };
@@ -243,11 +259,19 @@ async function crearUsuario(event) {
             body: JSON.stringify(datos)
         });
 
-        const resultado = await response.json();
+        const textoRespuesta = await response.text();
+
+        let resultado;
+        try {
+            resultado = JSON.parse(textoRespuesta);
+        } catch (e) {
+            console.error("Respuesta RAW del servidor (HTML de error):", textoRespuesta);
+            throw new Error("El servidor no devolvió JSON. Revisa la consola para ver el HTML devuelto.");
+        }
 
         if (!response.ok) {
             if (msg) {
-                msg.textContent = resultado.error || resultado.Error || 'No se pudo procesar el usuario';
+                msg.textContent = resultado.error || 'No se pudo procesar la solicitud.';
                 msg.style.color = '#dc2626';
             }
             return;
@@ -264,7 +288,7 @@ async function crearUsuario(event) {
     } catch (error) {
         console.error('Error al guardar usuario:', error);
         if (msg) {
-            msg.textContent = 'Error de conexión con el servidor.';
+            msg.textContent = error.message || 'Error de conexión con el servidor.';
             msg.style.color = '#dc2626';
         }
     }
@@ -276,7 +300,7 @@ async function eliminarUsuario(ci) {
     }
 
     try {
-        const response = await fetch(`/kgade/KGA-Development-Studio/API/usuario/usuarios.php?id=${ci}`, {
+        const response = await fetch(`/KGA-Development-Studio/API/usuario/usuarios.php?id=${ci}`, {
             method: 'DELETE'
         });
 

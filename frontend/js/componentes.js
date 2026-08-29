@@ -1,36 +1,77 @@
+const contenedorSidebar = document.getElementById("sidebar");
 
-fetch("../components/sidebar.html")
-    .then(response => response.text())
-    .then(data => {
+if (contenedorSidebar) {
+    fetch("../components/sidebar.html")
+        .then(response => response.text())
+        .then(data => {
+            contenedorSidebar.innerHTML = data;
 
-        document.getElementById("sidebar").innerHTML = data;
+            const paginaActual = window.location.pathname.split("/").pop();
+            const enlaces = document.querySelectorAll(".sidebar nav a");
 
-        const paginaActual = window.location.pathname.split("/").pop();
+            enlaces.forEach(enlace => {
+                const paginaEnlace = enlace.getAttribute("href");
+                if (paginaEnlace === paginaActual) {
+                    enlace.classList.add("active");
+                }
+            });
 
-        const enlaces = document.querySelectorAll(".sidebar nav a");
+            aplicarPermisosSidebar();
+        })
+        .catch(err => console.error("Error cargando la sidebar:", err));
+}
 
-        enlaces.forEach(enlace => {
+const contenedorHeader = document.getElementById("header");
 
-            const paginaEnlace = enlace.getAttribute("href");
+if (contenedorHeader) {
+    fetch("../components/header.html")
+        .then(response => response.text())
+        .then(data => {
+            contenedorHeader.innerHTML = data;
 
-            if (paginaEnlace === paginaActual) {
-                enlace.classList.add("active");
+            const titulo = document.body.dataset.titulo;
+            const elemTitulo = document.getElementById("tituloPagina");
+
+            if (elemTitulo && titulo) {
+                elemTitulo.textContent = titulo;
             }
+        })
+        .catch(err => console.error("Error cargando el header:", err));
+}
 
-        });
+async function aplicarPermisosSidebar() {
+    try {
+        const response = await fetch('/kgade/KGA-Development-Studio/API/sesion.php');
+        if (!response.ok) return;
 
-        controlarSidebarPorRol();
+        const datos = await response.json();
 
-    });
+        if (!datos.autenticado) {
+            window.location.href = 'index.html';
+            return;
+        }
 
-fetch("../components/header.html")
-    .then(response => response.text())
-    .then(data => {
+        const usuario = datos.usuario || {};
+        const cargo = (usuario.cargo).toString().toLowerCase().trim();
 
-        document.getElementById("header").innerHTML = data;
+        const lblRol = document.getElementById('lblRolUsuario');
+        const lblNombre = document.getElementById('lblNombreUsuario');
 
-        const titulo = document.body.dataset.titulo;
+        if (lblRol) lblRol.textContent = cargo.toUpperCase();
+        if (lblNombre) {
+            lblNombre.textContent = usuario.nombre_admin;
+        }
 
-        document.getElementById("tituloPagina").textContent = titulo;
+        const esAdmin = (cargo === 'administrador');
 
-    });
+        if (!esAdmin) {
+            const navDoc = document.getElementById('navDocumentos');
+            const navUsu = document.getElementById('navUsuarios');
+
+            if (navDoc) navDoc.style.setProperty('display', 'none', 'important');
+            if (navUsu) navUsu.style.setProperty('display', 'none', 'important');
+        }
+    } catch (error) {
+        console.error('Error al aplicar permisos en la sidebar:', error);
+    }
+}

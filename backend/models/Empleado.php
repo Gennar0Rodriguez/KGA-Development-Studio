@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/Database.php';
 
-class Usuario
+class Empleado
 {
     private PDO $conexion;
 
@@ -10,7 +10,7 @@ class Usuario
         $this->conexion = Database::getInstancia()->getConexion();
     }
 
-    public function crear(string $ci, string $nombre, string $apellido,  string $pass, string $rol): bool {
+    public function crear(string $ci, string $nombre, string $apellido, string $user, string $pass, string $rol): bool {
         $sql = 'INSERT INTO administrativo(ci_admin, nombre_admin, apellido_admin, contraseña_admin, cargo) VALUES (:ci, :nombre, :apellido, :password, :rol)';
 
         $sentencia = $this->conexion->prepare($sql);

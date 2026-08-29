@@ -34,9 +34,6 @@
                     id="inputBuscar"
                     placeholder="Buscar usuario por CI, nombre o apellido...">
 
-                <button class="btn-buscar" id="btnBuscar">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </button>
             </div>
 
             <div class="contenido">
@@ -66,7 +63,6 @@
                         <input type="text" name="ci" id="ci" placeholder="Cédula (8 dígitos)" maxlength="8" required>
                         <input type="text" name="nombre" id="nombre" placeholder="Nombre" required>
                         <input type="text" name="apellido" id="apellido" placeholder="Apellido" required>
-                        <input type="text" name="user" id="user" placeholder="Usuario" required>
                         <input type="password" name="pass" id="pass" placeholder="Contraseña" required>
 
                         <select name="rol" id="rol" required>
@@ -75,7 +71,7 @@
                             <option value="empleado">Empleado</option>
                         </select>
 
-                        <button type="submit" class="btn-agregar">
+                        <button type="submit" class="btn-agregar" id="btn-agregar">
                             <i class="fa-solid fa-user-plus"></i>
                             Agregar Usuario
                         </button>
@@ -92,7 +88,6 @@
 
     <script src="../js/listarUsuarios.js"></script>
     <script src="../js/sesionNav.js"></script>
-    <script src="../js/crearUsuarios.js"></script>
     <script src="../js/logout.js"></script>
     <script src="../js/componentes.js"></script>
     

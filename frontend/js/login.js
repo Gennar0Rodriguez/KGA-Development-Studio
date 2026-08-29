@@ -32,7 +32,7 @@ document.getElementById('formLogin').addEventListener('submit', async (event) =>
         const cargoUsuario = (resultado.usuario?.cargo || resultado.usuario?.rol || '').toLowerCase().trim();
 
         // Redirección directa según el rol
-        if (cargoUsuario === 'administrador' || cargoUsuario === 'admin') {
+        if (cargoUsuario === 'administrador') {
             window.location.href = 'ambulanciaFormulario.html';
         } else {
             // Empleado, enfermero o cualquier otro rol
