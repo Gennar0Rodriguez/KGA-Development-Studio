@@ -7,27 +7,18 @@
 
     <link rel="stylesheet" href="../css/stylesadministrarUsuarios.css">
     <link rel="stylesheet" href="../css/stylesnotificaciones.css">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
-
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
     <header>
-
         <img src="../logo/hospital de clinicaslogo.png" alt="Logo">
-
         <h1>Administración de Usuarios</h1>
-
         <div></div>
-
     </header>
 
     <hr>
@@ -35,230 +26,96 @@
     <div class="layout">
 
         <aside class="sidebar">
+            <div class="logo">
+                <h2>Hospital De Clinicas</h2>
+            </div>
+            
+            <nav>
+                <a href="gestionAmbulancias.html">
+                    <i class="fa-solid fa-truck-medical"></i> Ambulancias
+                </a>
 
-    <div class="logo">
-        <img src="logo.png" alt="">
-        <h2>Hospital De Clinicas</h2>
-    </div>
-        <nav>
+                <a href="documentosAdmin.html" id="navDocumentos">
+                    <i class="fa-solid fa-file-lines"></i> Documentación
+                </a>
 
-    <a href="gestionAmbulancias.html">
-        <i class="fa-solid fa-truck-medical"></i>
-        Ambulancias
-    </a>
+                <a href="notificaciones.html">
+                    <i class="fa-solid fa-bell"></i> Notificaciones <span class="badge">3</span>
+                </a>
 
-    <a href="documentosAdmin.html">
-        <i class="fa-solid fa-file-lines"></i>
-        Documentación
-    </a>
+                <a href="administrarUsuarios.html" id="navUsuarios" class="active">
+                    <i class="fa-solid fa-user-plus"></i> Administrar Usuarios
+                </a>
+            </nav>
 
-    <a href="notificaciones.html">
-        <i class="fa-solid fa-bell"></i>
-        Notificaciones
-        <span class="badge">3</span>
-    </a>
-
-    <a href="administrarUsuarios.html" class="active">
-        <i class="fa-solid fa-user-plus"></i>
-        Administrar Usuarios
-    </a>
-
-</nav>
-    <div class="usuario">
-        <img src="../img/fotoejemplo.webp" alt="">
-        <div>
-            <strong>Administrador</strong>
-            <p>Hospital de Clínicas</p>
-        </div>
-    </div>
-
-</aside>
-
+            <div class="usuario">
+                <img src="../img/fotoejemplo.webp" alt="Usuario">
+                <div>
+                    <strong id="nombreUsuario">Hospital de Clínicas</strong>
+                    <p id="rolUsuario">Cargando...</p>
+                </div>
+            </div>
+            <button id="btnLogout" class="btn-logout">
+        <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+            </button>
+        </aside>
 
         <main>
 
             <div class="topbar">
-
                 <input
                     type="text"
+                    id="inputBuscar"
                     placeholder="Buscar usuario por CI, nombre o apellido...">
 
-                <button class="btn-buscar">
+                <button class="btn-buscar" id="btnBuscar">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
-
             </div>
 
             <div class="contenido">
 
-
                 <section class="usuarios">
+                    <h2>Usuarios Registrados</h2>
 
-    <h2>Usuarios Registrados</h2>
-
-    <table class="tabla-usuarios">
-
-        <thead>
-
-            <tr>
-                <th>CI</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Cargo</th>
-                <th>Área</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-            <tr>
-                <td>4.123.456-7</td>
-                <td>Juan</td>
-                <td>Pérez</td>
-                <td>Médico</td>
-                <td>Emergencias</td>
-
-                <td>
-                    <span class="estado activo">
-                        Activo
-                    </span>
-                </td>
-
-                <td>
-
-                    <button class="btn-editar">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
-
-                    <button class="btn-eliminar">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-
-                </td>
-
-            </tr>
-
-            <tr>
-                <td>5.456.123-8</td>
-                <td>María</td>
-                <td>González</td>
-                <td>Enfermera</td>
-                <td>CTI</td>
-
-                <td>
-                    <span class="estado inactivo">
-                        Inactivo
-                    </span>
-                </td>
-
-                <td>
-
-                    <button class="btn-editar">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
-
-                    <button class="btn-eliminar">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-
-                </td>
-
-            </tr>
-
-            <tr>
-                <td>3.987.654-2</td>
-                <td>Carlos</td>
-                <td>Rodríguez</td>
-                <td>Recepcionista</td>
-                <td>Consultas</td>
-
-                <td>
-                    <span class="estado activo">
-                        Activo
-                    </span>
-                </td>
-
-                <td>
-
-                    <button class="btn-editar">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
-
-                    <button class="btn-eliminar">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-
-                </td>
-
-            </tr>
-
-        </tbody>
-
-    </table>
-
-</section>
-
+                    <table class="tabla-usuarios">
+                        <thead>
+                            <tr>
+                                <th>CI</th>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Cargo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaUsuariosBody">
+                        </tbody>
+                    </table>
                 </section>
 
-                <!-- AGREGAR USUARIO -->
-
                 <aside class="panel-agregar">
-
                     <h2>Agregar Usuario</h2>
 
-                    <form>
+                    <form id="formAgregarUsuario">
+                        <input type="text" name="ci" id="ci" placeholder="Cédula (8 dígitos)" maxlength="8" required>
+                        <input type="text" name="nombre" id="nombre" placeholder="Nombre" required>
+                        <input type="text" name="apellido" id="apellido" placeholder="Apellido" required>
+                        <input type="text" name="user" id="user" placeholder="Usuario" required>
+                        <input type="password" name="pass" id="pass" placeholder="Contraseña" required>
 
-                        <input
-                            type="text"
-                            placeholder="Cédula">
-
-                        <input
-                            type="text"
-                            placeholder="Nombre">
-
-                        <input
-                            type="text"
-                            placeholder="Apellido">
-
-                        <input
-                            type="text"
-                            placeholder="Correo Institucional">
-
-                        <input
-                            type="text"
-                            placeholder="Área">
-
-                        <select>
-
-                            <option selected disabled>
-                                Seleccione un cargo
-                            </option>
-
-                            <option>Administrador</option>
-
-                            <option>Médico</option>
-
-                            <option>Enfermero</option>
-
-                            <option>Recepcionista</option>
-
-                            <option>Chofer</option>
-
+                        <select name="rol" id="rol" required>
+                            <option value="" disabled selected>Seleccione un cargo</option>
+                            <option value="administrador">Administrador</option>
+                            <option value="empleado">Empleado</option>
                         </select>
 
                         <button type="submit" class="btn-agregar">
-
                             <i class="fa-solid fa-user-plus"></i>
-
                             Agregar Usuario
-
                         </button>
-
                     </form>
 
+                    <p id="msgResultado" style="margin-top: 15px; font-weight: bold; text-align: center;"></p>
                 </aside>
 
             </div>
@@ -267,6 +124,11 @@
 
     </div>
 
+    <script src="../js/listarUsuarios.js"></script>
+    <script src="../js/sesionNav.js"></script>
+    <script src="../js/crearUsuarios.js"></script>
+    <script src="../js/logout.js"></script>
+    
+    
 </body>
-
 </html>
