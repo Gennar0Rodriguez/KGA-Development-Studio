@@ -6,60 +6,25 @@
     <title>Administración de Ambulancias | SIGSM</title>
     <link rel="stylesheet" href="../css/stylesgestionAmbulancias.css">
     <link rel="stylesheet" href="../css/stylesnotificaciones.css">
+    <link rel="stylesheet" href="../css/modalNuevoTraslado.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/header.css">
 </head>
-<body>
-    <header>
-        <img src="../logo/hospital de clinicaslogo.png" alt="Logo de SIGSM">
-        <h1>Administración de ambulancias</h1>
-    </header>
-
+<body data-titulo="Gestión de Ambulancias">
+    <div id="header"></div>
     <hr>
 
     <div class="layout">
-            <aside class="sidebar">
-        <div class="logo">
-            <h2>Hospital De Clinicas</h2>
-        </div>
-        
-        <nav>
-            <a href="gestionAmbulancias.html" class="active">
-                <i class="fa-solid fa-truck-medical"></i> Ambulancias
-            </a>
-
-            <a href="documentosAdmin.html" id="navDocumentos">
-                <i class="fa-solid fa-file-lines"></i> Documentación
-            </a>
-
-            <a href="notificaciones.html">
-                <i class="fa-solid fa-bell"></i> Notificaciones <span class="badge">3</span>
-            </a>
-
-            <a href="administrarUsuarios.html" id="navUsuarios">
-                <i class="fa-solid fa-user-plus"></i> Administrar Usuarios
-            </a>
-        </nav>
-
-        <div class="usuario">
-            <img src="../img/fotoejemplo.webp" alt="Usuario">
-            <div>
-                <strong id="lblRolUsuario">Cargando...</strong>
-                <p id="lblNombreUsuario">Hospital de Clínicas</p>
-            </div>
-        </div>
-                    <button id="btnLogout" class="btn-logout">
-        <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
-            </button>
-    </aside>
+        <div id="sidebar"></div>
 
         <main>
             <section class="btn-principal">
-                <button class="btn-agregar" id="btnAgregarAmbulancia" onclick="window.location.href='nuevoTraslado.html'">
+                    <button type="button" class="btn-agregar" id="btnAbrirModalTraslado">
                     <i class="fa-solid fa-plus"></i> Agregar nueva ambulancia
-                </button>
+                    </button>
 
                 <input type="text" class="buscador" placeholder="Buscar por matricula...">
 
@@ -128,9 +93,239 @@
                 </div>
             </section>
         </main>
+
+    <div id="modalNuevoTraslado" class="modal-traslado">
+
+        <div class="modal-traslado-contenido">
+
+            <div class="modal-traslado-header">
+
+                <h2>Nuevo Traslado</h2>
+
+                <button
+                    type="button"
+                    id="btnCerrarModalTraslado"
+                    class="btn-cerrar-traslado">
+                    &times;
+                </button>
+
+            </div>
+
+
+            <form id="formNuevoTraslado">
+
+                <label for="ambulancia">
+                    Matrícula de la ambulancia
+                </label>
+
+                <select id="ambulancia" required>
+                    <option value="">Seleccione una ambulancia</option>
+                    <option value="ABC-123">ABC-123</option>
+                    <option value="DEF-456">DEF-456</option>
+                    <option value="GHI-789">GHI-789</option>
+                </select>
+
+
+                <label for="paciente">
+                    Paciente
+                </label>
+
+                <input
+                    type="text"
+                    id="paciente"
+                    required
+                >
+
+
+                <label for="conductor">
+                    Conductor
+                </label>
+
+                <select id="conductor">
+
+                    <option value="">
+                        Seleccione un conductor
+                    </option>
+
+                    <option value="Juan Pérez">
+                        Juan Pérez
+                    </option>
+
+                    <option value="Ana García">
+                        Ana García
+                    </option>
+
+                </select>
+
+
+                <label for="enfermero">
+                    Enfermero
+                </label>
+
+                <select id="enfermero" required>
+
+                    <option value="">
+                        Seleccione un enfermero
+                    </option>
+
+                    <option value="María López">
+                        María López
+                    </option>
+
+                    <option value="Carlos Rodríguez">
+                        Carlos Rodríguez
+                    </option>
+
+                </select>
+
+
+                <label for="destino">
+                    Destino
+                </label>
+
+                <input
+                    type="text"
+                    id="destino"
+                    required
+                >
+
+
+                <label for="fecha">
+                    Fecha
+                </label>
+
+                <input
+                    type="date"
+                    id="fecha"
+                    required
+                >
+
+
+                <label for="hora">
+                    Hora de salida
+                </label>
+
+                <input
+                    type="time"
+                    id="hora"
+                    required
+                >
+
+
+                <label for="observaciones">
+                    Observaciones
+                </label>
+
+                <textarea
+                    id="observaciones"
+                    required
+                ></textarea>
+
+
+                <label for="estado">
+                    Estado
+                </label>
+
+                <select id="estado" required>
+
+                    <option value="Programado">
+                        Programado
+                    </option>
+
+                    <option value="En curso">
+                        En curso
+                    </option>
+
+                    <option value="Finalizado">
+                        Finalizado
+                    </option>
+
+                </select>
+
+
+                <label for="oxigeno">
+                    Necesita Oxígeno
+                </label>
+
+                <select id="oxigeno" required>
+
+                    <option value="No">
+                        No
+                    </option>
+
+                    <option value="Si">
+                        Sí
+                    </option>
+
+                </select>
+
+
+                <label for="camilla">
+                    Tipo de Camilla
+                </label>
+
+                <select id="camilla" required>
+
+                    <option value="Emergencia">
+                        Emergencia
+                    </option>
+
+                    <option value="Comun">
+                        Común
+                    </option>
+
+                </select>
+
+
+                <label for="prioridad">
+                    Prioridad
+                </label>
+
+                <select id="prioridad" required>
+
+                    <option value="Normal">
+                        Normal
+                    </option>
+
+                    <option value="Urgente">
+                        Urgente
+                    </option>
+
+                    <option value="Crítica">
+                        Crítica
+                    </option>
+
+                </select>
+
+
+                <div class="acciones-formulario">
+
+                    <button
+                        type="button"
+                        id="btnCancelarModalTraslado"
+                        class="btn-cancelar">
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn-guardar">
+                        Guardar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
     </div>
 
+    
+    <script src="../js/modalNuevoTraslado.js"></script>
     <script src="../js/sesionNav.js"></script>
     <script src="../js/logout.js"></script>
+    <script src="../js/componentes.js"></script>
 </body>
 </html>

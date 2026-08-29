@@ -24,41 +24,7 @@
     <hr>
 
     <div class="layout">
-
-        <aside class="sidebar">
-            <div class="logo">
-                <h2>Hospital De Clinicas</h2>
-            </div>
-            
-            <nav>
-                <a href="gestionAmbulancias.html">
-                    <i class="fa-solid fa-truck-medical"></i> Ambulancias
-                </a>
-
-                <a href="documentosAdmin.html" id="navDocumentos">
-                    <i class="fa-solid fa-file-lines"></i> Documentación
-                </a>
-
-                <a href="notificaciones.html">
-                    <i class="fa-solid fa-bell"></i> Notificaciones <span class="badge">3</span>
-                </a>
-
-                <a href="administrarUsuarios.html" id="navUsuarios" class="active">
-                    <i class="fa-solid fa-user-plus"></i> Administrar Usuarios
-                </a>
-            </nav>
-
-            <div class="usuario">
-                <img src="../img/fotoejemplo.webp" alt="Usuario">
-                <div>
-                    <strong id="nombreUsuario">Hospital de Clínicas</strong>
-                    <p id="rolUsuario">Cargando...</p>
-                </div>
-            </div>
-            <button id="btnLogout" class="btn-logout">
-        <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
-            </button>
-        </aside>
+        <div id="sidebar"></div>
 
         <main>
 
@@ -121,13 +87,14 @@
             </div>
 
         </main>
-
+        
     </div>
 
     <script src="../js/listarUsuarios.js"></script>
     <script src="../js/sesionNav.js"></script>
     <script src="../js/crearUsuarios.js"></script>
     <script src="../js/logout.js"></script>
+    <script src="../js/componentes.js"></script>
     
     
 </body>

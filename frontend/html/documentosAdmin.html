@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../css/stylesdocumentosAdmin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="../css/modalSubirDocumento.css">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
@@ -22,51 +23,16 @@
 
     <div class="layout">
 
-<aside class="sidebar">
-    <div class="logo">
-        <h2>Hospital De Clinicas</h2>
-    </div>
-    
-    <nav>
-        <a href="gestionAmbulancias.html">
-            <i class="fa-solid fa-truck-medical"></i> Ambulancias
-        </a>
-
-        <a href="documentosAdmin.html" id="navDocumentos" class="active">
-            <i class="fa-solid fa-file-lines"></i> Documentación
-        </a>
-
-        <a href="notificaciones.html">
-            <i class="fa-solid fa-bell"></i> Notificaciones <span class="badge">3</span>
-        </a>
-
-        <a href="administrarUsuarios.html" id="navUsuarios">
-            <i class="fa-solid fa-user-plus"></i> Administrar Usuarios
-        </a>
-    </nav>
-
-    <div class="usuario">
-        <img src="../img/fotoejemplo.webp" alt="Usuario">
-        <div>
-            <strong id="lblRolUsuario">Cargando...</strong>
-            <p id="lblNombreUsuario">Hospital de Clínicas</p>
-        </div>
-    </div>
-        <button id="btnLogout" class="btn-logout">
-        <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
-        </button>
-</aside>
+    <div id="sidebar"></div>
     
     <main>
 
     <section class="documentos-container">
 
         <h2>Administración de Documentación</h2>
-        <a href="subirDocumento.html">
-            <button class="btn-subir">
-                + Subir documento
-            </button>
-        </a>
+        <button type="button" class="btn-subir" id="btnAbrirModal" >
+            + Subir documento
+        </button>
     <section class="busqueda-documentos">
         <input type="text" class="buscador" placeholder="Buscar documento...">
         <button class="btn-buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
@@ -98,7 +64,102 @@
     </section>
 
     </main>
+
+    <div id="modalSubirDocumento" class="modal">
+
+    <div class="modal-contenido">
+
+        <div class="modal-header">
+            <h2>Subir nuevo documento</h2>
+
+            <button type="button" id="btnCerrarModal" class="btn-cerrar">
+                &times;
+            </button>
+        </div>
+
+        <form id="formSubirDocumento" enctype="multipart/form-data">
+
+            <label for="documentTitle">
+                Título del documento:
+            </label>
+
+            <input
+                type="text"
+                id="documentTitle"
+                name="documentTitle"
+                required
+            >
+
+
+            <label for="documentDescription">
+                Descripción del documento:
+            </label>
+
+            <textarea
+                id="documentDescription"
+                name="documentDescription"
+                required
+            ></textarea>
+
+
+            <label for="documentTipe">
+                Tipo:
+            </label>
+
+            <select id="documentTipe" name="documentTipe" required>
+
+                <option value="Laboratorio">
+                    Laboratorio
+                </option>
+
+                <option value="Emergencia">
+                    Emergencia
+                </option>
+
+            </select>
+
+
+            <label for="documentFile">
+                Seleccionar archivo:
+            </label>
+
+            <input
+                type="file"
+                id="documentFile"
+                name="documentFile"
+                required
+            >
+
+
+            <div class="modal-acciones">
+
+                <button
+                    type="button"
+                    id="btnCancelarModal"
+                    class="btn-cancelar">
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn-subir">
+                    <i class="fa-solid fa-upload"></i>
+                    Subir Documento
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+    
+    </div>
     <script src="../js/logout.js"></script>
     <script src="../js/sesionNav.js"></script>
+    <script src="../js/componentes.js"></script>
+    <script src="../js/modalSubirDocumento.js"></script>
 </body>
 </html>

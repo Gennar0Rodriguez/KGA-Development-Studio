@@ -1,0 +1,165 @@
+
+.modal {
+    display: none;
+
+    position: fixed;
+    z-index: 2000;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    align-items: center;
+    justify-content: center;
+}
+
+
+.modal.mostrar {
+    display: flex;
+}
+
+
+.modal-contenido {
+    width: 600px;
+    max-width: 90%;
+
+    background: white;
+
+    border-radius: 12px;
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+    padding: 25px;
+
+    animation: aparecerModal 0.2s ease;
+}
+
+
+@keyframes aparecerModal {
+
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+
+.modal-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 20px;
+}
+
+
+.modal-header h2 {
+    margin: 0;
+}
+
+
+.btn-cerrar {
+    border: none;
+
+    background: transparent;
+
+    font-size: 30px;
+
+    cursor: pointer;
+
+    color: #555;
+}
+
+
+.btn-cerrar:hover {
+    color: #000;
+}
+
+
+.modal-contenido form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+
+.modal-contenido input,
+.modal-contenido textarea,
+.modal-contenido select {
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 10px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 6px;
+
+    font-family: "Lexend", sans-serif;
+}
+
+
+.modal-contenido textarea {
+    min-height: 100px;
+
+    resize: vertical;
+}
+
+
+.modal-acciones {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 15px;
+}
+
+
+.btn-cancelar,
+.btn-subir {
+
+    border: none;
+
+    padding: 10px 18px;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    font-family: "Lexend", sans-serif;
+}
+
+
+.btn-cancelar {
+    background: #e5e7eb;
+}
+
+
+.btn-subir {
+    background: #00cdb5;
+
+    color: white;
+}
+
+
+.btn-cancelar:hover,
+.btn-subir:hover {
+    opacity: 0.85;
+}
