@@ -1,3 +1,5 @@
+//el modal de nuevo traslado, se usa en la pagina de crear documento
+
 const btnAbrirModalTraslado =
     document.getElementById("btnAbrirModalTraslado");
 

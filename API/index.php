@@ -25,18 +25,12 @@ if ($segments[0] === 'KGA-Development-Studio') {
 if ($segments[0] === 'API') {
     array_shift($segments);
 }
-if ($segments[0] === 'api') {
-    array_shift($segments);
-}
-if ($segments[0] === 'index.php') {
-    array_shift($segments);
-}
 
 
 $resource = $segments[0] ?? '';
 $id = $segments[1] ?? null;
 
-// Obtener datos del body para POST/PUT
+// Obtener datos del body para POST/PUT copia y pegue tmb del profe 
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
 
 switch ($resource) {

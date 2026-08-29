@@ -5,7 +5,7 @@ header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
 
 require_once __DIR__ . '/../../backend/models/Usuario.php';
 
-// Definir variables por si no venían declaradas en un index wrapper
+// Obtener el método HTTP y el ID del usuario
 $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $id = $_GET['id'] ?? $_GET['ci'] ?? null;
 
@@ -61,7 +61,7 @@ try {
             exit;
 
         case 'DELETE':
-            // DELETE /api/usuarios/?id=12345678
+            // DELETE /api/usuarios/?id=12345678 aunque no anda
             if ($id !== null) {
                 $resultado = $usuario->eliminar($id);
                 if ($resultado) {

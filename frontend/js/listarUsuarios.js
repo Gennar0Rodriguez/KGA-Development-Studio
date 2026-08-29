@@ -1,8 +1,11 @@
+
+// Variables globales sobre todo para la paginacion full gd
 let usuarioActual = null;
 let todosLosUsuarios = []; 
 let paginaActual = 1;
 const usuariosPorPagina = 10;
 
+//basicamente dice que cuando termine de cargar la pagina, se ejecuta la funcion cargarUsuarios y agrega el event listener al input de busqueda
 document.addEventListener('DOMContentLoaded', () => {
     cargarUsuarios();
 
@@ -23,6 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+
+//sirve para cargar la sesion y mostrar el nombre y rol del usuario logueado
 async function cargarSesion() {
     try {
         const response = await fetch('/kgade/KGA-Development-Studio/API/sesion.php');
@@ -44,6 +49,7 @@ async function cargarSesion() {
     }
 }
 
+//sirve para cargar los usuarios desde la API y renderizarlos en la tabla (faltan las rutas absolutas bot)
 async function cargarUsuarios() {
     try {
         const response = await fetch('/kgade/KGA-Development-Studio/API/usuario/usuarios.php');
@@ -62,6 +68,7 @@ async function cargarUsuarios() {
     }
 }
 
+//paginación recontra complicada que se yo amigo
 function renderizarTablaPaginada(lista) {
     const tbody = document.getElementById('tablaUsuariosBody');
     if (!tbody) return;
@@ -106,7 +113,7 @@ function renderizarTablaPaginada(lista) {
         // --- CELDAS DE ACCIONES (EDITAR Y ELIMINAR) ---
         const celdaAcciones = document.createElement('td');
 
-        // Botón Editar (con ícono de lápiz)
+        // Botón Editar (con iconito del lápiz)
         const botonEditar = document.createElement('button');
         botonEditar.className = 'btn-editar';
         botonEditar.dataset.ci = ciVal;
@@ -138,6 +145,7 @@ function renderizarTablaPaginada(lista) {
     renderizarPaginador(lista);
 }
 
+//basicamente usa el div y pone los botones de paginacion, si no hay div lo crea y lo pone abajo de la tabla
 function renderizarPaginador(lista) {
     let contenedorPaginacion = document.getElementById('contenedorPaginacion');
     const seccionTabla = document.querySelector('.usuarios');
@@ -181,11 +189,11 @@ function renderizarPaginador(lista) {
         contenedorPaginacion.appendChild(btnPagina);
     }
 }
-
+//y filtra usuarios que mas queres q te explique
 function filtrarUsuarios() {
     const busqueda = (document.getElementById('inputBuscar')?.value || '').toLowerCase().trim();
 
-    const usuariosFiltrados = todosLosUsuarios.filter((asd) => {
+    const usuariosFiltrados = todosLosUsuarios.filter((asd) => { //asd puede ser cualqueir bobada lo puse para q vean
         const ci = String(asd.ci_admin || asd.ci || '').toLowerCase();
         const nombre = String(asd.nombre_admin || asd.nombre || '').toLowerCase();
         const apellido = String(asd.apellido_admin || asd.apellido || '').toLowerCase();
@@ -197,6 +205,7 @@ function filtrarUsuarios() {
     renderizarTablaPaginada(usuariosFiltrados);
 }
 
+//sirve pa editar el usuario, basicamente pone los datos del usuario en el formulario y cambia el boton de "Añadir Usuario" a "Editar Usuario" aunque no anda (corregilo bot)
 function editarUsuario(usuario) {
     const ciVal = usuario.ci_admin || usuario.ci || '';
     const nomVal = usuario.nombre_admin || usuario.nombre || '';
@@ -211,13 +220,13 @@ function editarUsuario(usuario) {
 
     const selectRol = document.getElementById('rol');
     if (selectRol) selectRol.value = cargoVal.toLowerCase();
-
+//aca hace el cambio del boton de "Añadir Usuario" a "Editar Usuario"
     const botonAgregar = document.getElementById('btn-agregar');
     if (botonAgregar) {
         botonAgregar.innerHTML = 'Editar Usuario <i class="fa-solid fa-pen"></i>';
     }
 }
-
+//esto es medio jodido pero cuando no hay campo en el formulario vuelve a poner el boton de "Añadir Usuario" y tampoco anda xd
 function actualizarBotonFormulario() {
     const ci = document.getElementById('ci')?.value.trim() || '';
     const nombre = document.getElementById('nombre')?.value.trim() || '';
@@ -232,7 +241,7 @@ function actualizarBotonFormulario() {
         botonAgregar.innerHTML = 'Añadir Usuario <i class="fa-solid fa-user-plus"></i>';
     }
 }
-
+//crea un usuario bro no ves q dice ahi 
 async function crearUsuario(event) {
     event.preventDefault();
 
@@ -294,6 +303,8 @@ async function crearUsuario(event) {
     }
 }
 
+
+//sirve para borrar pero no anda aun no le andaba nada no
 async function eliminarUsuario(ci) {
     if (!confirm(`¿Desea eliminar el usuario con CI ${ci}?`)) {
         return;

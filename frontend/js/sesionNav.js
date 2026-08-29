@@ -1,3 +1,5 @@
+
+//carga la sidebar y el header en todas las paginas y ve cual está activo (el header no anda bien aun btw)
 fetch("../components/sidebar.html")
     .then(response => response.text())
     .then(data => {

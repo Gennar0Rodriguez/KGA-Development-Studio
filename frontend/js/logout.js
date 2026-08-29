@@ -1,3 +1,4 @@
+//el boton de cerrar sesion, se usa en todas las paginas
 document.addEventListener('click', (event) => {
 
     if (event.target.closest('#btnLogout')) {
@@ -6,7 +7,7 @@ document.addEventListener('click', (event) => {
 
 });
 
-
+//funcion para cerrar sesion 
 async function cerrarSesion() {
 
     if (!confirm('¿Estás seguro de que deseas cerrar sesión?')) {

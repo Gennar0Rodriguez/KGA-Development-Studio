@@ -1,4 +1,5 @@
-    const btnAbrirModal = document.getElementById("btnAbrirModal");
+//el modal de subir documento, se usa en la pagina de crear usuario y crear documento
+const btnAbrirModal = document.getElementById("btnAbrirModal");
 const modal = document.getElementById("modalSubirDocumento");
 const btnCerrarModal = document.getElementById("btnCerrarModal");
 const btnCancelarModal = document.getElementById("btnCancelarModal");

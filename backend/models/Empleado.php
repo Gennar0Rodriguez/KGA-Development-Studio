@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../config/Database.php';
 
+
+//hice esta class pero para rellenar nomas las pautas del proyecto
 class Empleado
 {
     private PDO $conexion;
