@@ -1,11 +1,9 @@
-
-// Variables globales sobre todo para la paginacion full gd
 let usuarioActual = null;
 let todosLosUsuarios = []; 
 let paginaActual = 1;
 const usuariosPorPagina = 10;
+let modoEdicion = false;
 
-//basicamente dice que cuando termine de cargar la pagina, se ejecuta la funcion cargarUsuarios y agrega el event listener al input de busqueda
 document.addEventListener('DOMContentLoaded', () => {
     cargarUsuarios();
 
@@ -16,18 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const formAgregarUsuario = document.getElementById('formAgregarUsuario');
     if (formAgregarUsuario) {
-        formAgregarUsuario.addEventListener('submit', crearUsuario);
-        
-        formAgregarUsuario.addEventListener('input', actualizarBotonFormulario);
-        
-        formAgregarUsuario.addEventListener('reset', () => {
-            setTimeout(actualizarBotonFormulario, 10);
-        });
+        formAgregarUsuario.addEventListener('submit', guardarUsuario);
+        formAgregarUsuario.addEventListener('reset', resetearFormulario);
     }
 });
 
-
-//sirve para cargar la sesion y mostrar el nombre y rol del usuario logueado
 async function cargarSesion() {
     try {
         const response = await fetch('/kgade/KGA-Development-Studio/API/sesion.php');
@@ -41,22 +32,20 @@ async function cargarSesion() {
             const elemNombre = document.getElementById('nombreUsuario');
             const elemRol = document.getElementById('rolUsuario');
 
-            if (elemNombre) elemNombre.textContent =usuarioActual.nombre_admin;
-            if (elemRol) elemRol.textContent =usuarioActual.cargo;
+            if (elemNombre) elemNombre.textContent = usuarioActual.nombre_admin;
+            if (elemRol) elemRol.textContent = usuarioActual.cargo;
         }
     } catch (error) {
         console.error('Error al cargar sesión:', error);
     }
 }
 
-//sirve para cargar los usuarios desde la API y renderizarlos en la tabla (faltan las rutas absolutas bot)
 async function cargarUsuarios() {
     try {
         const response = await fetch('/kgade/KGA-Development-Studio/API/usuario/usuarios.php');
         if (!response.ok) throw new Error('Error en la respuesta del servidor');
         
         todosLosUsuarios = await response.json();
-        
         paginaActual = 1;
         renderizarTablaPaginada(todosLosUsuarios);
     } catch (error) {
@@ -68,7 +57,6 @@ async function cargarUsuarios() {
     }
 }
 
-//paginación recontra complicada que se yo amigo
 function renderizarTablaPaginada(lista) {
     const tbody = document.getElementById('tablaUsuariosBody');
     if (!tbody) return;
@@ -81,7 +69,6 @@ function renderizarTablaPaginada(lista) {
         return;
     }
 
-    // Paginación: Cortar 10 usuarios según la página actual
     const inicio = (paginaActual - 1) * usuariosPorPagina;
     const fin = inicio + usuariosPorPagina;
     const usuariosPagina = lista.slice(inicio, fin);
@@ -89,51 +76,38 @@ function renderizarTablaPaginada(lista) {
     usuariosPagina.forEach((usuario) => {
         const fila = document.createElement('tr');
 
-        const ciVal = usuario.ci_admin;
-        const nomVal = usuario.nombre_admin;
-        const apeVal = usuario.apellido_admin;
-        const cargoVal = usuario.cargo;
-
         const celdaCi = document.createElement('td');
-        celdaCi.textContent = ciVal;
+        celdaCi.textContent = usuario.ci_admin;
         fila.appendChild(celdaCi);
 
         const celdaNombre = document.createElement('td');
-        celdaNombre.textContent = nomVal;
+        celdaNombre.textContent = usuario.nombre_admin;
         fila.appendChild(celdaNombre);
 
         const celdaApellido = document.createElement('td');
-        celdaApellido.textContent = apeVal;
+        celdaApellido.textContent = usuario.apellido_admin;
         fila.appendChild(celdaApellido);
 
         const celdaRol = document.createElement('td');
-        celdaRol.textContent = cargoVal;
+        celdaRol.textContent = usuario.cargo;
         fila.appendChild(celdaRol);
 
-        // --- CELDAS DE ACCIONES (EDITAR Y ELIMINAR) ---
         const celdaAcciones = document.createElement('td');
 
-        // Botón Editar (con iconito del lápiz)
         const botonEditar = document.createElement('button');
         botonEditar.className = 'btn-editar';
-        botonEditar.dataset.ci = ciVal;
+        botonEditar.dataset.ci = usuario.ci_admin;
         botonEditar.innerHTML = '<i class="fa-solid fa-pen"></i>';
         botonEditar.style.cursor = 'pointer';
         botonEditar.style.marginRight = '5px';
-
-        botonEditar.addEventListener('click', () => {
-            editarUsuario(usuario);
-        });
+        botonEditar.addEventListener('click', () => editarUsuario(usuario));
 
         const botonEliminar = document.createElement('button');
         botonEliminar.className = 'btn-eliminar';
-        botonEliminar.dataset.ci = ciVal;
+        botonEliminar.dataset.ci = usuario.ci_admin;
         botonEliminar.innerHTML = '<i class="fa-solid fa-trash"></i>';
         botonEliminar.style.cursor = 'pointer';
-
-        botonEliminar.addEventListener('click', () => {
-            eliminarUsuario(ciVal);
-        });
+        botonEliminar.addEventListener('click', () => eliminarUsuario(usuario.ci_admin));
 
         celdaAcciones.appendChild(botonEditar);
         celdaAcciones.appendChild(botonEliminar);
@@ -145,7 +119,6 @@ function renderizarTablaPaginada(lista) {
     renderizarPaginador(lista);
 }
 
-//basicamente usa el div y pone los botones de paginacion, si no hay div lo crea y lo pone abajo de la tabla
 function renderizarPaginador(lista) {
     let contenedorPaginacion = document.getElementById('contenedorPaginacion');
     const seccionTabla = document.querySelector('.usuarios');
@@ -189,14 +162,14 @@ function renderizarPaginador(lista) {
         contenedorPaginacion.appendChild(btnPagina);
     }
 }
-//y filtra usuarios que mas queres q te explique
+
 function filtrarUsuarios() {
     const busqueda = (document.getElementById('inputBuscar')?.value || '').toLowerCase().trim();
 
-    const usuariosFiltrados = todosLosUsuarios.filter((asd) => { //asd puede ser cualqueir bobada lo puse para q vean
-        const ci = String(asd.ci_admin|| '').toLowerCase();
-        const nombre = String(asd.nombre_admin|| '').toLowerCase();
-        const apellido = String(asd.apellido_admin|| '').toLowerCase();
+    const usuariosFiltrados = todosLosUsuarios.filter((u) => {
+        const ci = String(u.ci_admin || '').toLowerCase();
+        const nombre = String(u.nombre_admin || '').toLowerCase();
+        const apellido = String(u.apellido_admin || '').toLowerCase();
 
         return ci.includes(busqueda) || nombre.includes(busqueda) || apellido.includes(busqueda);
     });
@@ -205,45 +178,35 @@ function filtrarUsuarios() {
     renderizarTablaPaginada(usuariosFiltrados);
 }
 
-//sirve pa editar el usuario, basicamente pone los datos del usuario en el formulario y cambia el boton de "Añadir Usuario" a "Editar Usuario" aunque no anda (corregilo bot)
+// Carga los datos en el formulario para editar
 function editarUsuario(usuario) {
-    const ciVal = usuario.ci_admin;
-    const nomVal = usuario.nombre_admin;
-    const apeVal = usuario.apellido_admin;
-    const cargoVal = usuario.cargo;
+    modoEdicion = true;
 
-    document.getElementById('ci').value = ciVal;
-    document.getElementById('nombre').value = nomVal;
-    document.getElementById('apellido').value = apeVal;
+    const inputCi = document.getElementById('ci');
+    if (inputCi) {
+        inputCi.value = usuario.ci_admin;
+        inputCi.readOnly = true; // Deshabilita la edición de la clave primaria
+    }
+
+    document.getElementById('nombre').value = usuario.nombre_admin;
+    document.getElementById('apellido').value = usuario.apellido_admin;
+    document.getElementById('pass').value = ''; // Se borra por seguridad
+
     const selectRol = document.getElementById('rol');
-    const labelUser = document.getElementById('label-User')
-    if (selectRol) selectRol.value = cargoVal.toLowerCase();
-//aca hace el cambio del boton de "Añadir Usuario" a "Editar Usuario"
+    if (selectRol) selectRol.value = usuario.cargo.toLowerCase();
+
     const botonAgregar = document.getElementById('btn-agregar');
+    const labelUser = document.getElementById('label-User');
     if (botonAgregar) {
         botonAgregar.innerHTML = 'Editar Usuario <i class="fa-solid fa-pen"></i>';
-        labelUser.innerHTML = 'Editar Usuario'
+    }
+    if (labelUser) {
+        labelUser.innerHTML = 'Editar Usuario';
+    }
+}
 
-    }
-}
-//esto es medio jodido pero cuando no hay campo en el formulario vuelve a poner el boton de "Añadir Usuario" y tampoco anda xd
-function actualizarBotonFormulario() {
-    const ci = document.getElementById('ci')?.value.trim() || '';
-    const nombre = document.getElementById('nombre')?.value.trim() || '';
-    const apellido = document.getElementById('apellido')?.value.trim() || '';
-    const botonAgregar = document.getElementById('btn-agregar');
-    const cargo = document.getElementById('rol')
-    const labelUser = document.getElementById('label-User')
-    if (!botonAgregar) return;
-    // Si TODOS los campos de texto están vacíos, vuelve a "Añadir Usuario"
-    if (ci === '' && nombre === '' && apellido === '') {
-        botonAgregar.innerHTML = 'Añadir Usuario <i class="fa-solid fa-user-plus"></i>';
-        cargo.selectedIndex = '0';
-        labelUser.innerHTML = ("Agregar Usuario")
-    }
-}
-//crea un usuario bro no ves q dice ahi
-async function crearUsuario(event) {
+// Maneja el guardado (tanto creación con POST como edición con PUT)
+async function guardarUsuario(event) {
     event.preventDefault();
 
     const msg = document.getElementById('msgResultado');
@@ -260,9 +223,11 @@ async function crearUsuario(event) {
         rol: document.getElementById('rol').value
     };
 
+    const metodo = modoEdicion ? 'PUT' : 'POST';
+
     try {
         const response = await fetch('/kgade/KGA-Development-Studio/API/usuario/usuarios.php', {
-            method: 'POST',
+            method: metodo,
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -275,8 +240,8 @@ async function crearUsuario(event) {
         try {
             resultado = JSON.parse(textoRespuesta);
         } catch (e) {
-            console.error("Respuesta RAW del servidor (HTML de error):", textoRespuesta);
-            throw new Error("El servidor no devolvió JSON. Revisa la consola para ver el HTML devuelto.");
+            console.error("Respuesta RAW del servidor:", textoRespuesta);
+            throw new Error("El servidor no devolvió JSON válido.");
         }
 
         if (!response.ok) {
@@ -288,11 +253,11 @@ async function crearUsuario(event) {
         }
 
         if (msg) {
-            msg.textContent = '¡Usuario guardado correctamente!';
+            msg.textContent = modoEdicion ? '¡Usuario actualizado correctamente!' : '¡Usuario creado correctamente!';
             msg.style.color = '#16a34a';
         }
 
-        event.target.reset();
+        resetearFormulario();
         cargarUsuarios();
 
     } catch (error) {
@@ -304,15 +269,33 @@ async function crearUsuario(event) {
     }
 }
 
+// Restablece la interfaz del formulario
+function resetearFormulario() {
+    modoEdicion = false;
+    const form = document.getElementById('formAgregarUsuario');
+    if (form) form.reset();
 
-//sirve para borrar pero no anda aun no le andaba nada no
+    const inputCi = document.getElementById('ci');
+    if (inputCi) inputCi.readOnly = false;
+
+    const botonAgregar = document.getElementById('btn-agregar');
+    const labelUser = document.getElementById('label-User');
+    if (botonAgregar) {
+        botonAgregar.innerHTML = 'Añadir Usuario <i class="fa-solid fa-user-plus"></i>';
+    }
+    if (labelUser) {
+        labelUser.innerHTML = 'Agregar Usuario';
+    }
+}
+
+// Elimina un usuario por su CI
 async function eliminarUsuario(ci) {
     if (!confirm(`¿Desea eliminar el usuario con CI ${ci}?`)) {
         return;
     }
 
     try {
-        const response = await fetch(`/KGA-Development-Studio/API/usuario/usuarios.php?id=${ci}`, {
+        const response = await fetch(`/kgade/KGA-Development-Studio/API/usuario/usuarios.php?id=${ci}`, {
             method: 'DELETE'
         });
 
@@ -327,32 +310,6 @@ async function eliminarUsuario(ci) {
         cargarUsuarios();
 
     } catch (error) {
-        console.error('Error al eliminar:', error);
+        console.error('Error al eliminar usuario:', error);
     }
-
-
-
-    
-    function updateUsuario(ci){
-    const msg = document.getElementById('msgResultado');
-    if (msg) {
-        msg.textContent = "Procesando...";
-        msg.style.color = "#0284C7";
-    }
-
-    const datosActuales = {
-        ci: document.getElementById('ci').value,
-        nombre: document.getElementById('nombre').value,
-        apellido: document.getElementById('apellido').value,
-        pass: document.getElementById('pass').value,
-        rol: document.getElementById('rol').value
-    };
-
-    const datosNuevos = {
-        nombre: document.getElementById('nombre').value,
-        apellido: document.getElementById('apellido').value,
-        pass: document.getElementById('pass').value,
-        rol: document.getElementById('rol').value
-    };
-}
 }
