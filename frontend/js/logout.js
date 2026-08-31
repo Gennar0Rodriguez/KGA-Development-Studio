@@ -7,7 +7,7 @@ document.addEventListener('click', (event) => {
 
 });
 
-//funcion para cerrar sesion 
+//funcion para cerrar sesion
 async function cerrarSesion() {
 
     if (!confirm('¿Estás seguro de que deseas cerrar sesión?')) {

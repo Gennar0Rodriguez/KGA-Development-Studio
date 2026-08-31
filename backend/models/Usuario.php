@@ -57,4 +57,18 @@ class Usuario
 
         return $usuario ?: null;
     }
+
+    public function editarUsuario(string $ci, string $nombre, string $apellido,  string $pass, string $rol): bool {
+        $sql = 'UPDATE administrativo SET nombre_admin=:nombre, apellido_admin=:apellido, contraseña_admin=:pass, cargo WHERE ci= :ci_admin';
+
+        $sentencia = $this->conexion->prepare($sql);
+
+        $sentencia -> bindParam(':ci', $ci);
+        $sentencia -> bindParam(':nombre', $nombre);
+        $sentencia -> bindParam(':apellido', $apellido);
+        $sentencia -> bindParam(':password', $pass);
+        $sentencia -> bindParam(':rol', $rol);
+        return $sentencia -> execute();
+    }
 }
+

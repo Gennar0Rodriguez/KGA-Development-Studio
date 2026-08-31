@@ -57,14 +57,13 @@
                 </section>
 
                 <aside class="panel-agregar">
-                    <h2>Agregar Usuario</h2>
+                    <h2 id = "label-User">Agregar Usuario</h2>
 
                     <form id="formAgregarUsuario">
                         <input type="text" name="ci" id="ci" placeholder="Cédula (8 dígitos)" maxlength="8" required>
                         <input type="text" name="nombre" id="nombre" placeholder="Nombre" required>
                         <input type="text" name="apellido" id="apellido" placeholder="Apellido" required>
                         <input type="password" name="pass" id="pass" placeholder="Contraseña" required>
-
                         <select name="rol" id="rol" required>
                             <option value="" disabled selected>Seleccione un cargo</option>
                             <option value="administrador">Administrador</option>
@@ -86,7 +85,7 @@
         
     </div>
 
-    <script src="../js/listarUsuarios.js"></script>
+    <script src="../js/administrarUsuarios.js"></script>
     <script src="../js/sesionNav.js"></script>
     <script src="../js/logout.js"></script>
     <script src="../js/componentes.js"></script>

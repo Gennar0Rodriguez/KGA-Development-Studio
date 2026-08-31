@@ -41,8 +41,8 @@ async function cargarSesion() {
             const elemNombre = document.getElementById('nombreUsuario');
             const elemRol = document.getElementById('rolUsuario');
 
-            if (elemNombre) elemNombre.textContent = usuarioActual.nombre || usuarioActual.nombre_admin;
-            if (elemRol) elemRol.textContent = usuarioActual.rol || usuarioActual.cargo;
+            if (elemNombre) elemNombre.textContent =usuarioActual.nombre_admin;
+            if (elemRol) elemRol.textContent =usuarioActual.cargo;
         }
     } catch (error) {
         console.error('Error al cargar sesión:', error);
@@ -89,10 +89,10 @@ function renderizarTablaPaginada(lista) {
     usuariosPagina.forEach((usuario) => {
         const fila = document.createElement('tr');
 
-        const ciVal = usuario.ci_admin || usuario.ci || '';
-        const nomVal = usuario.nombre_admin || usuario.nombre || '';
-        const apeVal = usuario.apellido_admin || usuario.apellido || '';
-        const cargoVal = usuario.cargo || usuario.rol || '';
+        const ciVal = usuario.ci_admin;
+        const nomVal = usuario.nombre_admin;
+        const apeVal = usuario.apellido_admin;
+        const cargoVal = usuario.cargo;
 
         const celdaCi = document.createElement('td');
         celdaCi.textContent = ciVal;
@@ -194,9 +194,9 @@ function filtrarUsuarios() {
     const busqueda = (document.getElementById('inputBuscar')?.value || '').toLowerCase().trim();
 
     const usuariosFiltrados = todosLosUsuarios.filter((asd) => { //asd puede ser cualqueir bobada lo puse para q vean
-        const ci = String(asd.ci_admin || asd.ci || '').toLowerCase();
-        const nombre = String(asd.nombre_admin || asd.nombre || '').toLowerCase();
-        const apellido = String(asd.apellido_admin || asd.apellido || '').toLowerCase();
+        const ci = String(asd.ci_admin|| '').toLowerCase();
+        const nombre = String(asd.nombre_admin|| '').toLowerCase();
+        const apellido = String(asd.apellido_admin|| '').toLowerCase();
 
         return ci.includes(busqueda) || nombre.includes(busqueda) || apellido.includes(busqueda);
     });
@@ -207,23 +207,23 @@ function filtrarUsuarios() {
 
 //sirve pa editar el usuario, basicamente pone los datos del usuario en el formulario y cambia el boton de "Añadir Usuario" a "Editar Usuario" aunque no anda (corregilo bot)
 function editarUsuario(usuario) {
-    const ciVal = usuario.ci_admin || usuario.ci || '';
-    const nomVal = usuario.nombre_admin || usuario.nombre || '';
-    const apeVal = usuario.apellido_admin || usuario.apellido || '';
-    const userVal = usuario.user_name || usuario.user || '';
-    const cargoVal = usuario.cargo || usuario.rol || '';
+    const ciVal = usuario.ci_admin;
+    const nomVal = usuario.nombre_admin;
+    const apeVal = usuario.apellido_admin;
+    const cargoVal = usuario.cargo;
 
     document.getElementById('ci').value = ciVal;
     document.getElementById('nombre').value = nomVal;
     document.getElementById('apellido').value = apeVal;
-    document.getElementById('user').value = userVal;
-
     const selectRol = document.getElementById('rol');
+    const labelUser = document.getElementById('label-User')
     if (selectRol) selectRol.value = cargoVal.toLowerCase();
 //aca hace el cambio del boton de "Añadir Usuario" a "Editar Usuario"
     const botonAgregar = document.getElementById('btn-agregar');
     if (botonAgregar) {
         botonAgregar.innerHTML = 'Editar Usuario <i class="fa-solid fa-pen"></i>';
+        labelUser.innerHTML = 'Editar Usuario'
+
     }
 }
 //esto es medio jodido pero cuando no hay campo en el formulario vuelve a poner el boton de "Añadir Usuario" y tampoco anda xd
@@ -231,17 +231,18 @@ function actualizarBotonFormulario() {
     const ci = document.getElementById('ci')?.value.trim() || '';
     const nombre = document.getElementById('nombre')?.value.trim() || '';
     const apellido = document.getElementById('apellido')?.value.trim() || '';
-    const user = document.getElementById('user')?.value.trim() || '';
-
     const botonAgregar = document.getElementById('btn-agregar');
+    const cargo = document.getElementById('rol')
+    const labelUser = document.getElementById('label-User')
     if (!botonAgregar) return;
-
     // Si TODOS los campos de texto están vacíos, vuelve a "Añadir Usuario"
-    if (ci === '' && nombre === '' && apellido === '' && user === '') {
+    if (ci === '' && nombre === '' && apellido === '') {
         botonAgregar.innerHTML = 'Añadir Usuario <i class="fa-solid fa-user-plus"></i>';
+        cargo.selectedIndex = '0';
+        labelUser.innerHTML = ("Agregar Usuario")
     }
 }
-//crea un usuario bro no ves q dice ahi 
+//crea un usuario bro no ves q dice ahi
 async function crearUsuario(event) {
     event.preventDefault();
 
@@ -328,4 +329,30 @@ async function eliminarUsuario(ci) {
     } catch (error) {
         console.error('Error al eliminar:', error);
     }
+
+
+
+    
+    function updateUsuario(ci){
+    const msg = document.getElementById('msgResultado');
+    if (msg) {
+        msg.textContent = "Procesando...";
+        msg.style.color = "#0284C7";
+    }
+
+    const datosActuales = {
+        ci: document.getElementById('ci').value,
+        nombre: document.getElementById('nombre').value,
+        apellido: document.getElementById('apellido').value,
+        pass: document.getElementById('pass').value,
+        rol: document.getElementById('rol').value
+    };
+
+    const datosNuevos = {
+        nombre: document.getElementById('nombre').value,
+        apellido: document.getElementById('apellido').value,
+        pass: document.getElementById('pass').value,
+        rol: document.getElementById('rol').value
+    };
+}
 }

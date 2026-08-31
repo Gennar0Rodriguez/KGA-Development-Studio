@@ -29,7 +29,7 @@ document.getElementById('formLogin').addEventListener('submit', async (event) =>
         console.log('Datos recibidos tras login:', resultado);
 
         // Extraer el rol (admitiendo tanto 'cargo' como 'rol')
-        const cargoUsuario = (resultado.usuario?.cargo || resultado.usuario?.rol || '').toLowerCase().trim();
+        const cargoUsuario = (resultado.usuario?.cargo).toLowerCase().trim();
 
         // Redirección directa según el rol
         if (cargoUsuario === 'administrador') {
