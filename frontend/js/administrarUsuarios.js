@@ -1,4 +1,3 @@
-let usuarioActual = null;
 let todosLosUsuarios = []; 
 let paginaActual = 1;
 const usuariosPorPagina = 10;
@@ -14,36 +13,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const formAgregarUsuario = document.getElementById('formAgregarUsuario');
     if (formAgregarUsuario) {
-        formAgregarUsuario.addEventListener('submit', guardarUsuario);
-        formAgregarUsuario.addEventListener('reset', resetearFormulario);
+        formAgregarUsuario.addEventListener('submit', guardarOCambiarUsuario);
+        // Si el usuario borra los campos a mano, detecta si vació todo
+        formAgregarUsuario.addEventListener('input', actualizarBotonFormulario);
+    }
+
+    // Listener para el botón de la X (Limpiar / Cancelar Edición)
+    const btnCancelar = document.getElementById('btn-cancelar');
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', limpiarFormulario);
     }
 });
 
-async function cargarSesion() {
-    try {
-        const response = await fetch('/kgade/KGA-Development-Studio/API/sesion.php');
-        if (!response.ok) return;
-
-        const datos = await response.json();
-
-        if (datos.autenticado) {
-            usuarioActual = datos.usuario;
-
-            const elemNombre = document.getElementById('nombreUsuario');
-            const elemRol = document.getElementById('rolUsuario');
-
-            if (elemNombre) elemNombre.textContent = usuarioActual.nombre_admin;
-            if (elemRol) elemRol.textContent = usuarioActual.cargo;
-        }
-    } catch (error) {
-        console.error('Error al cargar sesión:', error);
-    }
-}
-
+// Cargar usuarios desde la API
 async function cargarUsuarios() {
     try {
         const response = await fetch('/kgade/KGA-Development-Studio/API/usuario/usuarios.php');
-        if (!response.ok) throw new Error('Error en la respuesta del servidor');
+        if (!response.ok) throw new Error('Error al obtener respuesta de la API');
         
         todosLosUsuarios = await response.json();
         paginaActual = 1;
@@ -57,6 +43,7 @@ async function cargarUsuarios() {
     }
 }
 
+// Renderizar tabla paginada
 function renderizarTablaPaginada(lista) {
     const tbody = document.getElementById('tablaUsuariosBody');
     if (!tbody) return;
@@ -92,11 +79,11 @@ function renderizarTablaPaginada(lista) {
         celdaRol.textContent = usuario.cargo;
         fila.appendChild(celdaRol);
 
+        // Acciones
         const celdaAcciones = document.createElement('td');
 
         const botonEditar = document.createElement('button');
         botonEditar.className = 'btn-editar';
-        botonEditar.dataset.ci = usuario.ci_admin;
         botonEditar.innerHTML = '<i class="fa-solid fa-pen"></i>';
         botonEditar.style.cursor = 'pointer';
         botonEditar.style.marginRight = '5px';
@@ -104,7 +91,6 @@ function renderizarTablaPaginada(lista) {
 
         const botonEliminar = document.createElement('button');
         botonEliminar.className = 'btn-eliminar';
-        botonEliminar.dataset.ci = usuario.ci_admin;
         botonEliminar.innerHTML = '<i class="fa-solid fa-trash"></i>';
         botonEliminar.style.cursor = 'pointer';
         botonEliminar.addEventListener('click', () => eliminarUsuario(usuario.ci_admin));
@@ -119,6 +105,7 @@ function renderizarTablaPaginada(lista) {
     renderizarPaginador(lista);
 }
 
+// Paginación
 function renderizarPaginador(lista) {
     let contenedorPaginacion = document.getElementById('contenedorPaginacion');
     const seccionTabla = document.querySelector('.usuarios');
@@ -163,6 +150,7 @@ function renderizarPaginador(lista) {
     }
 }
 
+// Filtrar usuarios
 function filtrarUsuarios() {
     const busqueda = (document.getElementById('inputBuscar')?.value || '').toLowerCase().trim();
 
@@ -178,35 +166,88 @@ function filtrarUsuarios() {
     renderizarTablaPaginada(usuariosFiltrados);
 }
 
-// Carga los datos en el formulario para editar
+// Cargar los datos en el formulario para editar
 function editarUsuario(usuario) {
     modoEdicion = true;
 
     const inputCi = document.getElementById('ci');
     if (inputCi) {
         inputCi.value = usuario.ci_admin;
-        inputCi.readOnly = true; // Deshabilita la edición de la clave primaria
+        inputCi.readOnly = true; // No modificable en UI pero se envía
     }
 
-    document.getElementById('nombre').value = usuario.nombre_admin;
-    document.getElementById('apellido').value = usuario.apellido_admin;
-    document.getElementById('pass').value = ''; // Se borra por seguridad
+    const inputNombre = document.getElementById('nombre');
+    const inputApellido = document.getElementById('apellido');
+    const inputPass = document.getElementById('pass');
+    
+    if (inputNombre) inputNombre.value = usuario.nombre_admin;
+    if (inputApellido) inputApellido.value = usuario.apellido_admin;
+    
+    if (inputPass) {
+        inputPass.value = '';
+        inputPass.required = false; // Al editar la contraseña es opcional
+    }
 
     const selectRol = document.getElementById('rol');
     if (selectRol) selectRol.value = usuario.cargo.toLowerCase();
 
-    const botonAgregar = document.getElementById('btn-agregar');
     const labelUser = document.getElementById('label-User');
-    if (botonAgregar) {
-        botonAgregar.innerHTML = 'Editar Usuario <i class="fa-solid fa-pen"></i>';
-    }
-    if (labelUser) {
-        labelUser.innerHTML = 'Editar Usuario';
+    const botonAgregar = document.getElementById('btn-agregar');
+    const btnCancelar = document.getElementById('btn-cancelar');
+    
+    if (labelUser) labelUser.innerHTML = 'Editar Usuario';
+    if (botonAgregar) botonAgregar.innerHTML = '<i class="fa-solid fa-pen"></i> Editar Usuario';
+    
+    // Mostrar la X
+    if (btnCancelar) btnCancelar.style.display = 'block';
+}
+
+// Restablecer formulario a "Agregar Usuario" y vaciar campos
+function limpiarFormulario() {
+    modoEdicion = false;
+
+    const form = document.getElementById('formAgregarUsuario');
+    if (form) form.reset();
+
+    const inputCi = document.getElementById('ci');
+    if (inputCi) inputCi.readOnly = false;
+
+    const inputPass = document.getElementById('pass');
+    if (inputPass) inputPass.required = true; // Vuelve a ser obligatorio para crear
+
+    const labelUser = document.getElementById('label-User');
+    const botonAgregar = document.getElementById('btn-agregar');
+    const btnCancelar = document.getElementById('btn-cancelar');
+    const cargo = document.getElementById('rol');
+
+    if (labelUser) labelUser.innerHTML = "Agregar Usuario";
+    if (botonAgregar) botonAgregar.innerHTML = '<i class="fa-solid fa-user-plus"></i> Agregar Usuario';
+    if (cargo) cargo.selectedIndex = 0;
+
+    // Ocultar la X
+    if (btnCancelar) btnCancelar.style.display = 'none';
+
+    // Limpiar mensaje
+    const msg = document.getElementById('msgResultado');
+    if (msg) msg.textContent = '';
+}
+
+// Si se borran manualmente los datos de los inputs, vuelve a estado "Agregar"
+function actualizarBotonFormulario() {
+    const ci = document.getElementById('ci')?.value.trim() || '';
+    const nombre = document.getElementById('nombre')?.value.trim() || '';
+    const apellido = document.getElementById('apellido')?.value.trim() || '';
+    
+    if (ci === '' && nombre === '' && apellido === '') {
+        limpiarFormulario();
+    } else if (modoEdicion) {
+        const btnCancelar = document.getElementById('btn-cancelar');
+        if (btnCancelar) btnCancelar.style.display = 'block';
     }
 }
 
-// Maneja el guardado (tanto creación con POST como edición con PUT)
-async function guardarUsuario(event) {
+// Enviar formulario (POST/PUT)
+async function guardarOCambiarUsuario(event) {
     event.preventDefault();
 
     const msg = document.getElementById('msgResultado');
@@ -215,84 +256,54 @@ async function guardarUsuario(event) {
         msg.style.color = "#0284C7";
     }
 
+    const inputCi = document.getElementById('ci');
     const datos = {
-        ci: document.getElementById('ci').value,
-        nombre: document.getElementById('nombre').value,
-        apellido: document.getElementById('apellido').value,
-        pass: document.getElementById('pass').value,
-        rol: document.getElementById('rol').value
+        ci: inputCi ? inputCi.value : '',
+        nombre: document.getElementById('nombre')?.value || '',
+        apellido: document.getElementById('apellido')?.value || '',
+        pass: document.getElementById('pass')?.value || '',
+        rol: document.getElementById('rol')?.value || ''
     };
 
-    const metodo = modoEdicion ? 'PUT' : 'POST';
+    const metodoHttp = modoEdicion ? 'PUT' : 'POST';
 
     try {
         const response = await fetch('/kgade/KGA-Development-Studio/API/usuario/usuarios.php', {
-            method: metodo,
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            method: metodoHttp,
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datos)
         });
 
-        const textoRespuesta = await response.text();
-
-        let resultado;
-        try {
-            resultado = JSON.parse(textoRespuesta);
-        } catch (e) {
-            console.error("Respuesta RAW del servidor:", textoRespuesta);
-            throw new Error("El servidor no devolvió JSON válido.");
-        }
+        const resultado = await response.json();
 
         if (!response.ok) {
             if (msg) {
-                msg.textContent = resultado.error || 'No se pudo procesar la solicitud.';
+                msg.textContent = resultado.error || 'Error en la solicitud.';
                 msg.style.color = '#dc2626';
             }
             return;
         }
 
         if (msg) {
-            msg.textContent = modoEdicion ? '¡Usuario actualizado correctamente!' : '¡Usuario creado correctamente!';
+            msg.textContent = modoEdicion ? '¡Usuario actualizado correctamente!' : '¡Usuario guardado correctamente!';
             msg.style.color = '#16a34a';
         }
 
-        resetearFormulario();
+        limpiarFormulario();
         cargarUsuarios();
 
     } catch (error) {
-        console.error('Error al guardar usuario:', error);
+        console.error('Error al procesar usuario:', error);
         if (msg) {
-            msg.textContent = error.message || 'Error de conexión con el servidor.';
+            msg.textContent = 'Error de conexión con el servidor.';
             msg.style.color = '#dc2626';
         }
     }
 }
 
-// Restablece la interfaz del formulario
-function resetearFormulario() {
-    modoEdicion = false;
-    const form = document.getElementById('formAgregarUsuario');
-    if (form) form.reset();
-
-    const inputCi = document.getElementById('ci');
-    if (inputCi) inputCi.readOnly = false;
-
-    const botonAgregar = document.getElementById('btn-agregar');
-    const labelUser = document.getElementById('label-User');
-    if (botonAgregar) {
-        botonAgregar.innerHTML = 'Añadir Usuario <i class="fa-solid fa-user-plus"></i>';
-    }
-    if (labelUser) {
-        labelUser.innerHTML = 'Agregar Usuario';
-    }
-}
-
-// Elimina un usuario por su CI
+// Eliminar usuario
 async function eliminarUsuario(ci) {
-    if (!confirm(`¿Desea eliminar el usuario con CI ${ci}?`)) {
-        return;
-    }
+    if (!confirm(`¿Desea eliminar el usuario con CI ${ci}?`)) return;
 
     try {
         const response = await fetch(`/kgade/KGA-Development-Studio/API/usuario/usuarios.php?id=${ci}`, {
@@ -310,6 +321,6 @@ async function eliminarUsuario(ci) {
         cargarUsuarios();
 
     } catch (error) {
-        console.error('Error al eliminar usuario:', error);
+        console.error('Error al eliminar:', error);
     }
 }

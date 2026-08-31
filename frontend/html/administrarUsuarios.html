@@ -56,28 +56,37 @@
                     </table>
                 </section>
 
-                <aside class="panel-agregar">
-                    <h2 id = "label-User">Agregar Usuario</h2>
+        <aside class="panel-agregar">
+        <h2 id="label-User">Agregar Usuario</h2>
 
-                    <form id="formAgregarUsuario">
-                        <input type="text" name="ci" id="ci" placeholder="Cédula (8 dígitos)" maxlength="8" required>
-                        <input type="text" name="nombre" id="nombre" placeholder="Nombre" required>
-                        <input type="text" name="apellido" id="apellido" placeholder="Apellido" required>
-                        <input type="password" name="pass" id="pass" placeholder="Contraseña" required>
-                        <select name="rol" id="rol" required>
-                            <option value="" disabled selected>Seleccione un cargo</option>
-                            <option value="administrador">Administrador</option>
-                            <option value="empleado">Empleado</option>
-                        </select>
+        <form id="formAgregarUsuario">
+            <input type="text" name="ci" id="ci" placeholder="Cédula (8 dígitos)" maxlength="8" required>
+            <input type="text" name="nombre" id="nombre" placeholder="Nombre" required>
+            <input type="text" name="apellido" id="apellido" placeholder="Apellido" required>
+            <input type="password" name="pass" id="pass" placeholder="Contraseña" required>
+            
+            <select name="rol" id="rol" required>
+                <option value="" disabled selected>Seleccione un cargo</option>
+                <option value="administrador">Administrador</option>
+                <option value="empleado">Empleado</option>
+            </select>
 
-                        <button type="submit" class="btn-agregar" id="btn-agregar">
-                            <i class="fa-solid fa-user-plus"></i>
-                            Agregar Usuario
-                        </button>
-                    </form>
+            <!-- Contenedor flexible para los botones -->
+            <div style="display: flex; gap: 8px; width: 100%;">
+                <button type="submit" class="btn-agregar" id="btn-agregar" style="flex: 1;">
+                    <i class="fa-solid fa-user-plus"></i>
+                    Agregar Usuario
+                </button>
+                
+                <!-- Botón con la X para limpiar/cancelar edición (Oculto por defecto) -->
+                <button type="button" id="btn-cancelar" style="display: none; background-color: #ef4444; color: white; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-size: 1rem;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </form>
 
-                    <p id="msgResultado" style="margin-top: 15px; font-weight: bold; text-align: center;"></p>
-                </aside>
+        <p id="msgResultado" style="margin-top: 15px; font-weight: bold; text-align: center;"></p>
+    </aside>
 
             </div>
 
