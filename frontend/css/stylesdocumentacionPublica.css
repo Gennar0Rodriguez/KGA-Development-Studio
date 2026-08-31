@@ -1,6 +1,7 @@
 body {
     font-family: "Lexend", sans-serif;
     background-color: #ffffff;
+    margin: 0;
 }
 
 header {
@@ -14,6 +15,17 @@ header img {
     width: 250px;
 }
 
+header h1 {
+    text-align: center;
+    margin: 0;
+}
+
+hr { 
+    border: none; 
+    height: 10px; 
+    background-color: rgb(0, 255, 221); 
+    margin: 0;  
+}
 
 .layout {
     display: flex;
@@ -28,7 +40,6 @@ header img {
     padding: 20px;
     display: flex;
     flex-direction: column;
-
     margin: 20px;
 }
 
@@ -36,21 +47,18 @@ header img {
     display: flex;
     flex-direction: column;
     gap: 10px;
-
     margin-top: 40px;
 }
 
 .sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     text-decoration: none;
-
     color: #555;
-
     padding: 12px 15px;
-
     border-radius: 12px;
-
     transition: 0.2s;
-
     font-weight: 500;
 }
 
@@ -61,47 +69,21 @@ header img {
 
 .sidebar nav a.active {
     background: #E0F2FE;
-
     color: #0284C7;
-
     font-weight: bold;
 }
 
-
 .usuario {
     margin-top: auto;
-
     display: flex;
     align-items: center;
-
     gap: 10px;
 }
 
 .usuario img {
     width: 40px;
     height: 40px;
-
     border-radius: 50%;
-}
-
-.sidebar nav a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-
-header h1 {
-    text-align: center;
-    margin: 0;
-}
-
-
-hr { 
-    border: none; 
-    height: 10px; 
-    background-color: rgb(0, 255, 221); 
-    margin: 0;  
 }
 
 main {
@@ -116,30 +98,23 @@ main h2 {
 .buscador {
     display: flex;
     gap: 10px;
-
     margin-bottom: 25px;
 }
 
 .buscador input {
     flex: 1;
-
     padding: 12px;
-
     border: 1px solid #ccc;
     border-radius: 10px;
-
     font-family: "Lexend", sans-serif;
 }
 
 .buscador button {
     padding: 12px 18px;
-
     border: none;
     border-radius: 10px;
-
     background-color: #0ea5e9;
     color: white;
-
     cursor: pointer;
 }
 
@@ -150,23 +125,17 @@ main h2 {
 .categorias {
     display: flex;
     gap: 15px;
-
     margin-bottom: 30px;
-
     flex-wrap: wrap;
 }
 
 .categorias button {
     background-color: #0ea5e9;
     color: white;
-
     border: none;
     border-radius: 20px;
-
     padding: 10px 20px;
-
     cursor: pointer;
-
     transition: 0.2s;
 }
 
@@ -176,23 +145,16 @@ main h2 {
 
 .contenedor-documentos {
     display: grid;
-
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-
     gap: 25px;
 }
 
 .card-documento {
     background-color: white;
-
     border-radius: 15px;
-
     padding: 20px;
-
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-
     transition: 0.3s;
-
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -200,7 +162,6 @@ main h2 {
 
 .card-documento:hover {
     transform: translateY(-5px);
-
     box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
@@ -221,42 +182,101 @@ main h2 {
 .acciones button {
     width: 45px;
     height: 45px;
-
     border: none;
     border-radius: 12px;
-
     color: white;
-
     cursor: pointer;
-
     font-size: 18px;
-
     transition: 0.3s;
 }
 
-.btn-ver {
+.btn-ver, .btn-descargar, .btn-compartir {
     background-color: #0ea5e9;
 }
 
-.btn-ver:hover {
+.btn-ver:hover, .btn-descargar:hover, .btn-compartir:hover {
     background-color: #0284c7;
     transform: translateY(-2px);
 }
 
-.btn-descargar {
-    background-color: #0ea5e9;
-}
+/* ==========================================
+   SECCIÓN RESPONSIVE (Máximo 768px)
+   ========================================== */
 
-.btn-descargar:hover {
-    background-color: #0284c7;
-    transform: translateY(-2px);
-}
+@media (max-width: 768px) {
+    /* Reorganización del Header a una sola columna centrada */
+    header {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 15px;
+        padding: 15px;
+    }
 
-.btn-compartir {
-    background-color: #0ea5e9;
-}
+    header img {
+        width: 180px;
+    }
 
-.btn-compartir:hover {
-    background-color: #0284c7;
-    transform: translateY(-2px);
+    /* Cambio de Layout de filas a columna */
+    .layout {
+        flex-direction: column;
+    }
+
+    /* Ajustes del Sidebar para móviles */
+    .sidebar {
+        width: auto;
+        height: auto;
+        margin: 15px;
+        padding: 15px;
+    }
+
+    .sidebar nav {
+        margin-top: 10px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .sidebar nav a {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .usuario {
+        margin-top: 15px;
+        justify-content: center;
+    }
+
+    /* Reducción del padding en el contenido principal */
+    main {
+        padding: 15px;
+    }
+
+    /* Buscador apilado si la pantalla es muy estrecha */
+    .buscador {
+        flex-direction: column;
+    }
+
+    .buscador button {
+        width: 100%;
+    }
+
+    /* Ajuste de categorías */
+    .categorias {
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .categorias button {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+
+    /* Tarjetas adaptadas a pantallas pequeñas */
+    .contenedor-documentos {
+        grid-template-columns: 1fr;
+    }
+
+    .acciones {
+        justify-content: space-around;
+    }
 }
