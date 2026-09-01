@@ -63,11 +63,11 @@
     );
 
 INSERT INTO administrativo (ci_admin, nombre_admin, apellido_admin, contraseña_admin, cargo) VALUES
-('11111111', 'Ezequiel', 'Matta', 'AdminSeguro123', 'administrador'),
-('22222222', 'Laura', 'Gomez', 'EmpPass2026', 'empleado'),
-('33333333', 'Carlos', 'Perez', 'PerezC456', 'empleado'),
-('44444444', 'Ana', 'Rios', 'RiosAna789', 'empleado'),
-('55555555', 'Jorge', 'Sosa', 'JorgeSosa321', 'empleado');
+('11111111', 'Ezequiel', 'Matta', 'ari', 'administrador'),
+('22222222', 'Laura', 'Gomez', '123', 'empleado'),
+('33333333', 'Carlos', 'Perez', '456', 'empleado'),
+('44444444', 'Ana', 'Rios', '789', 'empleado'),
+('55555555', 'Jorge', 'Sosa', 'jorge', 'empleado');
 
 INSERT INTO categoria (id_categoria, nombre_cat) VALUES
 ('C1', 'Recursos Humanos'),
