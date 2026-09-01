@@ -1,4 +1,4 @@
-  CREATE DATABASE Proyecto;
+    CREATE DATABASE Proyecto;
     USE Proyecto;
 
     CREATE TABLE administrativo (
@@ -28,7 +28,7 @@
         hora TIME NOT NULL,
         fecha DATE NOT NULL,
         PRIMARY KEY (ci_admin, id_documentos),
-        FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin),
+        FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin) ON DELETE CASCADE,
         FOREIGN KEY (id_documentos) REFERENCES documentos(id_documentos)
     );
 
