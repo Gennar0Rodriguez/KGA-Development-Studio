@@ -48,9 +48,7 @@ class Usuario
         return $usuario ?: null;
     }
 
-    // Corregido: SQL formateado adecuadamente y asignación correcta de parámetros
     public function editarUsuario(string $ci, string $nombre, string $apellido, ?string $pass, string $rol): bool {
-        // Si se proporcionó una contraseña nueva (no está vacía ni es null)
         if (!empty($pass)) {
             $sql = 'UPDATE administrativo 
                     SET nombre_admin = :nombre, 
@@ -62,7 +60,6 @@ class Usuario
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindParam(':pass', $pass);
         } else {
-            // Si viene vacía, NO actualizamos la contraseña
             $sql = 'UPDATE administrativo 
                     SET nombre_admin = :nombre, 
                         apellido_admin = :apellido, 
@@ -77,6 +74,13 @@ class Usuario
         $sentencia->bindParam(':apellido', $apellido);
         $sentencia->bindParam(':rol', $rol);
 
+        return $sentencia->execute();
+    }
+
+    public function eliminar(string $ci): bool {
+        $sql = 'DELETE FROM administrativo WHERE ci_admin = :ci';
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->bindParam(':ci', $ci);
         return $sentencia->execute();
     }
 }
