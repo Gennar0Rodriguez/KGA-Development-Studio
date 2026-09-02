@@ -49,28 +49,34 @@ class Usuario
     }
 
     // Corregido: SQL formateado adecuadamente y asignación correcta de parámetros
-    public function editarUsuario(string $ci, string $nombre, string $apellido, string $pass, string $rol): bool {
-        $sql = 'UPDATE administrativo 
-                SET nombre_admin = :nombre, 
-                    apellido_admin = :apellido, 
-                    contraseña_admin = :pass, 
-                    cargo = :rol 
-                WHERE ci_admin = :ci';
+    public function editarUsuario(string $ci, string $nombre, string $apellido, ?string $pass, string $rol): bool {
+        // Si se proporcionó una contraseña nueva (no está vacía ni es null)
+        if (!empty($pass)) {
+            $sql = 'UPDATE administrativo 
+                    SET nombre_admin = :nombre, 
+                        apellido_admin = :apellido, 
+                        contraseña_admin = :pass, 
+                        cargo = :rol 
+                    WHERE ci_admin = :ci';
 
-        $sentencia = $this->conexion->prepare($sql);
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->bindParam(':pass', $pass);
+        } else {
+            // Si viene vacía, NO actualizamos la contraseña
+            $sql = 'UPDATE administrativo 
+                    SET nombre_admin = :nombre, 
+                        apellido_admin = :apellido, 
+                        cargo = :rol 
+                    WHERE ci_admin = :ci';
+
+            $sentencia = $this->conexion->prepare($sql);
+        }
+
         $sentencia->bindParam(':ci', $ci);
         $sentencia->bindParam(':nombre', $nombre);
         $sentencia->bindParam(':apellido', $apellido);
-        $sentencia->bindParam(':pass', $pass);
         $sentencia->bindParam(':rol', $rol);
-        return $sentencia->execute();
-    }
 
-    // Agregado: método para eliminar usuario
-    public function eliminar(string $ci): bool {
-        $sql = 'DELETE FROM administrativo WHERE ci_admin = :ci';
-        $sentencia = $this->conexion->prepare($sql);
-        $sentencia->bindParam(':ci', $ci);
         return $sentencia->execute();
     }
 }

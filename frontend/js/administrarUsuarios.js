@@ -297,10 +297,10 @@ async function guardarOCambiarUsuario(event) {
 
     const inputCi = document.getElementById('ci');
     const datos = {
-        ci: inputCi ? inputCi.value : '',
-        nombre: document.getElementById('nombre')?.value || '',
-        apellido: document.getElementById('apellido')?.value || '',
-        pass: document.getElementById('pass')?.value || '',
+        ci: inputCi ? inputCi.value.trim() : '',
+        nombre: document.getElementById('nombre')?.value.trim() || '',
+        apellido: document.getElementById('apellido')?.value.trim() || '',
+        pass: document.getElementById('pass')?.value.trim() || '',
         rol: document.getElementById('rol')?.value || ''
     };
 

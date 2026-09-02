@@ -49,32 +49,31 @@ try {
             }
             exit;
 
-        case 'PUT':
-            // Recibir y actualizar los datos del usuario
-            $datos = json_decode(file_get_contents('php://input'), true);
+    case 'PUT':
+        $datos = json_decode(file_get_contents('php://input'), true);
 
-            $ci = $datos['ci'] ?? null;
-            $nombre = $datos['nombre'] ?? null;
-            $apellido = $datos['apellido'] ?? null;
-            $password = $datos['pass'] ?? null;
-            $rol = $datos['rol'] ?? null;
+        $ci = $datos['ci'] ?? null;
+        $nombre = $datos['nombre'] ?? null;
+        $apellido = $datos['apellido'] ?? null;
+        $password = !empty($datos['pass']) ? trim($datos['pass']) : null; // Si está vacío, pasa a ser null
+        $rol = $datos['rol'] ?? null;
 
-            if (!$ci) {
-                http_response_code(400);
-                echo json_encode(['error' => 'La CI es obligatoria']);
-                exit;
-            }
-
-            $resultado = $usuario->editarUsuario($ci, $nombre, $apellido, $password, $rol);
-
-            if ($resultado) {
-                http_response_code(200);
-                echo json_encode(['mensaje' => 'Usuario actualizado correctamente']);
-            } else {
-                http_response_code(500);
-                echo json_encode(['error' => 'No se pudo actualizar el usuario']);
-            }
+        if (!$ci) {
+            http_response_code(400);
+            echo json_encode(['error' => 'La CI es obligatoria']);
             exit;
+        }
+
+        $resultado = $usuario->editarUsuario($ci, $nombre, $apellido, $password, $rol);
+
+        if ($resultado) {
+            http_response_code(200);
+            echo json_encode(['mensaje' => 'Usuario actualizado correctamente']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'No se pudo actualizar el usuario']);
+        }
+        exit;
 
     case 'DELETE':
                 if ($id !== null) {
