@@ -285,3 +285,17 @@ main{
     cursor:pointer;
     transition:0.3s;
 }
+
+.tabla-usuarios tbody tr {
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.tabla-usuarios tbody tr:hover {
+    background-color: #8ad0ff; 
+    cursor: pointer;
+}
+
+.btn-editar:hover, 
+.btn-eliminar:hover {
+    transform: scale(1.08);
+}
