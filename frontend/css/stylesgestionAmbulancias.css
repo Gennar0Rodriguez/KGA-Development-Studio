@@ -27,7 +27,7 @@ header h4 {
 hr { 
     border: none; 
     height: 10px; 
-    background-color: rgb(0, 255, 221); 
+    background-color: #ADE1F9; 
     margin: 0;  
 }
 
@@ -91,7 +91,7 @@ hr {
 
 .card-ambulancia {
     width: 280px;
-    background-color: #2596be;
+    background-color:#8bb4c7b9;
     padding: 15px;
     border-radius: 12px;
 
@@ -185,7 +185,7 @@ hr {
     transition: 0.2s;
 }
 .btn-editar {
-    background-color: #00b828;
+    background-color: #62966f;
     color: white;
 }
 
@@ -194,7 +194,7 @@ hr {
 }
 
 .btn-eliminar {
-    background-color: #810000;
+    background-color: #814949;
     color: white;
 }
 
