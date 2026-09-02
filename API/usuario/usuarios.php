@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
@@ -74,21 +76,34 @@ try {
             }
             exit;
 
-        case 'DELETE':
-            if ($id !== null) {
-                $resultado = $usuario->eliminar($id);
-                if ($resultado) {
-                    http_response_code(200);
-                    echo json_encode(['mensaje' => 'Usuario eliminado correctamente']);
+    case 'DELETE':
+                if ($id !== null) {
+                    // Obtener la CI de la sesión en PHP
+                    $ciSesionActual = $_SESSION['usuario']['ci_admin'] 
+                        ?? $_SESSION['ci_admin'] 
+                        ?? $_SESSION['ci'] 
+                        ?? null;
+
+                    // VALIDACIÓN: Impedir que el usuario elimine su propia cuenta en uso
+                    if ($ciSesionActual !== null && (string)$id === (string)$ciSesionActual) {
+                        http_response_code(403);
+                        echo json_encode(['error' => 'No puedes eliminar la cuenta con la que tienes la sesión iniciada.']);
+                        exit;
+                    }
+
+                    $resultado = $usuario->eliminar($id);
+                    if ($resultado) {
+                        http_response_code(200);
+                        echo json_encode(['mensaje' => 'Usuario eliminado correctamente']);
+                    } else {
+                        http_response_code(500);
+                        echo json_encode(['error' => 'No se pudo eliminar el usuario']);
+                    }
                 } else {
-                    http_response_code(500);
-                    echo json_encode(['error' => 'No se pudo eliminar el usuario']);
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Se requiere la CI del usuario']);
                 }
-            } else {
-                http_response_code(400);
-                echo json_encode(['error' => 'Se requiere la CI del usuario']);
-            }
-            exit;
+                exit;
     }
 } catch (PDOException $e) {
     http_response_code(500);

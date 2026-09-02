@@ -1,9 +1,14 @@
+let usuarioActual = null;
 let todosLosUsuarios = []; 
 let paginaActual = 1;
 const usuariosPorPagina = 10;
 let modoEdicion = false;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Cargar primero la sesión activa
+    await cargarSesion();
+    
+    // 2. Cargar los usuarios en la tabla
     cargarUsuarios();
 
     const inputBuscar = document.getElementById('inputBuscar');
@@ -14,16 +19,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const formAgregarUsuario = document.getElementById('formAgregarUsuario');
     if (formAgregarUsuario) {
         formAgregarUsuario.addEventListener('submit', guardarOCambiarUsuario);
-        // Si el usuario borra los campos a mano, detecta si vació todo
         formAgregarUsuario.addEventListener('input', actualizarBotonFormulario);
     }
 
-    // Listener para el botón de la X (Limpiar / Cancelar Edición)
     const btnCancelar = document.getElementById('btn-cancelar');
     if (btnCancelar) {
         btnCancelar.addEventListener('click', limpiarFormulario);
     }
 });
+
+// Cargar sesión del servidor
+async function cargarSesion() {
+    try {
+        const response = await fetch('/kgade/KGA-Development-Studio/API/sesion.php');
+        if (!response.ok) return;
+
+        const datos = await response.json();
+
+        if (datos.autenticado) {
+            usuarioActual = datos.usuario;
+
+            const elemNombre = document.getElementById('nombreUsuario');
+            const elemRol = document.getElementById('rolUsuario');
+
+            if (elemNombre) elemNombre.textContent = usuarioActual.nombre_admin;
+            if (elemRol) elemRol.textContent = usuarioActual.cargo;
+        }
+    } catch (error) {
+        console.error('Error al cargar sesión:', error);
+    }
+}
+
+// Devuelve la CI de la sesión activa priorizando el objeto cargado desde la API
+function obtenerCiSesionActual() {
+    return usuarioActual?.ci_admin || 
+           usuarioActual?.ci || 
+           sessionStorage.getItem('ci_admin') || 
+           sessionStorage.getItem('ci') || 
+           document.body.dataset.ciUsuario || 
+           null;
+}
 
 // Cargar usuarios desde la API
 async function cargarUsuarios() {
@@ -59,6 +94,7 @@ function renderizarTablaPaginada(lista) {
     const inicio = (paginaActual - 1) * usuariosPorPagina;
     const fin = inicio + usuariosPorPagina;
     const usuariosPagina = lista.slice(inicio, fin);
+    const ciSesion = obtenerCiSesionActual();
 
     usuariosPagina.forEach((usuario) => {
         const fila = document.createElement('tr');
@@ -92,8 +128,17 @@ function renderizarTablaPaginada(lista) {
         const botonEliminar = document.createElement('button');
         botonEliminar.className = 'btn-eliminar';
         botonEliminar.innerHTML = '<i class="fa-solid fa-trash"></i>';
-        botonEliminar.style.cursor = 'pointer';
-        botonEliminar.addEventListener('click', () => eliminarUsuario(usuario.ci_admin));
+
+        // Si es el usuario en sesión, deshabilitar el botón visualmente
+        if (ciSesion && String(usuario.ci_admin).trim() === String(ciSesion).trim()) {
+            botonEliminar.disabled = true;
+            botonEliminar.style.opacity = '0.4';
+            botonEliminar.style.cursor = 'not-allowed';
+            botonEliminar.title = 'No puedes eliminar tu propia cuenta en uso';
+        } else {
+            botonEliminar.style.cursor = 'pointer';
+            botonEliminar.addEventListener('click', () => eliminarUsuario(usuario.ci_admin));
+        }
 
         celdaAcciones.appendChild(botonEditar);
         celdaAcciones.appendChild(botonEliminar);
@@ -173,7 +218,7 @@ function editarUsuario(usuario) {
     const inputCi = document.getElementById('ci');
     if (inputCi) {
         inputCi.value = usuario.ci_admin;
-        inputCi.readOnly = true; // No modificable en UI pero se envía
+        inputCi.readOnly = true;
     }
 
     const inputNombre = document.getElementById('nombre');
@@ -185,7 +230,7 @@ function editarUsuario(usuario) {
     
     if (inputPass) {
         inputPass.value = '';
-        inputPass.required = false; // Al editar la contraseña es opcional
+        inputPass.required = false;
     }
 
     const selectRol = document.getElementById('rol');
@@ -197,12 +242,10 @@ function editarUsuario(usuario) {
     
     if (labelUser) labelUser.innerHTML = 'Editar Usuario';
     if (botonAgregar) botonAgregar.innerHTML = '<i class="fa-solid fa-pen"></i> Editar Usuario';
-    
-    // Mostrar la X
     if (btnCancelar) btnCancelar.style.display = 'block';
 }
 
-// Restablecer formulario a "Agregar Usuario" y vaciar campos
+// Restablecer formulario
 function limpiarFormulario() {
     modoEdicion = false;
 
@@ -213,7 +256,7 @@ function limpiarFormulario() {
     if (inputCi) inputCi.readOnly = false;
 
     const inputPass = document.getElementById('pass');
-    if (inputPass) inputPass.required = true; // Vuelve a ser obligatorio para crear
+    if (inputPass) inputPass.required = true;
 
     const labelUser = document.getElementById('label-User');
     const botonAgregar = document.getElementById('btn-agregar');
@@ -223,16 +266,12 @@ function limpiarFormulario() {
     if (labelUser) labelUser.innerHTML = "Agregar Usuario";
     if (botonAgregar) botonAgregar.innerHTML = '<i class="fa-solid fa-user-plus"></i> Agregar Usuario';
     if (cargo) cargo.selectedIndex = 0;
-
-    // Ocultar la X
     if (btnCancelar) btnCancelar.style.display = 'none';
 
-    // Limpiar mensaje
     const msg = document.getElementById('msgResultado');
     if (msg) msg.textContent = '';
 }
 
-// Si se borran manualmente los datos de los inputs, vuelve a estado "Agregar"
 function actualizarBotonFormulario() {
     const ci = document.getElementById('ci')?.value.trim() || '';
     const nombre = document.getElementById('nombre')?.value.trim() || '';
@@ -303,6 +342,14 @@ async function guardarOCambiarUsuario(event) {
 
 // Eliminar usuario
 async function eliminarUsuario(ci) {
+    const ciSesion = obtenerCiSesionActual();
+
+    // Validar en el frontend antes de enviar
+    if (ciSesion && String(ci).trim() === String(ciSesion).trim()) {
+        alert("No puedes eliminar la cuenta con la que tienes la sesión iniciada.");
+        return;
+    }
+
     if (!confirm(`¿Desea eliminar el usuario con CI ${ci}?`)) return;
 
     try {
