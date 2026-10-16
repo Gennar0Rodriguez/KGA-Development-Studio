@@ -199,6 +199,12 @@ main h2 {
     transform: translateY(-2px);
 }
 
+.btn-categoria.active {
+    background-color: #0284C7;
+    color: #ffffff;
+    font-weight: bold;
+}
+
 /* ==========================================
    SECCIÓN RESPONSIVE (Máximo 768px)
    ========================================== */

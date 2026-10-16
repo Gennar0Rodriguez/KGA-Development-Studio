@@ -299,3 +299,9 @@ main{
 .btn-eliminar:hover {
     transform: scale(1.08);
 }
+
+.btn-agregar:hover{
+    background:#00aaff;
+    color:white;
+        transform: scale(1.04);
+}

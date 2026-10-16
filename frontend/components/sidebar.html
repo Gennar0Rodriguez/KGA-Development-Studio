@@ -1,27 +1,37 @@
-<!-- Sidebar default asi no copio y pego codigo como un botardo -->
 <aside class="sidebar">
     <div class="logo">
-        <h2>Hospital De Clinicas</h2>
+        <h2>Hospital De Clínicas</h2>
     </div>
 
     <nav>
         <a href="gestionAmbulancias.html">
-            <i class="fa-solid fa-truck-medical"></i> Ambulancias
+            <i class="fa-solid fa-truck-medical"></i>
+            <span>Ambulancias</span>
         </a>
 
         <a href="documentosAdmin.html" id="navDocumentos">
-            <i class="fa-solid fa-file-lines"></i> Documentación
+            <i class="fa-solid fa-file-lines"></i>
+            <span>Documentación</span>
         </a>
 
-        <a href="notificaciones.html" >
-            <i class="fa-solid fa-bell"></i>
-            Notificaciones
-            <span class="badge">3</span>
+        <a href="notificaciones.html" class="nav-notificaciones">
+            <span class="icono-notificacion">
+                <i class="fa-solid fa-bell"></i>
+
+                <span
+                    id="badgeNotificaciones"
+                    class="badge-notificacion"
+                    aria-label="Notificaciones sin leer"
+                    style="display: none;"
+                ></span>
+            </span>
+
+            <span>Notificaciones</span>
         </a>
 
         <a href="administrarUsuarios.html" id="navUsuarios">
             <i class="fa-solid fa-user-plus"></i>
-            Administrar Usuarios
+            <span>Administrar Usuarios</span>
         </a>
     </nav>
 
@@ -39,4 +49,54 @@
         Cerrar Sesión
     </button>
 </aside>
+
+<style>
+    .sidebar .nav-notificaciones {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sidebar .icono-notificacion {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+    }
+
+    .sidebar .badge-notificacion {
+        position: absolute;
+        top: -7px;
+        right: -10px;
+        z-index: 2;
+
+        min-width: 19px;
+        height: 19px;
+        padding: 0 5px;
+        box-sizing: border-box;
+
+        display: none;
+        align-items: center;
+        justify-content: center;
+
+        border: 2px solid #ffffff;
+        border-radius: 999px;
+
+        background-color: #e53935;
+        color: #ffffff;
+
+        font-family: Arial, sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1;
+        white-space: nowrap;
+
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+</style>
+
 <script src="../js/logout.js"></script>
+```

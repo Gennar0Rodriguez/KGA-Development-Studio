@@ -54,17 +54,18 @@
         <h2>Acceda a la información del Hospital de Clínicas de forma digital</h2>
     
         <div class="buscador">
-            <input type="text" placeholder="Buscar documento...">
-            <button><i class="fa-solid fa-magnifying-glass"></i></button>
+            <input type="text" id="inputBuscarPublico" placeholder="Buscar documento por título o descripción...">
         </div>
     
         <h3>Categorías</h3>
     
-        <div class="categorias">
-            <button>Protocolos</button>
-            <button>Pacientes</button>
-            <button>Traslados</button>
-            <button>Emergencias</button>
+        <div class="categorias" id="contenedorCategorias">
+            <button class="btn-categoria active" data-cat="todas">Todas</button>
+            <button class="btn-categoria" data-cat="C1">Protocolos / RRHH</button>
+            <button class="btn-categoria" data-cat="C2">Logística y Flota</button>
+            <button class="btn-categoria" data-cat="C3">Calidad y Normativas</button>
+            <button class="btn-categoria" data-cat="C4">Administración</button>
+            <button class="btn-categoria" data-cat="C5">Atención al Paciente</button>
         </div>
     
         <section class="contenedor-documentos">
@@ -117,5 +118,7 @@
     
     </main>
     </div>
+    <script src="../js/modalSubirDocumento.js"></script>
 </body>
+
 </html>

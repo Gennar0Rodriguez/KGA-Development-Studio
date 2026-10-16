@@ -17,6 +17,9 @@ if (contenedorSidebar) {
             });
 
             aplicarPermisosSidebar();
+
+            // Evento para avisar que la sidebar y la campanita se cargaron
+            document.dispatchEvent(new CustomEvent("sidebarCargada"));
         })
         .catch(err => console.error("Error cargando la sidebar:", err));
 }
@@ -52,14 +55,14 @@ async function aplicarPermisosSidebar() {
         }
 
         const usuario = datos.usuario || {};
-        const cargo = (usuario.cargo).toString().toLowerCase().trim();
+        const cargo = (usuario.cargo || '').toString().toLowerCase().trim();
 
         const lblRol = document.getElementById('lblRolUsuario');
         const lblNombre = document.getElementById('lblNombreUsuario');
 
         if (lblRol) lblRol.textContent = cargo.toUpperCase();
         if (lblNombre) {
-            lblNombre.textContent = usuario.nombre_admin;
+            lblNombre.textContent = usuario.nombre_admin || 'Usuario';
         }
 
         const esAdmin = (cargo === 'administrador');

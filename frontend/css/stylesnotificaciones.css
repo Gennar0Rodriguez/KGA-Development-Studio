@@ -1,87 +1,144 @@
-.notificaciones {
-    width: 90%;
+/* Contenedor principal de las notificaciones */
+.notificaciones,
+.lista-notificaciones {
+    width: 100%;
     max-width: 900px;
-
-    margin: 30px auto;
+    margin: 24px auto;
+    box-sizing: border-box;
 }
 
-.notificacion {
-    background: white;
+/* Tarjeta individual */
+.card-notificacion {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 
-    padding: 20px;
+    background: #ffffff;
+    padding: 22px;
+    margin-bottom: 16px;
 
-    margin-bottom: 15px;
-
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #719779;
     border-radius: 12px;
 
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 
-    transition: 0.3s;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.notificacion:hover {
+.card-notificacion:hover {
     transform: translateY(-2px);
-
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);
 }
 
-.badge {
-    margin-left: auto;
-
-    background: red;
-
-    color: white;
-
-    width: 22px;
-    height: 22px;
-
-    border-radius: 50%;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 12px;
+.card-notificacion h3 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 1.1rem;
+    font-weight: 650;
 }
 
+.card-notificacion p {
+    margin: 0;
+    color: #4b5563;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.fecha-notificacion {
+    display: block;
+    color: #6b7280;
+    font-size: 0.8rem;
+}
+
+/* Botón de acción */
 .btn-leido {
+    align-self: flex-start;
+
     background-color: #719779;
-    color: white;
+    color: #ffffff;
 
     border: none;
-    border-radius: 12px;
+    border-radius: 8px;
 
-    padding: 10px 20px;
+    padding: 10px 16px;
 
     font-size: 0.9rem;
-    font-weight: bold;
+    font-weight: 600;
 
     cursor: pointer;
-
-    transition: all 0.3s ease;
-
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.2s ease;
 }
 
+.btn-leido:hover {
+    background-color: #587e60;
+}
+
+.btn-leido:focus-visible {
+    outline: 3px solid #a7c9ae;
+    outline-offset: 3px;
+}
+
+/* Mensaje cuando no hay notificaciones */
+.sin-notificaciones {
+    margin-top: 20px;
+    padding: 24px;
+
+    background: #f9fafb;
+    border: 1px dashed #d1d5db;
+    border-radius: 10px;
+
+    color: #6b7280;
+    text-align: center;
+}
+
+/* Botón de cerrar sesión */
 .btn-logout {
     margin-top: auto;
     width: 100%;
     padding: 10px;
+
     background-color: transparent;
     color: #ef4444;
+
     border: 1px solid #ef4444;
     border-radius: 6px;
+
     font-size: 0.95rem;
     font-weight: 600;
+
     cursor: pointer;
+
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+
     transition: all 0.2s ease;
 }
 
 .btn-logout:hover {
     background-color: #ef4444;
     color: #ffffff;
+}
+
+/* El contador de la barra lateral se define en sidebar.html,
+   porque esa barra se carga en distintas páginas. */
+
+@media (max-width: 600px) {
+    .notificaciones,
+    .lista-notificaciones {
+        width: 100%;
+        margin: 16px auto;
+    }
+
+    .card-notificacion {
+        padding: 16px;
+    }
+
+    .btn-leido {
+        width: 100%;
+    }
 }
