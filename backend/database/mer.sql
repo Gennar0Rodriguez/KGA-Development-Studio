@@ -62,6 +62,24 @@
         FOREIGN KEY (id_encuesta) REFERENCES encuesta(id_encuesta)
     );
 
+    CREATE TABLE notificacion (
+        id_notificacion VARCHAR(8) PRIMARY KEY NOT NULL,
+        titulo_not VARCHAR(50) NOT NULL,
+        descripcion_not VARCHAR(100)
+    );
+
+    CREATE TABLE recibe (
+        ci_admin VARCHAR(8) NOT NULL,
+        id_notificacion VARCHAR(8) NOT NULL,
+        ci_emisor VARCHAR(8) ,
+        ci_receptor VARCHAR(8) ,
+        fecha_envio VARCHAR(50) NOT NULL,
+        leido BOOLEAN NOT NULL,
+        PRIMARY KEY (ci_admin, id_notificacion),
+        FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin) ON DELETE CASCADE,
+        FOREIGN KEY (id_notificacion) REFERENCES notificacion(id_notificacion) ON DELETE CASCADE
+    );
+
 INSERT INTO administrativo (ci_admin, nombre_admin, apellido_admin, contraseña_admin, cargo) VALUES
 ('11111111', 'Ezequiel', 'Matta', 'ari', 'administrador'),
 ('22222222', 'Laura', 'Gomez', '123', 'empleado'),

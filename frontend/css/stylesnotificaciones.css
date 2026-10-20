@@ -124,6 +124,43 @@
     color: #ffffff;
 }
 
+.sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Espacio uniforme entre el icono y el texto */
+    position: relative;
+}
+
+.icono-notificacion {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; /* Ancho fijo igual al de los demás iconos */
+    text-align: center;
+}
+
+.sidebar nav a i {
+    font-size: 1.1rem; /* Asegura que la campana tenga el mismo tamaño que los iconos de arriba y abajo */
+}
+
+.badge-notificacion {
+    position: absolute;
+    top: -8px;
+    right: -10px;
+    background-color: #e74c3c;
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: bold;
+    border-radius: 50%;
+    padding: 1px 4px;
+    min-width: 15px;
+    height: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
 /* El contador de la barra lateral se define en sidebar.html,
    porque esa barra se carga en distintas páginas. */
 

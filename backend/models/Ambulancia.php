@@ -10,32 +10,33 @@ class Ambulancia
         $this->conexion = Database::getInstancia()->getConexion();
     }
 
-    public function obtenerTodas(): array
-    {
+    public function obtenerTodas(): array {
         $sql = "SELECT matricula, modelo, capacidad, tipo_vehiculo, camilla FROM vehiculo";
-        $stmt = $this->conexion->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->execute();
+        return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function crear(string $matricula, string $modelo, string $capacidad, string $tipo, bool $camilla): bool
-    {
-        $sql = "INSERT INTO vehiculo (matricula, modelo, capacidad, tipo_vehiculo, camilla) 
-                VALUES (:mat, :mod, :cap, :tipo, :cam)";
-        $stmt = $this->conexion->prepare($sql);
-        return $stmt->execute([
-            ':mat' => $matricula,
-            ':mod' => $modelo,
-            ':cap' => $capacidad,
-            ':tipo' => $tipo,
-            ':cam' => $camilla ? 1 : 0
-        ]);
+    public function crear(string $matricula, string $modelo, string $capacidad, string $tipo, bool $camilla): bool {
+        $sql = 'INSERT INTO vehiculo (matricula, modelo, capacidad, tipo_vehiculo, camilla)
+                VALUES (:mat, :mod, :cap, :tipo, :cam)';
+
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->bindParam(':mat', $matricula);
+        $sentencia->bindParam(':mod', $modelo);
+        $sentencia->bindParam(':cap', $capacidad);
+        $sentencia->bindParam(':tipo', $tipo);
+
+        $camilla = $camilla ? 1 : 0;
+        $sentencia->bindParam(':cam', $camilla, PDO::PARAM_INT);
+
+        return $sentencia->execute();
     }
 
-    public function eliminar(string $matricula): bool
-    {
-        $sql = "DELETE FROM vehiculo WHERE matricula = :mat";
-        $stmt = $this->conexion->prepare($sql);
-        return $stmt->execute([':mat' => $matricula]);
+    public function eliminar(string $matricula): bool {
+        $sql = 'DELETE FROM vehiculo WHERE matricula = :mat';
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->bindParam(':mat', $matricula);
+        return $sentencia->execute();
     }
 }

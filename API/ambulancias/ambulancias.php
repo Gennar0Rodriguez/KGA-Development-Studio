@@ -16,7 +16,8 @@ $ambulancia = new Ambulancia();
 try {
     switch ($metodo) {
         case 'GET':
-            echo json_encode($ambulancia->obtenerTodas());
+            $resultado = $ambulancia->obtenerTodas();
+            echo json_encode($resultado);
             exit;
 
         case 'POST':
@@ -28,7 +29,12 @@ try {
                 exit;
             }
 
-            if ($ambulancia->crear($datos['matricula'], $datos['modelo'] ?? '', $datos['capacidad'] ?? '2', $datos['tipo_vehiculo'] ?? 'ambulancia', $datos['camilla'] ?? true)) {
+            $modelo = $datos['modelo'] ?? '';
+            $capacidad = $datos['capacidad'] ?? '2';
+            $tipo = $datos['tipo_vehiculo'] ?? 'ambulancia';
+            $camilla = $datos['camilla'] ?? true;
+
+            if ($ambulancia->crear($datos['matricula'], $modelo, $capacidad, $tipo, $camilla)) {
                 http_response_code(201);
                 echo json_encode(['mensaje' => 'Ambulancia registrada correctamente']);
             } else {
@@ -38,14 +44,15 @@ try {
             exit;
 
         case 'DELETE':
-            $mat = $_GET['matricula'] ?? null;
-            if (!$mat) {
+            $matricula = $_GET['matricula'] ?? null;
+
+            if (!$matricula) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Matrícula requerida']);
                 exit;
             }
 
-            if ($ambulancia->eliminar($mat)) {
+            if ($ambulancia->eliminar($matricula)) {
                 echo json_encode(['mensaje' => 'Ambulancia eliminada correctamente']);
             } else {
                 http_response_code(500);
