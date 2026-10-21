@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(formSubir);
 
             try {
-                const response = await fetch('/kgade/KGA-Development-Studio/API/documentos.php', {
+                const response = await fetch('/kgade/KGA-Development-Studio/API/documentos/documentos.php', {
                     method: 'POST',
                     body: formData
                 });
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Cargar lista completa desde la API
 async function cargarDocumentos() {
     try {
-        const response = await fetch('/kgade/KGA-Development-Studio/API/documentos.php');
+        const response = await fetch('/kgade/KGA-Development-Studio/API/documentos/documentos.php');
         if (!response.ok) return;
 
         todosLosDocumentos = await response.json();
@@ -207,7 +207,7 @@ async function eliminarDocumento(idDoc) {
     if (!confirm(`¿Desea eliminar el documento con ID ${idDoc}?`)) return;
 
     try {
-        const response = await fetch(`/kgade/KGA-Development-Studio/API/documentos.php?id=${idDoc}`, {
+        const response = await fetch(`/kgade/KGA-Development-Studio/API/documentos/documentos.php?id=${idDoc}`, {
             method: 'DELETE'
         });
 
