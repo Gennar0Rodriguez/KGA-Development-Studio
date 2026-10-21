@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('Enviando datos de traslado:', payload);
 
             try {
-                const response = await fetch('/kgade/KGA-Development-Studio/API/traslados.php', {
+                const response = await fetch('/kgade/KGA-Development-Studio/API/traslados/traslados.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Cargar Choferes, Ambulancias, Enfermeros y Destinos
 async function cargarOpcionesFormulario() {
     try {
-        const res = await fetch('/kgade/KGA-Development-Studio/API/traslados.php?action=auxiliares');
+        const res = await fetch('/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=auxiliares');
         if (!res.ok) return;
 
         const listas = await res.json();
@@ -143,7 +143,7 @@ async function cargarOpcionesFormulario() {
 // Cargar lista de traslados desde el servidor
 async function cargarTraslados() {
     try {
-        const response = await fetch('/kgade/KGA-Development-Studio/API/traslados.php');
+        const response = await fetch('/kgade/KGA-Development-Studio/API/traslados/traslados.php');
         if (!response.ok) return;
 
         todosLosTraslados = await response.json();
@@ -201,7 +201,7 @@ async function eliminarTraslado(id) {
     if (!confirm(`¿Desea eliminar el traslado ${id}?`)) return;
 
     try {
-        const response = await fetch(`/kgade/KGA-Development-Studio/API/traslados.php?id=${id}`, {
+        const response = await fetch(`/kgade/KGA-Development-Studio/API/traslados/traslados.php?id=${id}`, {
             method: 'DELETE'
         });
 

@@ -8,7 +8,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
 
-require_once __DIR__ . '/../backend/models/Notificacion.php';
+require_once __DIR__ . '/../../backend/models/Notificacion.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $notificacion = new Notificacion();
@@ -71,7 +71,7 @@ try {
                 exit;
             }
 
-            if ($notificacion->eliminar((int)$id)) {
+            if ($notificacion->eliminar((string)$id)) {
                 echo json_encode(['mensaje' => 'Notificación eliminada']);
             } else {
                 http_response_code(500);

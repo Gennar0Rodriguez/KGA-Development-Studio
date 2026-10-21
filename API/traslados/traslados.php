@@ -13,7 +13,7 @@ try {
     $rutaModelo = __DIR__ . '/../../backend/models/Traslado.php';
     if (!file_exists($rutaModelo)) {
         // Intenta la ruta alternativa si difiere la estructura de carpetas
-        $rutaModelo = __DIR__ . '/../backend/models/Traslado.php';
+        $rutaModelo = __DIR__ . '/../../backend/models/Traslado.php';
     }
 
     if (!file_exists($rutaModelo)) {

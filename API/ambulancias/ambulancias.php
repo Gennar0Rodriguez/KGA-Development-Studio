@@ -8,7 +8,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
 
-require_once __DIR__ . '/../backend/models/Ambulancia.php';
+require_once __DIR__ . '/../../backend/models/Ambulancia.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $ambulancia = new Ambulancia();

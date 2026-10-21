@@ -27,7 +27,7 @@ async function iniciarPollingNotificaciones() {
 
     try {
         const response = await fetch(
-            '/kgade/KGA-Development-Studio/API/notificaciones.php',
+            '/kgade/KGA-Development-Studio/API/notificaciones/notificaciones.php',
             {
                 method: 'GET',
                 credentials: 'same-origin',
@@ -176,7 +176,7 @@ function renderizarNotificaciones(lista) {
 async function eliminarNotificacion(id) {
     try {
         const response = await fetch(
-            `/kgade/KGA-Development-Studio/API/notificaciones.php?id=${encodeURIComponent(id)}`,
+            `/kgade/KGA-Development-Studio/API/notificaciones/notificaciones.php?id=${encodeURIComponent(id)}`,
             {
                 method: 'DELETE',
                 credentials: 'same-origin'
