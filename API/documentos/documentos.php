@@ -131,6 +131,27 @@ switch ($metodo) {
         }
 
 
+        // Nombre del archivo ---INICIO------------------------------------------------------
+        // Se obtiene el nombre original, que es el que se guarda en la BD
+        $nombreOriginal = basename(str_replace("\\", "/", $archivo["name"]));
+
+        $nombreOriginal = preg_replace('/[\x00-\x1F\x7F]/', "", $nombreOriginal);
+            // Eliminamos caracteres especiales mediante expresión regular, como los de control \x00-\x1F y \x7F
+
+        if ($nombreOriginal === "") {
+            $nombreOriginal = "documento.pdf";
+        }
+
+        if (function_exists("mb_substr")) {
+            // Con codificación, en este caso UTF-8 (letras acentuadas u otros caracteres)
+            $nombreOriginal = mb_substr($nombreOriginal, 0, 255, "UTF-8");
+        } else {
+            // Sin codificación. No Unicode
+            $nombreOriginal = substr($nombreOriginal, 0, 255);
+        }
+        // Nombre del archivo ---FIN------------------------------------------------------
+
+
         // Seleccionar la categoria del documento
         $idCategoria = 'C1';
 
@@ -141,9 +162,13 @@ switch ($metodo) {
         // El ID del documento es también el nombre del PDF (el frontend lo busca como ID.pdf)
         $idDocumento = 'DOC' . bin2hex(random_bytes(4));
 
+        $nombreServidor = $idDocumento . ".pdf";
+
 
         // Se crea la carpeta uploads/documentos, si es que ya no existe
-        $carpetaFisica = $raizProyecto . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR . "documentos";
+        $carpetaRelativa = "uploads/documentos";
+
+        $carpetaFisica = $raizProyecto . DIRECTORY_SEPARATOR . str_replace("/", DIRECTORY_SEPARATOR, $carpetaRelativa);
 
         if (!is_dir($carpetaFisica) && !mkdir($carpetaFisica, 0777, true) && !is_dir($carpetaFisica)) {
             responderJson([
@@ -153,7 +178,9 @@ switch ($metodo) {
 
 
         // El archivo queda en el srv en uploads/documentos/
-        $rutaFisica = $carpetaFisica . DIRECTORY_SEPARATOR . $idDocumento . ".pdf";
+        $rutaRelativa = $carpetaRelativa . "/" . $nombreServidor;
+
+        $rutaFisica = $carpetaFisica . DIRECTORY_SEPARATOR . $nombreServidor;
 
         if (!move_uploaded_file($archivo["tmp_name"], $rutaFisica)) {
             responderJson([
@@ -162,7 +189,7 @@ switch ($metodo) {
         }
 
         // Se guarda el documento en la BD
-        if (!$documento->crear($idDocumento, $idCategoria, $titulo, $descripcion, $ciAdmin)) {
+        if (!$documento->crear($idDocumento, $idCategoria, $titulo, $descripcion, $nombreOriginal, $rutaRelativa, $ciAdmin)) {
             if (is_file($rutaFisica)) {
                 // Si falla el guardado en la BD se borra el PDF
                 unlink($rutaFisica);

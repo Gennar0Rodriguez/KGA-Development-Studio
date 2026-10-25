@@ -65,7 +65,9 @@
     CREATE TABLE notificacion (
         id_notificacion VARCHAR(8) PRIMARY KEY NOT NULL,
         titulo_not VARCHAR(50) NOT NULL,
-        descripcion_not VARCHAR(100)
+        descripcion_not VARCHAR(100),
+        nombre_archivo VARCHAR(255) NOT NULL,
+        ruta_archivo VARCHAR(255) NOT NULL
     );
 
     CREATE TABLE recibe (
