@@ -1,4 +1,4 @@
-    CREATE DATABASE Proyecto;
+CREATE DATABASE Proyecto;
     USE Proyecto;
 
     CREATE TABLE administrativo (
@@ -19,6 +19,8 @@
         id_categoria VARCHAR(50),
         titulo_docs VARCHAR(50) NOT NULL,
         descripcion_docs VARCHAR(50),
+        nombre_archivo VARCHAR(255) NOT NULL,
+        ruta_archivo VARCHAR(255) NOT NULL,
         FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
     );
 
@@ -65,9 +67,7 @@
     CREATE TABLE notificacion (
         id_notificacion VARCHAR(8) PRIMARY KEY NOT NULL,
         titulo_not VARCHAR(50) NOT NULL,
-        descripcion_not VARCHAR(100),
-        nombre_archivo VARCHAR(255) NOT NULL,
-        ruta_archivo VARCHAR(255) NOT NULL
+        descripcion_not VARCHAR(100)
     );
 
     CREATE TABLE recibe (
@@ -96,12 +96,12 @@ INSERT INTO categoria (id_categoria, nombre_cat) VALUES
 ('C4', 'Administracion'),
 ('C5', 'Atencion al Paciente');
 
-INSERT INTO documentos (id_documentos, id_categoria, titulo_docs, descripcion_docs) VALUES
-('DOC1', 'C1', 'Manual de Empleado', 'Normas generales del personal'),
-('DOC2', 'C2', 'Guia de Traslados', 'Protocolo logistico de ambulancias'),
-('DOC3', 'C3', 'Estandares de Calidad', 'Normas y procedimientos ISO'),
-('DOC4', 'C4', 'Balance Mensual', 'Reporte financiero mensual'),
-('DOC5', 'C5', 'Protocolo de Ingreso', 'Actualizacion de normas de atencion');
+INSERT INTO documentos (id_documentos, id_categoria, titulo_docs, descripcion_docs, nombre_archivo, ruta_archivo) VALUES
+('DOC1', 'C1', 'Manual de Empleado', 'Normas generales del personal', 'DOC1.pdf', 'uploads/documentos/DOC1.pdf'),
+('DOC2', 'C2', 'Guia de Traslados', 'Protocolo logistico de ambulancias', 'DOC2.pdf', 'uploads/documentos/DOC2.pdf'),
+('DOC3', 'C3', 'Estandares de Calidad', 'Normas y procedimientos ISO', 'DOC3.pdf', 'uploads/documentos/DOC3.pdf'),
+('DOC4', 'C4', 'Balance Mensual', 'Reporte financiero mensual', 'DOC4.pdf', 'uploads/documentos/DOC4.pdf'),
+('DOC5', 'C5', 'Protocolo de Ingreso', 'Actualizacion de normas de atencion', 'DOC5.pdf', 'uploads/documentos/DOC5.pdf');
 
 INSERT INTO carga (ci_admin, id_documentos, hora, fecha) VALUES
 ('11111111', 'DOC1', '10:00:00', '2026-08-01'),
