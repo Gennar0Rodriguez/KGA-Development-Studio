@@ -53,6 +53,43 @@ function resolverRutaArchivo(string $rutaRelativa, string $raizProyecto): ?strin
 
 switch ($metodo) {
     case 'GET':
+        $idDocumento = $_GET['id'] ?? null;
+
+        // Si viene un ID se envía el PDF, si no se devuelve la lista de documentos
+        if ($idDocumento !== null) {
+            $datosDocumento = $documento->buscarPorId($idDocumento);
+
+            if ($datosDocumento === null) {
+                responderJson([
+                    "error" => "Documento no encontrado"
+                ], 404);
+            }
+
+            $rutaFisica = resolverRutaArchivo(
+                $datosDocumento["ruta_archivo"],
+                $raizProyecto
+            );
+
+            if ($rutaFisica === null || !is_file($rutaFisica) || !is_readable($rutaFisica)) {
+                responderJson([
+                    "error" => "El archivo no existe o no se puede leer"
+                ], 404);
+            }
+
+            // Se limpia el nombre del pdf
+            $nombreArchivo = str_replace(["\r", "\n", '"', "\\"], "_", basename($datosDocumento["nombre_archivo"]));
+
+            header("Content-Type: application/pdf");
+
+            header('Content-Disposition: inline; filename="' . $nombreArchivo . '"'); // Nombre que se muestra
+
+            header("Content-Length: " . filesize($rutaFisica)); // Tamaño PDF
+
+            readfile($rutaFisica); // La API envía el archivo, o sea el (archivo es el) body de la request
+
+            exit; // Se corta acá para que no se mezcle el PDF con la lista de documentos
+        }
+
         responderJson($documento->obtenerTodos());
 
         exit;

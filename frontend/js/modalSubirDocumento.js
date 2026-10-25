@@ -159,7 +159,7 @@ function renderizarVistaPacientes(lista) {
     }
 
     lista.forEach(doc => {
-        const rutaArchivo = `/kgade/KGA-Development-Studio/uploads/documentos/${doc.id_documentos}.pdf`;
+        const rutaArchivo = `/kgade/KGA-Development-Studio/API/documentos/documentos.php?id=${doc.id_documentos}`;
 
         const card = document.createElement('div');
         card.className = 'card-documento';
@@ -191,6 +191,15 @@ function formatearFecha(fechaStr) {
     if (!fechaStr) return 'N/A';
     const partes = fechaStr.split('-');
     return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : fechaStr;
+}
+
+function descargarDocumento(ruta, titulo) {
+    const enlace = document.createElement('a');
+    enlace.href = ruta;
+    enlace.download = titulo + '.pdf';
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
 }
 
 function compartirDocumento(titulo, ruta) {
