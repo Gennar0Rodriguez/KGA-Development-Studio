@@ -19,9 +19,13 @@ class Traslado
                     t.hora_llegada,
                     t.lugar_origen,
                     t.estado,
+                    t.id_destino,
+                    t.ci_chofer,
                     d.nombre_destino,
                     CONCAT(ch.nombre_chofer, ' ', ch.apellido_chofer) AS chofer,
                     CONCAT(enf.nombre_enfermero, ' ', enf.apellido_enfermero) AS enfermero,
+                    enf.ci_enfermero,
+                    tr.id_transportable,
                     p.nombre_paciente,
                     p.oxigeno
                 FROM traslado t
@@ -163,6 +167,81 @@ class Traslado
             }
 
             error_log("Error en crear traslado: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function actualizar(array $datos): bool {
+        try {
+            $this->conexion->beginTransaction();
+
+            $estadoEnum = 'en proceso';
+            $estadoInput = strtolower($datos['estado'] ?? '');
+
+            if ($estadoInput === 'programado' || $estadoInput === 'en curso') {
+                $estadoEnum = 'en proceso';
+            } else if ($estadoInput === 'finalizado' || $estadoInput === 'aprobado') {
+                $estadoEnum = 'aprobado';
+            }
+
+            // Actualizar traslado
+            $sqlTraslado = "UPDATE traslado
+                            SET ci_chofer = :ci_chofer, matricula = :matricula, id_destino = :id_destino,
+                                fecha_traslado = :fecha, hora_salida = :hora, estado = :estado
+                            WHERE id_traslado = :id";
+
+            $sentencia = $this->conexion->prepare($sqlTraslado);
+            $sentencia->bindParam(':ci_chofer', $datos['ci_chofer']);
+            $sentencia->bindParam(':matricula', $datos['matricula']);
+            $sentencia->bindParam(':id_destino', $datos['id_destino']);
+            $sentencia->bindParam(':fecha', $datos['fecha']);
+            $sentencia->bindParam(':hora', $datos['hora']);
+            $sentencia->bindParam(':estado', $estadoEnum);
+            $sentencia->bindParam(':id', $datos['id_traslado']);
+            $sentencia->execute();
+
+            // Actualizar transporta (guarda una copia del chofer, la matricula y el destino)
+            $sqlTransporta = "UPDATE transporta
+                              SET ci_chofer = :ci_ch, matricula = :mat, id_destino = :id_dest
+                              WHERE id_traslado = :idTras";
+
+            $sentencia = $this->conexion->prepare($sqlTransporta);
+            $sentencia->bindParam(':ci_ch', $datos['ci_chofer']);
+            $sentencia->bindParam(':mat', $datos['matricula']);
+            $sentencia->bindParam(':id_dest', $datos['id_destino']);
+            $sentencia->bindParam(':idTras', $datos['id_traslado']);
+            $sentencia->execute();
+
+            // Actualizar transportable (enfermero)
+            $sqlTrans = "UPDATE transportable SET ci_enfermero = :ci_enf WHERE id_transportable = :id";
+
+            $sentencia = $this->conexion->prepare($sqlTrans);
+            $sentencia->bindParam(':ci_enf', $datos['ci_enfermero']);
+            $sentencia->bindParam(':id', $datos['id_transportable']);
+            $sentencia->execute();
+
+            // Actualizar paciente
+            $sqlPac = "UPDATE paciente SET nombre_paciente = :nombre, oxigeno = :oxigeno WHERE id_transportable = :id";
+
+            $sentencia = $this->conexion->prepare($sqlPac);
+
+            $nombrePaciente = $datos['paciente'];
+            $oxigeno = ($datos['oxigeno'] === 'Si' || $datos['oxigeno'] === '1') ? 1 : 0;
+
+            $sentencia->bindParam(':nombre', $nombrePaciente);
+            $sentencia->bindParam(':oxigeno', $oxigeno, PDO::PARAM_INT);
+            $sentencia->bindParam(':id', $datos['id_transportable']);
+            $sentencia->execute();
+
+            $this->conexion->commit();
+            return true;
+
+        } catch (Exception $e) {
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+
+            error_log("Error en actualizar traslado: " . $e->getMessage());
             return false;
         }
     }

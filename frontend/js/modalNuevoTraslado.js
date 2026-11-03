@@ -1,4 +1,6 @@
 let todosLosTraslados = [];
+let modoEdicion = false;
+let trasladoEditando = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('JS Traslados cargado correctamente');
@@ -20,6 +22,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cerrarModal = () => {
         if (modal) modal.style.display = 'none';
         if (formTraslado) formTraslado.reset();
+
+        // Vuelve el modal a como estaba para un traslado nuevo
+        modoEdicion = false;
+        trasladoEditando = null;
+
+        const tituloModal = document.querySelector('.modal-traslado-header h2');
+        if (tituloModal) tituloModal.textContent = 'Nuevo Traslado';
     };
 
     if (btnCerrar) btnCerrar.addEventListener('click', cerrarModal);
@@ -49,11 +58,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 prioridad: document.getElementById('prioridad')?.value
             };
 
+            // Si se esta editando se manda tambien cual es el traslado
+            if (modoEdicion) {
+                payload.id_traslado = trasladoEditando.id_traslado;
+                payload.id_transportable = trasladoEditando.id_transportable;
+            }
+
+            const metodoHttp = modoEdicion ? 'PUT' : 'POST';
+
             console.log('Enviando datos de traslado:', payload);
 
             try {
                 const response = await fetch('/kgade/KGA-Development-Studio/API/traslados/traslados.php', {
-                    method: 'POST',
+                    method: metodoHttp,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
@@ -189,11 +206,39 @@ function renderizarTarjetasTraslado(lista) {
             </div>
             
             <div class="acciones">
+                <button class="btn-editar" onclick="editarTraslado('${item.id_traslado}', '${item.id_transportable}')">Editar</button>
                 <button class="btn-eliminar" onclick="eliminarTraslado('${item.id_traslado}')">Eliminar</button>
             </div>
         `;
         contenedor.appendChild(card);
     });
+}
+
+// Abrir el modal con los datos del traslado para editarlo
+function editarTraslado(idTraslado, idTransportable) {
+    const traslado = todosLosTraslados.find(t =>
+        String(t.id_traslado) === idTraslado && String(t.id_transportable) === idTransportable
+    );
+
+    if (!traslado) return;
+
+    modoEdicion = true;
+    trasladoEditando = traslado;
+
+    document.getElementById('ambulancia').value = traslado.matricula || '';
+    document.getElementById('paciente').value = traslado.nombre_paciente || '';
+    document.getElementById('conductor').value = traslado.ci_chofer || '';
+    document.getElementById('enfermero').value = traslado.ci_enfermero || '';
+    document.getElementById('destino').value = traslado.id_destino || '';
+    document.getElementById('fecha').value = traslado.fecha_traslado || '';
+    document.getElementById('hora').value = traslado.hora_salida || '';
+    document.getElementById('estado').value = (traslado.estado === 'aprobado') ? 'Finalizado' : 'En curso';
+    document.getElementById('oxigeno').value = (Number(traslado.oxigeno) === 1) ? 'Si' : 'No';
+
+    const tituloModal = document.querySelector('.modal-traslado-header h2');
+    if (tituloModal) tituloModal.textContent = 'Editar Traslado';
+
+    document.getElementById('modalNuevoTraslado').style.display = 'flex';
 }
 
 // Eliminar traslado

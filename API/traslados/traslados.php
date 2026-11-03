@@ -7,7 +7,7 @@ error_reporting(E_ALL);
 
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 
 try {
     $rutaModelo = __DIR__ . '/../../backend/models/Traslado.php';
@@ -51,6 +51,23 @@ try {
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'No se pudo guardar el traslado en la base de datos']);
+            }
+            exit;
+
+        case 'PUT':
+            $datos = json_decode(file_get_contents('php://input'), true);
+
+            if (!$datos || empty($datos['id_traslado']) || empty($datos['id_transportable'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Se requieren los datos del traslado a editar']);
+                exit;
+            }
+
+            if ($traslado->actualizar($datos)) {
+                echo json_encode(['mensaje' => 'Traslado actualizado correctamente']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'No se pudo actualizar el traslado']);
             }
             exit;
 
