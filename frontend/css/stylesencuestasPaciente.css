@@ -1,0 +1,295 @@
+body {
+    font-family: "Lexend", sans-serif;
+    background-color: #ffffff;
+    margin: 0;
+}
+
+header {
+    display: grid;
+    grid-template-columns: 250px 1fr 250px;
+    align-items: center;
+    padding: 20px;
+}
+
+header img {
+    width: 250px;
+}
+
+header h1 {
+    text-align: center;
+    margin: 0;
+}
+
+hr { 
+    border: none; 
+    height: 10px; 
+    background-color: #ADE1F9; 
+    margin: 0;  
+}
+
+.layout {
+    display: flex;
+}
+
+.sidebar {
+    width: 260px;
+    height: calc(50vh - 40px);
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 40px;
+}
+
+.sidebar nav a {
+    text-decoration: none;
+    color: #555;
+    padding: 12px 15px;
+    border-radius: 12px;
+    transition: 0.2s;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sidebar nav a:hover {
+    background: #F3F4F6;
+    color: #000;
+}
+
+.sidebar nav a.active {
+    background: #E0F2FE;
+    color: #0284C7;
+    font-weight: bold;
+}
+
+.usuario {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.usuario img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+main {
+    flex: 1;
+    padding: 30px;
+}
+
+.titulo {
+    margin-bottom: 30px;
+}
+
+.titulo h2 {
+    margin-bottom: 10px;
+}
+
+.titulo p {
+    color: #666;
+}
+
+.encuesta-card {
+    max-width: 850px;
+    background: white;
+    border-radius: 25px;
+    padding: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,.15);
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.encuesta-card h3 {
+    margin: 0;
+    color: #0284c7;
+    text-align: center;
+}
+
+.pregunta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pregunta label {
+    font-weight: 600;
+}
+
+.escala {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.escala label {
+    width: 50px;
+    height: 50px;
+    background: #0ea5e9;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.escala label:hover {
+    transform: scale(1.1);
+}
+
+.escala input {
+    display: none;
+}
+
+select,
+textarea {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-family: "Lexend", sans-serif;
+}
+
+textarea {
+    resize: none;
+    height: 120px;
+}
+
+.btn-enviar {
+    align-self: flex-end;
+    background: #22c55e;
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: .3s;
+}
+
+.btn-enviar:hover {
+    background: #16a34a;
+    transform: translateY(-3px);
+}
+
+
+/* Botón de cerrar sesión */
+.btn-logout {
+    margin-top: auto;
+    width: 100%;
+    padding: 10px;
+
+    background-color: transparent;
+    color: #ef4444;
+
+    border: 1px solid #ef4444;
+    border-radius: 6px;
+
+    font-size: 0.95rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+/* ==========================================
+   SECCIÓN RESPONSIVE (Máximo 768px)
+   ========================================== */
+
+@media (max-width: 768px) {
+    /* Reorganización del Header */
+    header {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    header img {
+        width: 180px;
+    }
+
+    /* Layout en vertical */
+    .layout {
+        flex-direction: column;
+    }
+
+    /* Ajuste de Sidebar a la parte superior */
+    .sidebar {
+        width: auto;
+        height: auto;
+        margin: 15px;
+        padding: 15px;
+    }
+
+    .sidebar nav {
+        margin-top: 10px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .sidebar nav a {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .usuario {
+        margin-top: 15px;
+        justify-content: center;
+    }
+
+    /* Ajuste del contenido principal */
+    main {
+        padding: 15px;
+    }
+
+    /* Ajustes de la tarjeta de Encuesta */
+    .encuesta-card {
+        padding: 20px;
+        border-radius: 18px;
+    }
+
+    /* Centrado de opciones de escala para pantallas chicas */
+    .escala {
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .escala label {
+        width: 42px;
+        height: 42px;
+        font-size: 14px;
+    }
+
+    /* Botón enviar ocupa todo el ancho */
+    .btn-enviar {
+        align-self: stretch;
+        width: 100%;
+    }
+}

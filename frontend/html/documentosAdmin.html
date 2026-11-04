@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+   <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Ambulancias | SIGSM</title>
+    <link rel="icon" href="../logo/hospital de clinicaslogo.png">
+    <link rel="stylesheet" href="../css/stylesgestionAmbulancias.css">
+    <link rel="stylesheet" href="../css/stylesnotificaciones.css">
+    <link rel="stylesheet" href="../css/stylesdocumentosAdmin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="../css/modalSubirDocumento.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+    <body>
+        <header>
+            <img src="../logo/hospital de clinicaslogo.png" alt="Logo de SIGSM">
+            <h1>Administración de Documentos</h1>
+        </header>
+
+        <hr>
+
+    <div class="layout">
+
+    <div id="sidebar"></div>
+    
+    <main>
+
+    <section class="documentos-container">
+
+        <h2>Administración de Documentación</h2>
+        <button type="button" class="btn-subir" id="btnAbrirModal" >
+            + Subir documento
+        </button>
+    <section class="busqueda-documentos">
+        <input type="text" class="buscador" placeholder="Buscar documento...">
+        <button class="btn-buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </section>
+        <table class="tabla-documentos">
+
+            <thead>
+                <tr>
+                    <th>Documento</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <tr>
+                    <td>GuiaPacientes.pdf</td>
+                    <td>15/06/2026</td>
+                    <td>
+                        <button class="btn-eliminar-doc">Eliminar</button>
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </section>
+
+    </main>
+
+    <div id="modalSubirDocumento" class="modal">
+
+    <div class="modal-contenido">
+
+        <div class="modal-header">
+            <h2>Subir nuevo documento</h2>
+
+            <button type="button" id="btnCerrarModal" class="btn-cerrar">
+                &times;
+            </button>
+        </div>
+
+        <form id="formSubirDocumento" enctype="multipart/form-data">
+
+            <label for="documentTitle">
+                Título del documento:
+            </label>
+
+            <input
+                type="text"
+                id="documentTitle"
+                name="documentTitle"
+                required
+            >
+
+
+            <label for="documentDescription">
+                Descripción del documento:
+            </label>
+
+            <textarea
+                id="documentDescription"
+                name="documentDescription"
+                required
+            ></textarea>
+
+
+            <label for="documentTipe">
+                Tipo:
+            </label>
+
+            <select id="documentTipe" name="documentTipe" required>
+
+                <option value="Laboratorio">
+                    Laboratorio
+                </option>
+
+                <option value="Emergencia">
+                    Emergencia
+                </option>
+
+            </select>
+
+
+            <label for="documentFile">
+                Seleccionar archivo:
+            </label>
+
+            <input
+                type="file"
+                id="documentFile"
+                name="documentFile"
+                required
+            >
+
+
+            <div class="modal-acciones">
+
+                <button
+                    type="button"
+                    id="btnCancelarModal"
+                    class="btn-cancelar">
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn-subir">
+                    <i class="fa-solid fa-upload"></i>
+                    Subir Documento
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+    
+    </div>
+    <script src="../js/logout.js"></script>
+    <script src="../js/sidebarAdmin.js"></script>
+    <script src="../js/modalSubirDocumento.js"></script>
+    <script src="../js/notificaciones.js"></script>
+</body>
+</html>
