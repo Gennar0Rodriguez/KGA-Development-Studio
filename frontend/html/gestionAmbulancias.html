@@ -42,64 +42,16 @@
 
     </section>
 
-            <section class="contenedor-ambulancias">
-                <div class="card-ambulancia">
-                    <h3>Matrícula: ABC-123</h3>
-                    <img src="../img/ambulanciaIMG.png" alt="Ambulancia">
+            <section class="seccion-vehiculos">
+                <h2>Vehículos registrados</h2>
+                <!-- Este contenedor se completa desde gestionAmbulancias.js -->
+                <div class="contenedor-vehiculos" id="contenedorVehiculos"></div>
+            </section>
 
-                    <div class="info-principal">
-                        <p><strong>Tipo:</strong> Ambulancia</p>
-                        <p><strong>Destino:</strong> #####</p>
-                        <p><strong>Estado:</strong> Programado</p>
-                        <p><strong>Hora salida APROXIMADA:</strong> 13:00</p>
-                        <p><strong>Hora llegada APROXIMADA:</strong> Pendiente</p>
-                    </div>
-
-                    <div class="info-extra">
-                        <h3>INFORMACIÓN EXTRA</h3>
-                        <p><strong>Conductor:</strong> Nombre Apellido Conductor</p>
-                        <p><strong>Enfermero:</strong> Nombre Apellido Enfermero</p>
-                        <p><strong>Paciente:</strong> Nombre Apellido Paciente</p>
-                        <p><strong>Observaciones:</strong> Descripción de las observaciones relevantes</p>
-                        <p><strong>Oxígeno:</strong> Sí</p>
-                        <p><strong>Tipo de camilla:</strong> Emergencia</p>
-                    </div>
-                    
-                    <div class="acciones">
-                        <button class="btn-editar">Editar</button>
-                        <button class="btn-eliminar">Eliminar</button>
-                        <button class="btn-seguimiento" onclick="window.location.href='ambulanciaSeguimiento.html'">Seguimiento</button>
-                    </div>
-                </div>
-                
-                <div class="card-ambulancia">
-                    <h3>Matrícula: JKS-123</h3>
-                    <img src="../img/ambulanciaIMG.png" alt="Ambulancia">
-
-                    <div class="info-principal">
-                        <p><strong>Tipo:</strong> Ambulancia</p>
-                        <p><strong>Destino:</strong> #####</p>
-                        <p><strong>Estado:</strong> Programado</p>
-                        <p><strong>Hora salida APROXIMADA:</strong> 13:00</p>
-                        <p><strong>Hora llegada APROXIMADA:</strong> Pendiente</p>
-                    </div>  
-
-                    <div class="info-extra">
-                        <h3>INFORMACIÓN EXTRA</h3>
-                        <p><strong>Conductor:</strong> Nombre Apellido Conductor</p>
-                        <p><strong>Enfermero:</strong> Nombre Apellido Enfermero</p>
-                        <p><strong>Paciente:</strong> Nombre Apellido Paciente</p>
-                        <p><strong>Observaciones:</strong> Descripción de las observaciones relevantes</p>
-                        <p><strong>Oxígeno:</strong> Sí</p>
-                        <p><strong>Tipo de camilla:</strong> Emergencia</p>
-                    </div>
-                    
-                    <div class="acciones">
-                        <button class="btn-editar">Editar</button>
-                        <button class="btn-eliminar">Eliminar</button>
-                        <button class="btn-seguimiento" onclick="window.location.href='ambulanciaSeguimiento.html'">Seguimiento</button>
-                    </div>
-                </div>
+            <section class="seccion-traslados">
+                <h2>Traslados registrados</h2>
+                <!-- modalNuevoTraslado.js utiliza este contenedor -->
+                <div class="contenedor-ambulancias"></div>
             </section>
         </main>
 
@@ -423,10 +375,81 @@
         </div>
 
     </div>
+
+    <!-- Modal para registrar un vehículo nuevo -->
+    <div id="modalNuevaAmbulancia" class="modal-traslado">
+        <div class="modal-traslado-contenido">
+            <div class="modal-traslado-header">
+                <h2>Añadir una ambulancia</h2>
+                <button type="button" id="btnCerrarModalAmbulancia" class="btn-cerrar-traslado">&times;</button>
+            </div>
+
+            <form id="formNuevaAmbulancia">
+                <label for="matriculaVehiculo">Matrícula</label>
+                <input
+                    type="text"
+                    id="matriculaVehiculo"
+                    name="matricula"
+                    maxlength="15"
+                    placeholder="Ej: SCA1234"
+                    required
+                >
+
+                <label for="modeloVehiculo">Modelo</label>
+                <input
+                    type="text"
+                    id="modeloVehiculo"
+                    name="modelo"
+                    maxlength="50"
+                    placeholder="Ej: Mercedes Sprinter"
+                    required
+                >
+
+                <label for="capacidadVehiculo">Capacidad</label>
+                <input
+                    type="number"
+                    id="capacidadVehiculo"
+                    name="capacidad"
+                    min="1"
+                    step="1"
+                    placeholder="Cantidad de personas"
+                    required
+                >
+
+                <label for="tipoVehiculo">Tipo de vehículo</label>
+                <select id="tipoVehiculo" name="tipo_vehiculo" required>
+                    <option value="">Seleccione un tipo</option>
+                    <option value="ambulancia">Ambulancia</option>
+                    <option value="auto">Auto</option>
+                    <option value="otro">Otro</option>
+                </select>
+
+                <label for="camillaVehiculo">¿Dispone de camilla?</label>
+                <select id="camillaVehiculo" name="camilla" required>
+                    <option value="">Seleccione una opción</option>
+                    <option value="1">Sí</option>
+                    <option value="0">No</option>
+                </select>
+
+                <p id="mensajeAmbulancia" role="status" aria-live="polite"></p>
+
+                <div class="acciones-formulario">
+                    <button type="button" id="btnCancelarModalAmbulancia" class="btn-cancelar">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btnGuardarAmbulancia" class="btn-guardar">
+                        Guardar vehículo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     </div>
 
     
     <script src="../js/modalNuevoTraslado.js"></script>
+    <script src="../js/gestionAmbulancias.js"></script>
     <script src="../js/logout.js"></script>
     <script src="../js/sidebarEmpleado.js"></script>
     <script src="../js/notificaciones.js"></script>
