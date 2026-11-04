@@ -72,4 +72,42 @@ class Respuesta
         $sentencia->bindParam(':id_encuesta', $idEncuesta);
         return $sentencia->execute();
     }
+
+    /**
+     * Calcula el promedio general, el total de respuestas y los promedios por pregunta
+     * para alimentar el panel de estadísticas lateral en la interfaz.
+     */
+    public function obtenerEstadisticasPorEncuesta(string $idEncuesta): array {
+        // Promedio global y total de respuestas de opción múltiple
+        $sqlGeneral = 'SELECT AVG(CAST(informacion AS DECIMAL(3,1))) AS promedio_general, COUNT(DISTINCT id_respuesta) AS total_respuestas 
+                       FROM respuesta 
+                       WHERE id_encuesta = :id_encuesta AND tipo = "opcion multiple"';
+        
+        $stmtGeneral = $this->conexion->prepare($sqlGeneral);
+        $stmtGeneral->bindParam(':id_encuesta', $idEncuesta);
+        $stmtGeneral->execute();
+        $datosGenerales = $stmtGeneral->fetch(PDO::FETCH_ASSOC);
+
+        // Promedio por cada pregunta específica
+        $sqlPorPregunta = 'SELECT id_pregunta, AVG(CAST(informacion AS DECIMAL(3,1))) AS promedio 
+                           FROM respuesta 
+                           WHERE id_encuesta = :id_encuesta AND tipo = "opcion multiple" 
+                           GROUP BY id_pregunta';
+        
+        $stmtPregunta = $this->conexion->prepare($sqlPorPregunta);
+        $stmtPregunta->bindParam(':id_encuesta', $idEncuesta);
+        $stmtPregunta->execute();
+        $promediosPregunta = $stmtPregunta->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            'promedioGeneral' => round((float)($datosGenerales['promedio_general'] ?? 0), 1),
+            'totalRespuestas' => (int)($datosGenerales['total_respuestas'] ?? 0),
+            'promediosPregunta' => array_map(function($p) {
+                return [
+                    'id_pregunta' => $p['id_pregunta'],
+                    'promedio' => round((float)$p['promedio'], 1)
+                ];
+            }, $promediosPregunta)
+        ];
+    }
 }
