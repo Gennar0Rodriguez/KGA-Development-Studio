@@ -1,41 +1,56 @@
+
 <?php
-// Permitir solicitudes JSON y CORS si es necesario
-header('Content-Type: application/json; charset=UTF-8');
+require_once __DIR__ . '/../../backend/models/Respuesta.php';
 
-// Ajusta la ruta relativa según la ubicación exacta de tu archivo models/Respuesta.php
-require_once __DIR__ . '/../../models/Respuesta.php';
+header('Content-Type: application/json; charset=utf-8');
 
+// Obtenemos la acción solicitada desde la URL.
 $accion = $_GET['accion'] ?? '';
-$idEncuesta = $_GET['id_encuesta'] ?? '';
 
-$respuestaModelo = new Respuesta();
+try {
+    $respuestaModelo = new Respuesta();
 
-switch ($accion) {
-    case 'obtenerEstadisticas':
-        if (empty($idEncuesta)) {
-            echo json_encode([
-                'promedioGeneral' => 0,
-                'totalRespuestas' => 0,
-                'promediosPregunta' => []
-            ]);
-            exit;
-        }
+    switch ($accion) {
 
-        try {
-            // Llamamos al método que calcula las estadísticas en tu modelo
+        case 'obtenerEstadisticas':
+
+            // Comprobamos que se haya recibido el ID de la encuesta.
+            $idEncuesta = $_GET['id_encuesta'] ?? '';
+
+            if (empty($idEncuesta)) {
+                http_response_code(400);
+                echo json_encode([
+                    'exito' => false,
+                    'mensaje' => 'Falta el ID de la encuesta.'
+                ]);
+                break;
+            }
+
+            // Obtenemos las estadísticas calculadas por el modelo.
             $estadisticas = $respuestaModelo->obtenerEstadisticasPorEncuesta($idEncuesta);
-            echo json_encode($estadisticas);
-        } catch (Exception $e) {
-            echo json_encode([
-                'error' => $e->getMessage(),
-                'promedioGeneral' => 0,
-                'totalRespuestas' => 0,
-                'promediosPregunta' => []
-            ]);
-        }
-        break;
 
-    default:
-        echo json_encode(['error' => 'Acción no válida en respuestas']);
-        break;
+            echo json_encode($estadisticas);
+            break;
+
+        default:
+            http_response_code(400);
+            echo json_encode([
+                'exito' => false,
+                'mensaje' => 'Acción no válida.'
+            ]);
+            break;
+    }
+
+} catch (Throwable $e) {
+
+    // Registramos el error real en el servidor.
+    error_log('Error en respuestas.php: ' . $e->getMessage());
+
+    http_response_code(500);
+
+    // Devolvemos JSON para que JavaScript pueda interpretar el error.
+    echo json_encode([
+        'exito' => false,
+        'mensaje' => 'Ocurrió un error al obtener las estadísticas.'
+    ]);
 }

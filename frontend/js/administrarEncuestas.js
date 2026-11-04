@@ -76,24 +76,79 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Obtiene las preguntas y estadísticas de la encuesta seleccionada.
      */
-    async function cargarDetalleEncuesta(idEncuesta) {
+
+/**
+ * Obtiene las preguntas y estadísticas de la encuesta seleccionada.
+ */
+async function cargarDetalleEncuesta(idEncuesta) {
+    try {
+
+        // Primero cargamos las preguntas.
+        const resPreguntas = await fetch(
+            `/kgade/KGA-Development-Studio/API/preguntas/preguntas.php?accion=obtenerPorEncuesta&id_encuesta=${encodeURIComponent(idEncuesta)}`
+        );
+
+        const preguntas = await leerRespuestaJSON(resPreguntas);
+
+        // Mostramos las preguntas aunque después falle la petición de estadísticas.
+        renderizarPreguntas(preguntas);
+
         try {
-            // Petición paralela para preguntas y estadísticas apuntando a la carpeta API en mayúscula
-            const [resPreguntas, resEstadisticas] = await Promise.all([
-                fetch(`/kgade/KGA-Development-Studio/API/preguntas/preguntas.php?accion=obtenerPorEncuesta&id_encuesta=${idEncuesta}`),
-                fetch(`/kgade/KGA-Development-Studio/API/respuestas/respuestas.php?accion=obtenerEstadisticas&id_encuesta=${idEncuesta}`)
-            ]);
 
-            const preguntas = await resPreguntas.json();
-            const estadisticas = await resEstadisticas.json();
+            // Solicitamos las estadísticas de la encuesta.
+            const resEstadisticas = await fetch(
+                `/kgade/KGA-Development-Studio/API/respuestas/respuestas.php?accion=obtenerEstadisticas&id_encuesta=${encodeURIComponent(idEncuesta)}`
+            );
 
-            renderizarPreguntas(preguntas);
+            const estadisticas = await leerRespuestaJSON(resEstadisticas);
+
             renderizarEstadisticas(estadisticas);
 
         } catch (error) {
-            console.error('Error al cargar detalle de la encuesta:', error);
+
+            console.error('Error al cargar las estadísticas:', error);
+
+            // Si las estadísticas fallan, mostramos valores iniciales.
+            renderizarEstadisticas({
+                promedioGeneral: 0,
+                totalRespuestas: 0,
+                promediosPregunta: []
+            });
         }
+
+    } catch (error) {
+        console.error('Error al cargar las preguntas:', error);
     }
+}
+
+
+/**
+ * Comprueba la respuesta del servidor y convierte su contenido a JSON.
+ * Si PHP devuelve HTML o un error HTTP, muestra información más clara.
+ */
+async function leerRespuestaJSON(respuesta) {
+
+    const contenido = await respuesta.text();
+
+    let datos;
+
+    try {
+        datos = JSON.parse(contenido);
+    } catch (error) {
+        throw new Error(
+            `El servidor no devolvió JSON. HTTP ${respuesta.status}. Respuesta: ${contenido.substring(0, 300)}`
+        );
+    }
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.mensaje || datos.error || `Error HTTP ${respuesta.status}`
+        );
+    }
+
+    return datos;
+}
+
 
     /**
      * Renderiza el listado de preguntas en el DOM.
