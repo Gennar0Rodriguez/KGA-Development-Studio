@@ -20,12 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
     btnAbrir.addEventListener('click', () => {
         formulario.reset();
         mostrarMensaje('');
-        modal.classList.add('mostrar');
+        // Usamos el mismo método que ya utiliza modalNuevoTraslado.js.
+        modal.style.display = 'flex';
     });
 
     // Una única función se encarga de cerrar y limpiar el modal.
     const cerrarModal = () => {
-        modal.classList.remove('mostrar');
+        modal.style.display = 'none';
         formulario.reset();
         mostrarMensaje('');
     };
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // También permitimos cerrar el modal con la tecla Escape.
     document.addEventListener('keydown', (evento) => {
-        if (evento.key === 'Escape' && modal.classList.contains('mostrar')) {
+        if (evento.key === 'Escape' && modal.style.display === 'flex') {
             cerrarModal();
         }
     });
