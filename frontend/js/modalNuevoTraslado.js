@@ -101,11 +101,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 id_destino: document.getElementById('destino')?.value,
                 fecha: document.getElementById('fecha')?.value,
                 hora: document.getElementById('hora')?.value,
+
+                // Ahora enviamos las observaciones para guardarlas en MySQL.
                 observaciones: document.getElementById('observaciones')?.value,
+
                 estado: document.getElementById('estado')?.value,
                 oxigeno: document.getElementById('oxigeno')?.value,
-                camilla: document.getElementById('camilla')?.value,
-                prioridad: document.getElementById('prioridad')?.value
+                camilla: document.getElementById('camilla')?.value
 
             };
 
@@ -445,6 +447,10 @@ function renderizarTarjetasTraslado(lista) {
                 <p><strong>Conductor:</strong> ${item.chofer || 'No asignado'}</p>
                 <p><strong>Enfermero:</strong> ${item.enfermero || 'No asignado'}</p>
                 <p><strong>Paciente:</strong> ${item.nombre_paciente || 'N/A'}</p>
+
+                <!-- Mostramos las observaciones guardadas en la base de datos. -->
+                <p><strong>Observaciones:</strong> ${item.observaciones || 'Sin observaciones'}</p>
+
                 <p><strong>Oxígeno:</strong> ${item.oxigeno ? 'Sí' : 'No'}</p>
 
             </div>
@@ -489,7 +495,7 @@ function editarTraslado(idTraslado, idTransportable) {
 
     trasladoEditando = traslado;
 
-    // Recuperamos la matrícula del traslado.
+    // Recuperamos los datos del traslado.
     document.getElementById('ambulancia').value = traslado.matricula || '';
 
     document.getElementById('paciente').value = traslado.nombre_paciente || '';
@@ -503,6 +509,9 @@ function editarTraslado(idTraslado, idTransportable) {
     document.getElementById('fecha').value = traslado.fecha_traslado || '';
 
     document.getElementById('hora').value = traslado.hora_salida || '';
+
+    // Recuperamos las observaciones para que aparezcan al editar.
+    document.getElementById('observaciones').value = traslado.observaciones || '';
 
     document.getElementById('estado').value =
         (traslado.estado === 'aprobado') ? 'Finalizado' : 'En curso';
