@@ -574,37 +574,44 @@ function renderizarTarjetasTraslado(lista) {
 
             </div>
 
-            ${esAdministrador ? `
+    ${esAdministrador ? `
 
-                <div class="acciones">
+        <div class="acciones">
 
-                    ${item.estado_solicitud === 'pendiente' ? `
+            <!-- El administrador siempre puede editar. -->
+            <button class="btn-editar"
+                onclick="editarTraslado('${item.id_traslado}', '${item.id_transportable}')">
+                Editar
+            </button>
 
-                        <button class="btn-aprobar"
-                            onclick="resolverSolicitud('${item.id_traslado}', 'aprobado')">
-                            Confirmar
-                        </button>
+            <!-- Confirmar y rechazar solamente aparecen si está pendiente. -->
+            ${item.estado_solicitud === 'pendiente' ? `
 
-                        <button class="btn-rechazar"
-                            onclick="resolverSolicitud('${item.id_traslado}', 'rechazado')">
-                            Rechazar
-                        </button>
+                <button class="btn-aprobar"
+                    onclick="resolverSolicitud('${item.id_traslado}', 'aprobado')">
+                    Confirmar
+                </button>
 
-                    ` : ''}
-
-                    <button class="btn-editar"
-                        onclick="editarTraslado('${item.id_traslado}', '${item.id_transportable}')">
-                        Editar
-                    </button>
-
-                    <button class="btn-eliminar"
-                        onclick="eliminarTraslado('${item.id_traslado}')">
-                        Eliminar
-                    </button>
-
-                </div>
+                <button class="btn-rechazar"
+                    onclick="resolverSolicitud('${item.id_traslado}', 'rechazado')">
+                    Rechazar
+                </button>
 
             ` : ''}
+
+            <!-- Eliminar solamente aparece si ya fue aprobado. -->
+            ${item.estado_solicitud === 'aprobado' ? `
+
+                <button class="btn-eliminar"
+                    onclick="eliminarTraslado('${item.id_traslado}')">
+                    Eliminar
+                </button>
+
+            ` : ''}
+
+        </div>
+
+    ` : ''}
 
         `;
 
