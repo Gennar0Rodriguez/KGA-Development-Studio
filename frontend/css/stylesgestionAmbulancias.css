@@ -270,6 +270,47 @@ hr {
     transition: all 0.3s ease;
 }
 
+/* Contenedor del buscador y sus sugerencias. */
+.campo-busqueda-ambulancia {
+    position: relative;
+    width: 100%;
+}
+
+/* Lista de vehículos encontrados. */
+.sugerencias-ambulancia {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+
+    max-height: 180px;
+    overflow-y: auto;
+
+    z-index: 3000;
+}
+
+/* Cada vehículo que aparece como resultado. */
+.opcion-ambulancia {
+    display: block;
+    width: 100%;
+
+    padding: 12px;
+    border: none;
+
+    background-color: white;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.opcion-ambulancia:hover {
+    background-color: #e0f2fe;
+}
+
 .btn-buscar:hover {
     background-color: #0284c7;
 
