@@ -94,8 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Actualizamos la lista para que el vehículo aparezca sin recargar la página.
             await cargarVehiculos();
 
-            // Cerramos el modal después de mostrar brevemente la confirmación.
-            cerrarModal();
+            // Dejamos visible la confirmación para que el usuario sepa que se guardó.
+            // El formulario queda limpio y puede cerrarse con la X o Cancelar.
 
         } catch (error) {
             console.error('Error al registrar el vehículo:', error);
