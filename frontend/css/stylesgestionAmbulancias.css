@@ -298,3 +298,53 @@ hr {
     background-color: #ef4444;
     color: #ffffff;
 }
+
+/* Listado independiente de vehículos registrados desde la base de datos. */
+.contenedor-vehiculos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    align-items: start;
+    gap: 25px;
+    padding: 25px;
+}
+
+.seccion-vehiculos h2,
+.seccion-traslados h2 {
+    margin: 20px 25px 0;
+}
+
+/* Los mensajes del formulario indican si el registro se guardó o falló. */
+#mensajeAmbulancia {
+    margin: 5px 0;
+    font-size: 0.95rem;
+}
+
+#mensajeAmbulancia.mensaje-error {
+    color: #b91c1c;
+}
+
+#mensajeAmbulancia.mensaje-exito {
+    color: #15803d;
+}
+
+#btnGuardarAmbulancia:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+@media (max-width: 700px) {
+    .contenedor-vehiculos {
+        grid-template-columns: 1fr;
+        padding: 15px;
+    }
+
+    .btn-principal {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .buscador {
+        margin-left: 0;
+    }
+}
