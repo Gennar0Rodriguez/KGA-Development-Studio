@@ -183,10 +183,14 @@ CREATE TABLE traslado (
     hora_salida TIME,
     hora_llegada TIME,
     lugar_origen VARCHAR(50) NOT NULL,
+    observaciones TEXT,
     estado ENUM('aprobado', 'denegado', 'en proceso') NOT NULL,
+    ci_solicitante VARCHAR(8) NULL,
+    estado_solicitud ENUM('pendiente', 'aprobado', 'rechazado') NOT NULL DEFAULT 'aprobado',
     FOREIGN KEY (ci_chofer) REFERENCES chofer(ci_chofer),
     FOREIGN KEY (matricula) REFERENCES vehiculo(matricula),
-    FOREIGN KEY (id_destino) REFERENCES destino(id_destino)
+    FOREIGN KEY (id_destino) REFERENCES destino(id_destino),
+    FOREIGN KEY (ci_solicitante) REFERENCES administrativo(ci_admin)
 );
 
 CREATE TABLE transportable (
