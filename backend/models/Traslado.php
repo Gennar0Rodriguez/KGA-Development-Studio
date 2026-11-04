@@ -15,7 +15,7 @@ class Traslado
     // OBTENER TODOS LOS TRASLADOS
     // ======================================================
 
-    public function obtenerTodos(): array {
+    public function obtenerTodos(?string $ciSolicitante = null): array {
 
         $sql = "SELECT
                     t.id_traslado,
@@ -26,6 +26,8 @@ class Traslado
                     t.lugar_origen,
                     t.observaciones,
                     t.estado,
+                    t.estado_solicitud,
+                    t.ci_solicitante,
                     t.id_destino,
                     t.ci_chofer,
                     d.nombre_destino,
@@ -45,9 +47,19 @@ class Traslado
                 LEFT JOIN enfermero enf ON tr_able.ci_enfermero = enf.ci_enfermero
                 LEFT JOIN paciente p ON tr_able.id_transportable = p.id_transportable
 
+                " . ($ciSolicitante !== null
+                    ? "WHERE t.ci_solicitante = :ci_solicitante"
+                    : "") . "
+
                 ORDER BY t.fecha_traslado DESC, t.hora_salida DESC";
 
         $sentencia = $this->conexion->prepare($sql);
+
+        // Si recibimos una CI, mostramos únicamente sus solicitudes.
+        if ($ciSolicitante !== null) {
+            $sentencia->bindValue(':ci_solicitante', $ciSolicitante);
+        }
+
         $sentencia->execute();
 
         return $sentencia->fetchAll(PDO::FETCH_ASSOC);
@@ -97,7 +109,7 @@ class Traslado
     // CREAR UN TRASLADO
     // ======================================================
 
-    public function crear(array $datos): bool {
+    public function crear(array $datos, string $ciSolicitante): bool {
 
         try {
 
@@ -121,7 +133,7 @@ class Traslado
             }
 
             // Insertar el traslado.
-            // Ahora también guardamos las observaciones.
+            // La solicitud comienza pendiente de aprobación.
             $sqlTraslado = "INSERT INTO traslado (
                                 id_traslado,
                                 ci_chofer,
@@ -131,7 +143,9 @@ class Traslado
                                 hora_salida,
                                 lugar_origen,
                                 observaciones,
-                                estado
+                                estado,
+                                ci_solicitante,
+                                estado_solicitud
                             )
                             VALUES (
                                 :id,
@@ -142,7 +156,9 @@ class Traslado
                                 :hora,
                                 :origen,
                                 :observaciones,
-                                :estado
+                                :estado,
+                                :ci_solicitante,
+                                'pendiente'
                             )";
 
             $sentencia = $this->conexion->prepare($sqlTraslado);
@@ -164,6 +180,9 @@ class Traslado
             $sentencia->bindValue(':observaciones', $observaciones);
 
             $sentencia->bindValue(':estado', $estadoEnum);
+
+            // La CI viene de la sesión, no del formulario.
+            $sentencia->bindValue(':ci_solicitante', $ciSolicitante);
 
             $sentencia->execute();
 
@@ -235,7 +254,7 @@ class Traslado
             $sentencia->execute();
 
 
-            // Enviar notificación.
+            // Enviar notificación de nueva solicitud.
             try {
 
                 $rutaNotif = __DIR__ . '/Notificacion.php';
@@ -270,6 +289,85 @@ class Traslado
             }
 
             error_log("Error en crear traslado: " . $e->getMessage());
+
+            return false;
+        }
+    }
+
+
+    // ======================================================
+    // APROBAR O RECHAZAR UNA SOLICITUD
+    // ======================================================
+
+    public function resolverSolicitud(string $idTraslado, string $estadoSolicitud, string $ciAdmin): bool {
+
+        try {
+
+            $this->conexion->beginTransaction();
+
+            // Buscamos quién creó la solicitud.
+            // FOR UPDATE evita que se resuelva dos veces simultáneamente.
+            $sql = "SELECT ci_solicitante
+                    FROM traslado
+                    WHERE id_traslado = :id
+                    AND estado_solicitud = 'pendiente'
+                    FOR UPDATE";
+
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->bindValue(':id', $idTraslado);
+            $sentencia->execute();
+
+            $ciSolicitante = $sentencia->fetchColumn();
+
+            // Si no tiene creador o ya fue resuelta, no continuamos.
+            if (!$ciSolicitante) {
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            // Actualizar el estado de la solicitud.
+            $sql = "UPDATE traslado
+                    SET estado_solicitud = :estado
+                    WHERE id_traslado = :id";
+
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->bindValue(':estado', $estadoSolicitud);
+            $sentencia->bindValue(':id', $idTraslado);
+            $sentencia->execute();
+
+            // Notificar exclusivamente al empleado que creó el traslado.
+            require_once __DIR__ . '/Notificacion.php';
+
+            $notificacion = new Notificacion();
+
+            $mensaje = ($estadoSolicitud === 'aprobado')
+                ? 'Tu solicitud de traslado fue aprobada.'
+                : 'Tu solicitud de traslado fue rechazada.';
+
+            $notificacionCreada = $notificacion->crear(
+                'Solicitud de traslado',
+                $mensaje,
+                $ciSolicitante,
+                $ciAdmin
+            );
+
+            // Si no se pudo crear la notificación, cancelamos la operación.
+            if (!$notificacionCreada) {
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            $this->conexion->commit();
+
+            return true;
+
+        } catch (Exception $e) {
+
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+
+            error_log("Error al resolver solicitud: " . $e->getMessage());
 
             return false;
         }

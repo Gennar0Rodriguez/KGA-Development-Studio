@@ -1,7 +1,8 @@
+
 <?php
 session_start();
 
-// Desactivar impresión de errores HTML en la salida para evitar romper el JSON
+// Desactivar impresión de errores HTML en la salida para evitar romper el JSON.
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
@@ -9,12 +10,22 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 
+// Comprobar que exista una sesión iniciada.
+$usuario = $_SESSION['usuario'] ?? null;
+
+if (!$usuario || empty($usuario['ci_admin']) || empty($usuario['cargo'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Debe iniciar sesión']);
+    exit;
+}
+
+$ciUsuario = $usuario['ci_admin'];
+
+$esAdmin = strtolower(trim($usuario['cargo'])) === 'administrador';
+
 try {
+
     $rutaModelo = __DIR__ . '/../../backend/models/Traslado.php';
-    if (!file_exists($rutaModelo)) {
-        // Intenta la ruta alternativa si difiere la estructura de carpetas
-        $rutaModelo = __DIR__ . '/../../backend/models/Traslado.php';
-    }
 
     if (!file_exists($rutaModelo)) {
         http_response_code(500);
@@ -28,15 +39,74 @@ try {
     $traslado = new Traslado();
 
     switch ($metodo) {
+
+        // ======================================================
+        // OBTENER TRASLADOS
+        // ======================================================
+
         case 'GET':
+
             if (isset($_GET['action']) && $_GET['action'] === 'auxiliares') {
+
                 echo json_encode($traslado->obtenerListasAuxiliares());
+
             } else {
-                echo json_encode($traslado->obtenerTodos());
+
+                // El administrador ve todos los traslados.
+                // El empleado solamente los que creó.
+                echo json_encode(
+                    $traslado->obtenerTodos($esAdmin ? null : $ciUsuario)
+                );
+
             }
+
             exit;
 
+
+        // ======================================================
+        // CREAR O RESOLVER SOLICITUD
+        // ======================================================
+
         case 'POST':
+
+            // Acción exclusiva del administrador.
+            if (isset($_GET['action']) && $_GET['action'] === 'resolver') {
+
+                if (!$esAdmin) {
+                    http_response_code(403);
+                    echo json_encode(['error' => 'No tiene permisos para realizar esta acción']);
+                    exit;
+                }
+
+                $datos = json_decode(file_get_contents('php://input'), true);
+
+                if (
+                    empty($datos['id_traslado']) ||
+                    !in_array($datos['estado_solicitud'] ?? '', ['aprobado', 'rechazado'], true)
+                ) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Datos de solicitud inválidos']);
+                    exit;
+                }
+
+                if ($traslado->resolverSolicitud(
+                    $datos['id_traslado'],
+                    $datos['estado_solicitud'],
+                    $ciUsuario
+                )) {
+
+                    echo json_encode(['mensaje' => 'Solicitud actualizada correctamente']);
+
+                } else {
+
+                    http_response_code(409);
+                    echo json_encode(['error' => 'La solicitud ya fue resuelta o no existe']);
+
+                }
+
+                exit;
+            }
+
             $datos = json_decode(file_get_contents('php://input'), true);
 
             if (!$datos) {
@@ -45,16 +115,35 @@ try {
                 exit;
             }
 
-            if ($traslado->crear($datos)) {
+            // La CI del solicitante se obtiene de la sesión.
+            if ($traslado->crear($datos, $ciUsuario)) {
+
                 http_response_code(201);
-                echo json_encode(['mensaje' => 'Traslado registrado correctamente']);
+                echo json_encode(['mensaje' => 'Solicitud de traslado registrada correctamente']);
+
             } else {
+
                 http_response_code(500);
                 echo json_encode(['error' => 'No se pudo guardar el traslado en la base de datos']);
+
             }
+
             exit;
 
+
+        // ======================================================
+        // ACTUALIZAR TRASLADO
+        // ======================================================
+
         case 'PUT':
+
+            // Solo los administradores pueden editar traslados.
+            if (!$esAdmin) {
+                http_response_code(403);
+                echo json_encode(['error' => 'No tiene permisos para realizar esta acción']);
+                exit;
+            }
+
             $datos = json_decode(file_get_contents('php://input'), true);
 
             if (!$datos || empty($datos['id_traslado']) || empty($datos['id_transportable'])) {
@@ -64,15 +153,34 @@ try {
             }
 
             if ($traslado->actualizar($datos)) {
+
                 echo json_encode(['mensaje' => 'Traslado actualizado correctamente']);
+
             } else {
+
                 http_response_code(500);
                 echo json_encode(['error' => 'No se pudo actualizar el traslado']);
+
             }
+
             exit;
 
+
+        // ======================================================
+        // ELIMINAR TRASLADO
+        // ======================================================
+
         case 'DELETE':
+
+            // Solo los administradores pueden eliminar traslados.
+            if (!$esAdmin) {
+                http_response_code(403);
+                echo json_encode(['error' => 'No tiene permisos para realizar esta acción']);
+                exit;
+            }
+
             $id = $_GET['id'] ?? null;
+
             if (!$id) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Se requiere el ID del traslado']);
@@ -80,19 +188,27 @@ try {
             }
 
             if ($traslado->eliminar($id)) {
+
                 echo json_encode(['mensaje' => 'Traslado eliminado correctamente']);
+
             } else {
+
                 http_response_code(500);
                 echo json_encode(['error' => 'No se pudo eliminar el traslado']);
+
             }
+
             exit;
     }
 
 } catch (PDOException $e) {
+
     http_response_code(500);
     echo json_encode(['error' => 'Error de Base de Datos: ' . $e->getMessage()]);
     exit;
+
 } catch (Throwable $e) {
+
     http_response_code(500);
     echo json_encode(['error' => 'Error en el servidor: ' . $e->getMessage()]);
     exit;

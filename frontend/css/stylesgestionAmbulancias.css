@@ -1,3 +1,4 @@
+
 body {
     font-family: "Lexend", sans-serif;
     background-color: #f0f4f8;
@@ -24,74 +25,75 @@ header h4 {
     margin: 0;
 }
 
-hr { 
-    border: none; 
-    height: 10px; 
-    background-color: #ADE1F9; 
-    margin: 0;  
+hr {
+    border: none;
+    height: 10px;
+    background-color: #ADE1F9;
+    margin: 0;
 }
 
-.layout{
-    display:flex;
-}
-.sidebar{
-    width:260px;
-    height:calc(70vh - 40px);
-    background:white;
-    border-radius:20px;
-    box-shadow:0 5px 20px rgba(0,0,0,0.15);
-    padding:20px;
-    display:flex;
-    flex-direction:column;
-    margin:20px;
+.layout {
+    display: flex;
 }
 
-.sidebar nav{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    margin-top:40px;
+.sidebar {
+    width: 260px;
+    height: calc(70vh - 40px);
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
 }
 
-.sidebar nav a{
-    text-decoration:none;
-    color:#555;
-    padding:12px 15px;
-    border-radius:12px;
-    transition:0.2s;
-    font-weight:500;
-    display:flex;
-    align-items:center;
-    gap:12px;
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 40px;
 }
 
-.sidebar nav a:hover{
-    background:#F3F4F6;
-    color:#000;
+.sidebar nav a {
+    text-decoration: none;
+    color: #555;
+    padding: 12px 15px;
+    border-radius: 12px;
+    transition: 0.2s;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.sidebar nav a.active{
-    background:#E0F2FE;
-    color:#0284C7;
-    font-weight:bold;
+.sidebar nav a:hover {
+    background: #F3F4F6;
+    color: #000;
 }
 
-.usuario{
-    margin-top:auto;
-    display:flex;
-    align-items:center;
-    gap:10px;
+.sidebar nav a.active {
+    background: #E0F2FE;
+    color: #0284C7;
+    font-weight: bold;
 }
 
-.usuario img{
-    width:40px;
-    height:40px;
-    border-radius:50%;
+.usuario {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.usuario img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
 }
 
 .card-ambulancia {
     width: 280px;
-    background-color:#8bb4c7b9;
+    background-color: #8bb4c7b9;
     padding: 15px;
     border-radius: 12px;
 
@@ -107,8 +109,7 @@ hr {
 }
 
 .card-ambulancia:hover {
-
-    transform: translateY(-5px);    
+    transform: translateY(-5px);
     box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
@@ -117,6 +118,7 @@ hr {
     align-self: center;
     margin-bottom: 10px;
 }
+
 .card-ambulancia h3 {
     text-align: center;
     margin-bottom: 15px;
@@ -184,6 +186,7 @@ hr {
     cursor: pointer;
     transition: 0.2s;
 }
+
 .btn-editar {
     background-color: #62966f;
     color: white;
@@ -373,7 +376,80 @@ hr {
     cursor: wait;
 }
 
+
+/* ======================================================
+   FILTROS DE SOLICITUDES
+====================================================== */
+
+.filtros-solicitudes {
+    display: flex;
+    gap: 12px;
+    margin: 20px 25px 0;
+    flex-wrap: wrap;
+}
+
+.btn-filtro {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+
+    background-color: white;
+    color: #555;
+
+    font-weight: bold;
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.btn-filtro:hover {
+    background-color: #e0f2fe;
+}
+
+.btn-filtro.activo {
+    background-color: #0284c7;
+    color: white;
+}
+
+
+/* ======================================================
+   BOTONES DE APROBACIÓN
+====================================================== */
+
+.btn-aprobar,
+.btn-rechazar {
+    flex: 1;
+    padding: 10px;
+
+    border: none;
+    border-radius: 8px;
+
+    color: white;
+    font-weight: bold;
+
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-aprobar {
+    background-color: #15803d;
+}
+
+.btn-aprobar:hover {
+    background-color: #166534;
+}
+
+.btn-rechazar {
+    background-color: #b91c1c;
+}
+
+.btn-rechazar:hover {
+    background-color: #991b1b;
+}
+
+
 @media (max-width: 700px) {
+
     .contenedor-vehiculos {
         grid-template-columns: 1fr;
         padding: 15px;
@@ -388,4 +464,9 @@ hr {
     .buscador {
         margin-left: 0;
     }
+
+    .contenedor-ambulancias {
+        grid-template-columns: 1fr;
+    }
+
 }

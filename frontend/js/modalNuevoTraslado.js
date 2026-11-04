@@ -6,15 +6,36 @@ let trasladoEditando = null;
 // Guarda los vehículos recibidos desde la base de datos.
 let vehiculosDisponibles = [];
 
+// Guarda el rol y los filtros de solicitudes.
+let esAdministrador = false;
+let filtroSolicitud = 'pendiente';
+let textoBusqueda = '';
+
+
 document.addEventListener('DOMContentLoaded', async () => {
 
     console.log('JS Traslados cargado correctamente');
+
+    // Consultamos la sesión para saber qué opciones mostrar.
+    const datosSesion = await obtenerSesion();
+
+    if (!datosSesion || !datosSesion.autenticado) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    const usuarioActual = datosSesion.usuario || {};
+
+    esAdministrador = (usuarioActual.cargo || '').toLowerCase() === 'administrador';
 
     const modal = document.getElementById('modalNuevoTraslado');
     const btnAbrir = document.getElementById('btnAbrirModalTraslado');
     const btnCerrar = document.getElementById('btnCerrarModalTraslado');
     const btnCancelar = document.getElementById('btnCancelarModalTraslado');
     const formTraslado = document.getElementById('formNuevoTraslado');
+
+    // Creamos los botones para cambiar entre solicitudes.
+    configurarFiltrosSolicitudes();
 
     // 1. Manejo de apertura del modal.
     if (btnAbrir && modal) {
@@ -102,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 fecha: document.getElementById('fecha')?.value,
                 hora: document.getElementById('hora')?.value,
 
-                // Ahora enviamos las observaciones para guardarlas en MySQL.
+                // Enviamos las observaciones para guardarlas en MySQL.
                 observaciones: document.getElementById('observaciones')?.value,
 
                 estado: document.getElementById('estado')?.value,
@@ -172,19 +193,116 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         inputBuscador.addEventListener('input', () => {
 
-            const texto = inputBuscador.value.toLowerCase().trim();
+            textoBusqueda = inputBuscador.value.toLowerCase().trim();
 
-            const filtrados = todosLosTraslados.filter(t =>
-                String(t.matricula || '').toLowerCase().includes(texto)
-            );
-
-            renderizarTarjetasTraslado(filtrados);
+            filtrarTraslados();
 
         });
 
     }
 
 });
+
+
+// ======================================================
+// OBTENER SESIÓN DEL USUARIO
+// ======================================================
+
+async function obtenerSesion() {
+
+    try {
+
+        const response = await fetch('/kgade/KGA-Development-Studio/API/sesion.php');
+
+        if (!response.ok) return null;
+
+        return await response.json();
+
+    } catch (error) {
+
+        console.error('Error al obtener sesión:', error);
+
+        return null;
+
+    }
+
+}
+
+
+// ======================================================
+// CONFIGURAR FILTROS DE SOLICITUDES
+// ======================================================
+
+function configurarFiltrosSolicitudes() {
+
+    const contenedor = document.querySelector('.contenedor-ambulancias');
+
+    if (!contenedor) return;
+
+    const filtros = document.createElement('section');
+
+    filtros.className = 'filtros-solicitudes';
+
+    filtros.innerHTML = `
+        <button class="btn-filtro activo" data-estado="pendiente">
+            Pendientes
+        </button>
+
+        <button class="btn-filtro" data-estado="aprobado">
+            ${esAdministrador ? 'Confirmados' : 'Aprobadas'}
+        </button>
+
+        <button class="btn-filtro" data-estado="rechazado">
+            Rechazados
+        </button>
+    `;
+
+    // Insertamos los filtros antes de las tarjetas.
+    contenedor.parentNode.insertBefore(filtros, contenedor);
+
+    filtros.querySelectorAll('.btn-filtro').forEach(boton => {
+
+        boton.addEventListener('click', () => {
+
+            filtroSolicitud = boton.dataset.estado;
+
+            // Actualizamos cuál botón está seleccionado.
+            filtros.querySelectorAll('.btn-filtro').forEach(b => {
+                b.classList.remove('activo');
+            });
+
+            boton.classList.add('activo');
+
+            filtrarTraslados();
+
+        });
+
+    });
+
+}
+
+
+// ======================================================
+// FILTRAR TRASLADOS
+// ======================================================
+
+function filtrarTraslados() {
+
+    const filtrados = todosLosTraslados.filter(traslado => {
+
+        const coincideEstado = traslado.estado_solicitud === filtroSolicitud;
+
+        const coincideBusqueda = String(traslado.matricula || '')
+            .toLowerCase()
+            .includes(textoBusqueda);
+
+        return coincideEstado && coincideBusqueda;
+
+    });
+
+    renderizarTarjetasTraslado(filtrados);
+
+}
 
 
 // ======================================================
@@ -387,7 +505,7 @@ async function cargarTraslados() {
 
         todosLosTraslados = await response.json();
 
-        renderizarTarjetasTraslado(todosLosTraslados);
+        filtrarTraslados();
 
     } catch (error) {
 
@@ -412,7 +530,7 @@ function renderizarTarjetasTraslado(lista) {
 
     if (!Array.isArray(lista) || lista.length === 0) {
 
-        contenedor.innerHTML = '<p style="text-align:center; width:100%; grid-column: 1/-1;">No hay traslados registrados.</p>';
+        contenedor.innerHTML = '<p style="text-align:center; width:100%; grid-column: 1/-1;">No hay solicitudes en esta sección.</p>';
 
         return;
 
@@ -435,6 +553,7 @@ function renderizarTarjetasTraslado(lista) {
                 <p><strong>Tipo:</strong> Ambulancia</p>
                 <p><strong>Destino:</strong> ${item.nombre_destino || 'No asignado'}</p>
                 <p><strong>Estado:</strong> ${item.estado || 'Programado'}</p>
+                <p><strong>Solicitud:</strong> ${item.estado_solicitud || 'Sin estado'}</p>
                 <p><strong>Hora salida:</strong> ${item.hora_salida || 'Pendiente'}</p>
                 <p><strong>Hora llegada:</strong> ${item.hora_llegada || 'Pendiente'}</p>
 
@@ -455,23 +574,99 @@ function renderizarTarjetasTraslado(lista) {
 
             </div>
 
-            <div class="acciones">
+            ${esAdministrador ? `
 
-                <button class="btn-editar" onclick="editarTraslado('${item.id_traslado}', '${item.id_transportable}')">
-                    Editar
-                </button>
+                <div class="acciones">
 
-                <button class="btn-eliminar" onclick="eliminarTraslado('${item.id_traslado}')">
-                    Eliminar
-                </button>
+                    ${item.estado_solicitud === 'pendiente' ? `
 
-            </div>
+                        <button class="btn-aprobar"
+                            onclick="resolverSolicitud('${item.id_traslado}', 'aprobado')">
+                            Confirmar
+                        </button>
+
+                        <button class="btn-rechazar"
+                            onclick="resolverSolicitud('${item.id_traslado}', 'rechazado')">
+                            Rechazar
+                        </button>
+
+                    ` : ''}
+
+                    <button class="btn-editar"
+                        onclick="editarTraslado('${item.id_traslado}', '${item.id_transportable}')">
+                        Editar
+                    </button>
+
+                    <button class="btn-eliminar"
+                        onclick="eliminarTraslado('${item.id_traslado}')">
+                        Eliminar
+                    </button>
+
+                </div>
+
+            ` : ''}
 
         `;
 
         contenedor.appendChild(card);
 
     });
+
+}
+
+
+// ======================================================
+// RESOLVER UNA SOLICITUD
+// ======================================================
+
+async function resolverSolicitud(idTraslado, estadoSolicitud) {
+
+    const accion = estadoSolicitud === 'aprobado'
+        ? 'confirmar'
+        : 'rechazar';
+
+    if (!confirm(`¿Desea ${accion} esta solicitud?`)) return;
+
+    try {
+
+        const response = await fetch(
+            '/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=resolver',
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    id_traslado: idTraslado,
+                    estado_solicitud: estadoSolicitud
+                })
+            }
+        );
+
+        const res = await response.json();
+
+        if (response.ok) {
+
+            alert(res.mensaje);
+
+            // Actualizamos las tarjetas para reflejar el nuevo estado.
+            await cargarTraslados();
+
+        } else {
+
+            alert(res.error || 'No se pudo actualizar la solicitud');
+
+        }
+
+    } catch (error) {
+
+        console.error('Error al resolver solicitud:', error);
+
+        alert('Ocurrió un error en la conexión.');
+
+    }
 
 }
 
