@@ -1,10 +1,10 @@
-
 let todosLosTraslados = [];
 let modoEdicion = false;
 let trasladoEditando = null;
 
-// Guardamos los choferes para utilizarlos en el autocompletado.
+// Listas que se cargan desde la API.
 let choferesDisponibles = [];
+let vehiculosDisponibles = [];
 
 // Guarda el rol y los filtros de solicitudes.
 let esAdministrador = false;
@@ -324,6 +324,10 @@ function filtrarTraslados() {
 // CARGAR OPCIONES DEL FORMULARIO
 // ======================================================
 
+// ======================================================
+// CARGAR OPCIONES DEL FORMULARIO
+// ======================================================
+
 async function cargarOpcionesFormulario() {
 
     try {
@@ -338,30 +342,12 @@ async function cargarOpcionesFormulario() {
 
         }
 
+        // Convertimos la respuesta de PHP en un objeto JavaScript.
+        const listas = await res.json();
+
+        // Guardamos los datos para utilizarlos en los autocompletados.
         choferesDisponibles = listas.choferes || [];
-
-        // Guardamos los vehículos para utilizarlos en el autocompletado.
         vehiculosDisponibles = listas.vehiculos || [];
-
-        // Cargar conductores.
-        const selectChofer = document.getElementById('conductor');
-
-        if (selectChofer && listas.choferes) {
-
-            selectChofer.innerHTML = '<option value="">Seleccione un conductor</option>';
-
-            listas.choferes.forEach(c => {
-
-                const opcion = document.createElement('option');
-
-                opcion.value = c.ci_chofer;
-                opcion.textContent = c.nombre_chofer + ' ' + c.apellido_chofer;
-
-                selectChofer.appendChild(opcion);
-
-            });
-
-        }
 
         // Cargar enfermeros.
         const selectEnfermero = document.getElementById('enfermero');
@@ -410,6 +396,11 @@ async function cargarOpcionesFormulario() {
 
         }
 
+        console.log('Opciones cargadas correctamente:', {
+            choferes: choferesDisponibles.length,
+            vehiculos: vehiculosDisponibles.length
+        });
+
     } catch (error) {
 
         console.error('Error al cargar opciones:', error);
@@ -417,7 +408,6 @@ async function cargarOpcionesFormulario() {
     }
 
 }
-
 
 // ======================================================
 // BUSCADOR AUTOMÁTICO DE VEHÍCULOS
