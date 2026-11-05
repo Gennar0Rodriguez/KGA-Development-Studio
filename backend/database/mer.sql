@@ -16,22 +16,16 @@ CREATE DATABASE Proyecto;
 
     CREATE TABLE documentos (
         id_documentos VARCHAR(50) PRIMARY KEY NOT NULL,
-        id_categoria VARCHAR(50),
+        ci_admin VARCHAR (50), 
+        id_categoria VARCHAR(50), 
+        hora_carga TIME NOT NULL,
+        fecha_carga DATE NOT NULL,
         titulo_docs VARCHAR(50) NOT NULL,
         descripcion_docs VARCHAR(50),
         nombre_archivo VARCHAR(255) NOT NULL,
         ruta_archivo VARCHAR(255) NOT NULL,
-        FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
-    );
-
-    CREATE TABLE carga(
-        ci_admin VARCHAR(8) NOT NULL,
-        id_documentos VARCHAR(50) NOT NULL,
-        hora TIME NOT NULL,
-        fecha DATE NOT NULL,
-        PRIMARY KEY (ci_admin, id_documentos),
-        FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin) ON DELETE CASCADE,
-        FOREIGN KEY (id_documentos) REFERENCES documentos(id_documentos)
+        FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria),
+        FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin)
     );
 
     CREATE TABLE encuesta (
@@ -46,95 +40,26 @@ CREATE DATABASE Proyecto;
     CREATE TABLE pregunta (
         id_pregunta VARCHAR(50) NOT NULL,
         id_encuesta VARCHAR(50) NOT NULL,
+        id_categoria VARCHAR(50) NOT NULL,
         nombre_pregunta VARCHAR(50) NOT NULL,
         tipo ENUM('opcion multiple', 'texto') NOT NULL,
-        PRIMARY KEY (id_pregunta, id_encuesta),
-        FOREIGN KEY (id_encuesta) REFERENCES encuesta(id_encuesta)
+        PRIMARY KEY (id_pregunta, id_encuesta, id_categoria),
+        FOREIGN KEY (id_encuesta) REFERENCES encuesta(id_encuesta),
+        FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
     );
-
 
     CREATE TABLE respuesta (
         id_respuesta VARCHAR(50) NOT NULL,
         id_pregunta VARCHAR(50) NOT NULL,
         id_encuesta VARCHAR(50) NOT NULL,
+        id_categoria VARCHAR(50) NOT NULL,
         informacion VARCHAR(50),
         tipo ENUM('opcion multiple', 'texto') NOT NULL,
         PRIMARY KEY (id_respuesta, id_pregunta, id_encuesta),
         FOREIGN KEY (id_pregunta) REFERENCES pregunta(id_pregunta),
-        FOREIGN KEY (id_encuesta) REFERENCES encuesta(id_encuesta)
+        FOREIGN KEY (id_encuesta) REFERENCES encuesta(id_encuesta),
+        FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
     );
-
-    CREATE TABLE notificacion (
-        id_notificacion VARCHAR(8) PRIMARY KEY NOT NULL,
-        titulo_not VARCHAR(50) NOT NULL,
-        descripcion_not VARCHAR(100)
-    );
-
-    CREATE TABLE recibe (
-        ci_admin VARCHAR(8) NOT NULL,
-        id_notificacion VARCHAR(8) NOT NULL,
-        ci_emisor VARCHAR(8) ,
-        ci_receptor VARCHAR(8) ,
-        fecha_envio VARCHAR(50) NOT NULL,
-        leido BOOLEAN NOT NULL,
-        PRIMARY KEY (ci_admin, id_notificacion),
-        FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin) ON DELETE CASCADE,
-        FOREIGN KEY (id_notificacion) REFERENCES notificacion(id_notificacion) ON DELETE CASCADE
-    );
-
-INSERT INTO administrativo (ci_admin, nombre_admin, apellido_admin, contraseña_admin, cargo) VALUES
-('11111111', 'Ezequiel', 'Matta', 'ari', 'administrador'),
-('22222222', 'Laura', 'Gomez', '123', 'empleado'),
-('33333333', 'Carlos', 'Perez', '456', 'empleado'),
-('44444444', 'Ana', 'Rios', '789', 'empleado'),
-('55555555', 'Jorge', 'Sosa', 'jorge', 'empleado');
-
-INSERT INTO categoria (id_categoria, nombre_cat) VALUES
-('C1', 'Recursos Humanos'),
-('C2', 'Logistica y Flota'),
-('C3', 'Calidad y Normativas'),
-('C4', 'Administracion'),
-('C5', 'Atencion al Paciente');
-
-INSERT INTO documentos (id_documentos, id_categoria, titulo_docs, descripcion_docs, nombre_archivo, ruta_archivo) VALUES
-('DOC1', 'C1', 'Manual de Empleado', 'Normas generales del personal', 'DOC1.pdf', 'uploads/documentos/DOC1.pdf'),
-('DOC2', 'C2', 'Guia de Traslados', 'Protocolo logistico de ambulancias', 'DOC2.pdf', 'uploads/documentos/DOC2.pdf'),
-('DOC3', 'C3', 'Estandares de Calidad', 'Normas y procedimientos ISO', 'DOC3.pdf', 'uploads/documentos/DOC3.pdf'),
-('DOC4', 'C4', 'Balance Mensual', 'Reporte financiero mensual', 'DOC4.pdf', 'uploads/documentos/DOC4.pdf'),
-('DOC5', 'C5', 'Protocolo de Ingreso', 'Actualizacion de normas de atencion', 'DOC5.pdf', 'uploads/documentos/DOC5.pdf');
-
-INSERT INTO carga (ci_admin, id_documentos, hora, fecha) VALUES
-('11111111', 'DOC1', '10:00:00', '2026-08-01'),
-('22222222', 'DOC2', '11:15:00', '2026-08-05'),
-('33333333', 'DOC3', '14:30:00', '2026-08-10'),
-('44444444', 'DOC4', '09:45:00', '2026-08-15'),
-('11111111', 'DOC5', '16:20:00', '2026-08-20');
-
-INSERT INTO encuesta (id_encuesta, id_categoria, descripcion_enc, titulo_enc) VALUES
-('E1', 'C1', 'Satisfaccion anual', 'Clima Laboral'),
-('E2', 'C2', 'Estado vehicular actual', 'Evaluacion de Flota'),
-('E3', 'C3', 'Procesos medicos', 'Auditoria Interna'),
-('E4', 'C5', 'Atencion recibida', 'Satisfaccion de Pacientes'),
-('E5', 'C4', 'Mejoras en la oficina', 'Buzon de Sugerencias');
-
-INSERT INTO pregunta (id_pregunta, id_encuesta, nombre_pregunta, tipo) VALUES
-('P1', 'E1', 'Como califica su entorno de trabajo?', 'opcion multiple'),
-('P2', 'E2', 'Describa cualquier falla vehicular notada', 'texto'),
-('P3', 'E3', 'Se cumplio el protocolo al 100%?', 'opcion multiple'),
-('P4', 'E4', 'Deje una sugerencia para mejorar la atencion', 'texto'),
-('P5', 'E5', 'Del 1 al 5, evalue las instalaciones', 'opcion multiple');
-
-INSERT INTO respuesta (id_respuesta, id_pregunta, id_encuesta, informacion, tipo) VALUES
-('R1', 'P1', 'E1', 'Excelente', 'opcion multiple'),
-('R2', 'P2', 'E2', 'Frenos un poco largos en la SAA1234', 'texto'),
-('R3', 'P3', 'E3', 'Si, completamente', 'opcion multiple'),
-('R4', 'P4', 'E4', 'Deberian mejorar los tiempos de espera', 'texto'),
-('R5', 'P5', 'E5', '5', 'opcion multiple');
-
-
-
-
-
 
 
 
@@ -150,7 +75,8 @@ CREATE TABLE vehiculo (
     modelo VARCHAR(50) NOT NULL,
     capacidad VARCHAR(50) NOT NULL,
     tipo_vehiculo ENUM('ambulancia', 'auto', 'otro') NOT NULL,
-    camilla BOOLEAN NOT NULL
+    camilla BOOLEAN NOT NULL,
+    observaciones VARCHAR(100)
 );
 
 CREATE TABLE conduce (
@@ -168,14 +94,8 @@ CREATE TABLE destino (
     ruta VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE enfermero (
-    ci_enfermero VARCHAR(8) PRIMARY KEY NOT NULL,
-    nombre_enfermero VARCHAR(50) NOT NULL,
-    apellido_enfermero VARCHAR(50) NOT NULL
-);
-
 CREATE TABLE traslado (
-    id_traslado VARCHAR(50) PRIMARY KEY NOT NULL,
+    id_traslado VARCHAR(50) NOT NULL,
     ci_chofer VARCHAR(8) NOT NULL,
     matricula VARCHAR(15) NOT NULL,
     id_destino VARCHAR(50) NOT NULL,
@@ -183,14 +103,40 @@ CREATE TABLE traslado (
     hora_salida TIME,
     hora_llegada TIME,
     lugar_origen VARCHAR(50) NOT NULL,
-    observaciones TEXT,
-    estado ENUM('aprobado', 'denegado', 'en proceso') NOT NULL,
-    ci_solicitante VARCHAR(8) NULL,
-    estado_solicitud ENUM('pendiente', 'aprobado', 'rechazado') NOT NULL DEFAULT 'aprobado',
+    estado_traslado ENUM ('finalizado', 'aprobado', 'denegado', 'en proceso', 'pendiente') NOT NULL,
+    ci_solicitante VARCHAR (8) NOT NULL,
+    estado_solicitud ENUM ('aprobado', 'rechazado', 'pendiente') NOT NULL,
+    observaciones VARCHAR(100),
+    PRIMARY KEY (id_traslado, ci_chofer, matricula, id_destino),
+    FOREIGN KEY (ci_chofer) REFERENCES chofer(ci_chofer),
+    FOREIGN KEY (matricula) REFERENCES vehiculo(matricula),
+    FOREIGN KEY (id_destino) REFERENCES destino(id_destino)
+);
+
+CREATE TABLE notifica (
+    id_traslado VARCHAR(50) NOT NULL,
+    ci_chofer VARCHAR(8) NOT NULL,
+    matricula VARCHAR(15) NOT NULL,
+    id_destino VARCHAR(50) NOT NULL,
+    ci_admin VARCHAR (8) NOT NULL,
+    ci_emisor VARCHAR (8) NOT NULL,
+    fecha_envio DATE NOT NULL,
+    leido BOOLEAN, 
+    titulo_not VARCHAR(100) NOT NULL,
+    descripcion_not VARCHAR(255) NOT NULL,
+    ci_receptor VARCHAR (8) NOT NULL, 
+    PRIMARY KEY (id_traslado, ci_chofer, matricula, id_destino, ci_admin),
+    FOREIGN KEY (id_traslado) REFERENCES traslado(id_traslado),
     FOREIGN KEY (ci_chofer) REFERENCES chofer(ci_chofer),
     FOREIGN KEY (matricula) REFERENCES vehiculo(matricula),
     FOREIGN KEY (id_destino) REFERENCES destino(id_destino),
-    FOREIGN KEY (ci_solicitante) REFERENCES administrativo(ci_admin)
+    FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin)
+);
+
+CREATE TABLE enfermero (
+    ci_enfermero VARCHAR(8) PRIMARY KEY NOT NULL,
+    nombre_enfermero VARCHAR(50) NOT NULL,
+    apellido_enfermero VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE transportable (
@@ -199,20 +145,6 @@ CREATE TABLE transportable (
     habitacion_retiro VARCHAR(50) NOT NULL,
     piso_retiro VARCHAR(50) NOT NULL,
     FOREIGN KEY (ci_enfermero) REFERENCES enfermero(ci_enfermero)
-);
-
-CREATE TABLE transporta (
-    id_transportable VARCHAR(50) NOT NULL,
-    id_traslado VARCHAR(50) NOT NULL,
-    ci_chofer VARCHAR(8) NOT NULL,
-    matricula VARCHAR(15) NOT NULL,
-    id_destino VARCHAR(50) NOT NULL,
-    PRIMARY KEY (id_transportable, id_traslado),
-    FOREIGN KEY (id_transportable) REFERENCES transportable(id_transportable),
-    FOREIGN KEY (id_traslado) REFERENCES traslado(id_traslado),
-    FOREIGN KEY (ci_chofer) REFERENCES chofer(ci_chofer),
-    FOREIGN KEY (matricula) REFERENCES vehiculo(matricula),
-    FOREIGN KEY (id_destino) REFERENCES destino(id_destino)
 );
 
 CREATE TABLE paciente (
@@ -229,86 +161,145 @@ CREATE TABLE elemento (
     id_transportable VARCHAR(50) PRIMARY KEY NOT NULL,
     nombre_elemento VARCHAR(50) NOT NULL,
     descripcion_elemento VARCHAR(50) NOT NULL,
-    tipo_elemento ENUM('organo', 'otro') NOT NULL,
+    tipo_elemento ENUM('organo', 'documentacion', 'otro') NOT NULL,
     FOREIGN KEY (id_transportable) REFERENCES transportable(id_transportable)
 );
 
-INSERT INTO chofer (ci_chofer, nombre_chofer, apellido_chofer, telefono) VALUES
-('48291023', 'Ezequiel', 'Matta', '099123456'),
-('51928374', 'Juan', 'Perez', '098765432'),
-('39281726', 'Carlos', 'Gomez', '091234567'),
-('44556677', 'Martin', 'Rodriguez', '092345678'),
-('50123459', 'Diego', 'Silva', '093456789');
+CREATE TABLE transporta (
+    id_transportable VARCHAR(50) NOT NULL,
+    id_traslado VARCHAR(50) NOT NULL,
+    ci_chofer VARCHAR(8) NOT NULL,
+    matricula VARCHAR(15) NOT NULL,
+    id_destino VARCHAR(50) NOT NULL,
+    PRIMARY KEY (id_transportable, id_traslado, ci_chofer, matricula,id_destino),
+    FOREIGN KEY (id_transportable) REFERENCES transportable(id_transportable),
+    FOREIGN KEY (id_traslado) REFERENCES traslado(id_traslado),
+    FOREIGN KEY (ci_chofer) REFERENCES chofer(ci_chofer),
+    FOREIGN KEY (matricula) REFERENCES vehiculo(matricula),
+    FOREIGN KEY (id_destino) REFERENCES destino(id_destino)
+);
 
-INSERT INTO vehiculo (matricula, modelo, capacidad, tipo_vehiculo, camilla) VALUES
-('SCA1234', 'Mercedes Sprinter', '3', 'ambulancia', TRUE),
-('SBB5678', 'Renault Master', '3', 'ambulancia', TRUE),
-('SFA9012', 'Fiat Fiorino', '2', 'auto', FALSE),
-('SCD3456', 'Peugeot Partner', '2', 'otro', FALSE),
-('SEE7890', 'Ford Transit', '4', 'ambulancia', TRUE);
 
-INSERT INTO conduce (ci_chofer, matricula) VALUES
-('48291023', 'SCA1234'),
-('51928374', 'SBB5678'),
-('39281726', 'SFA9012'),
-('44556677', 'SCD3456'),
-('50123459', 'SEE7890');
 
-INSERT INTO destino (id_destino, nombre_destino, direccion, ruta) VALUES
-('DEST01', 'Hospital de Clinicas', 'Av. Italia s/n', 'Ruta 1'),
-('DEST02', 'Hospital Maciel', '25 de Mayo 174', 'Ruta 1'),
-('DEST03', 'Sanatorio Americano', 'Av. Italia 2445', 'Ruta 5'),
-('DEST04', 'Hospital Militar', 'Av. 8 de Octubre 3020', 'Ruta 8'),
-('DEST05', 'Sanatorio Britanico', 'Av. Garibaldi 1720', 'Ruta 102');
+INSERT INTO administrativo (ci_admin, nombre_admin, apellido_admin, contraseña_admin, cargo) VALUES 
+('12345678', 'Ezequiel', 'Matta', 'Ari', 'administrador'),
+('87654321', 'Juan', 'Gomez', '123', 'empleado'),
+('11223344', 'Carlos', 'Perez', '456', 'empleado'),
+('55667788', 'Maria', 'Rodriguez', '789', 'administrador'),
+('99887766', 'Juan', 'Lopez', '222', 'empleado');
 
-INSERT INTO enfermero (ci_enfermero, nombre_enfermero, apellido_enfermero) VALUES
-('38192837', 'Maria', 'Lopez'),
-('42192834', 'Ana', 'Fernandez'),
-('46192839', 'Lucia', 'Martinez'),
-('37192831', 'Sofia', 'Suarez'),
-('49192835', 'Valentina', 'Acosta');
+INSERT INTO categoria (id_categoria, nombre_cat) VALUES 
+('CAT01', 'Urgencias'),
+('CAT02', 'Pediatria'),
+('CAT03', 'Cirugia General'),
+('CAT04', 'Farmacia'),
+('CAT05', 'Laboratorio Clinico');
 
-INSERT INTO traslado (id_traslado, ci_chofer, matricula, id_destino, fecha_traslado, hora_salida, hora_llegada, lugar_origen, estado) VALUES
-('TRAS01', '48291023', 'SCA1234', 'DEST01', '2026-04-14', '08:00:00', '09:00:00', 'Piriapolis', 'aprobado'),
-('TRAS02', '51928374', 'SBB5678', 'DEST02', '2026-04-14', '10:30:00', NULL, 'Montevideo', 'en proceso'),
-('TRAS03', '39281726', 'SFA9012', 'DEST03', '2026-04-15', NULL, NULL, 'Montevideo', 'denegado'),
-('TRAS04', '44556677', 'SCD3456', 'DEST04', '2026-04-16', '14:00:00', '15:15:00', 'Piriapolis', 'aprobado'),
-('TRAS05', '50123459', 'SEE7890', 'DEST05', '2026-04-17', '16:00:00', NULL, 'Montevideo', 'en proceso');
+INSERT INTO documentos (id_documentos, ci_admin, id_categoria, hora_carga, fecha_carga, titulo_docs, descripcion_docs, nombre_archivo, ruta_archivo) VALUES 
+('DOC01', '12345678', 'CAT01', '08:30:00', '2026-06-01', 'Protocolo Triaje', 'Protocolo de recepcion de emergencias', 'triaje.pdf', '/docs/urgencias/'),
+('DOC02', '87654321', 'CAT02', '09:15:00', '2026-06-02', 'Historial Pediatrico', 'Guia de controles pediatricos', 'pediatria.pdf', '/docs/pediatria/'),
+('DOC03', '11223344', 'CAT03', '10:00:00', '2026-06-03', 'Checklist Quirurgico', 'Lista de verificacion de quirofano', 'quirofano.pdf', '/docs/cirugia/'),
+('DOC04', '55667788', 'CAT04', '11:20:00', '2026-06-04', 'Inventario Insumos', 'Stock de medicamentos del mes', 'farmacia.pdf', '/docs/farmacia/'),
+('DOC05', '99887766', 'CAT05', '14:00:00', '2026-06-05', 'Manual Muestras', 'Procedimiento de analiticas de sangre', 'analisis.pdf', '/docs/laboratorio/');
 
-INSERT INTO transportable (id_transportable, ci_enfermero, habitacion_retiro, piso_retiro) VALUES
-('TRAN01', '38192837', '204', '2'),
-('TRAN02', '42192834', '312', '3'),
-('TRAN03', '46192839', '105', '1'),
-('TRAN04', '37192831', '410', '4'),
-('TRAN05', '49192835', '520', '5'),
-('TRAN06', '38192837', '101', '1'),
-('TRAN07', '42192834', '202', '2'),
-('TRAN08', '46192839', '303', '3'),
-('TRAN09', '37192831', '404', '4'),
-('TRAN10', '49192835', '505', '5');
+INSERT INTO encuesta (id_encuesta, id_categoria, descripcion_enc, titulo_enc) VALUES 
+('ENC01', 'CAT01', 'Tiempo de atencion en guardia', 'Satisfaccion Urgencias'),
+('ENC02', 'CAT02', 'Trato del personal medico infantil', 'Atencion Pediatrica'),
+('ENC03', 'CAT03', 'Experiencia pre y post operatoria', 'Calidad Quirurgica'),
+('ENC04', 'CAT04', 'Disponibilidad de medicamentos', 'Evaluacion Farmacia'),
+('ENC05', 'CAT05', 'Entrega de resultados de analisis', 'Servicio Laboratorio');
 
-INSERT INTO transporta (id_transportable, id_traslado, ci_chofer, matricula, id_destino) VALUES
-('TRAN01', 'TRAS01', '48291023', 'SCA1234', 'DEST01'),
-('TRAN02', 'TRAS01', '48291023', 'SCA1234', 'DEST01'),
-('TRAN03', 'TRAS02', '51928374', 'SBB5678', 'DEST02'),
-('TRAN04', 'TRAS02', '51928374', 'SBB5678', 'DEST02'),
-('TRAN05', 'TRAS03', '39281726', 'SFA9012', 'DEST03'),
-('TRAN06', 'TRAS03', '39281726', 'SFA9012', 'DEST03'),
-('TRAN07', 'TRAS04', '44556677', 'SCD3456', 'DEST04'),
-('TRAN08', 'TRAS04', '44556677', 'SCD3456', 'DEST04'),
-('TRAN09', 'TRAS05', '50123459', 'SEE7890', 'DEST05'),
-('TRAN10', 'TRAS05', '50123459', 'SEE7890', 'DEST05');
+INSERT INTO pregunta (id_pregunta, id_encuesta, id_categoria, nombre_pregunta, tipo) VALUES 
+('PRG01', 'ENC01', 'CAT01', '¿El tiempo de espera en guardia fue adecuado?', 'opcion multiple'),
+('PRG02', 'ENC02', 'CAT02', 'Comentarios sobre el trato a los niños', 'texto'),
+('PRG03', 'ENC03', 'CAT03', '¿Recibio informacion clara sobre su cirugia?', 'opcion multiple'),
+('PRG04', 'ENC04', 'CAT04', 'Detalle sugerencias sobre la entrega de remedios', 'texto'),
+('PRG05', 'ENC05', 'CAT05', '¿Los resultados se entregaron en fecha?', 'opcion multiple');
 
-INSERT INTO paciente (id_transportable, ci_paciente, nombre_paciente, accesorio, oxigeno, aislamiento) VALUES
-('TRAN01', '41234567', 'Roberto Gomez', 'baston', FALSE, FALSE),
-('TRAN02', '45678912', 'Marta Sanchez', 'silla', TRUE, FALSE),
-('TRAN03', '39876543', 'Pedro Diaz', 'otro', FALSE, TRUE),
-('TRAN04', '38234567', 'Lucia Mendez', 'baston', TRUE, TRUE),
-('TRAN05', '37456789', 'Jorge Rivas', 'silla', FALSE, FALSE);
+INSERT INTO respuesta (id_respuesta, id_pregunta, id_encuesta, id_categoria, informacion, tipo) VALUES 
+('RES01', 'PRG01', 'ENC01', 'CAT01', 'Si, fue muy rapido', 'opcion multiple'),
+('RES02', 'PRG02', 'ENC02', 'CAT02', 'Excelente contencion del medico', 'texto'),
+('RES03', 'PRG03', 'ENC03', 'CAT03', 'Si, todo me quedo claro', 'opcion multiple'),
+('RES04', 'PRG04', 'ENC04', 'CAT04', 'Faltaba un remedio recetado', 'texto'),
+('RES05', 'PRG05', 'ENC05', 'CAT05', 'Si, llegaron a tiempo', 'opcion multiple');
 
-INSERT INTO elemento (id_transportable, nombre_elemento, descripcion_elemento, tipo_elemento) VALUES
-('TRAN06', 'Corazon', 'Organo para trasplante urgente', 'organo'),
-('TRAN07', 'Kit quirurgico', 'Instrumental medico esterilizado', 'otro'),
-('TRAN08', 'Riñon', 'Organo para trasplante', 'organo'),
-('TRAN09', 'Sangre', 'Unidades de sangre plasma', 'otro'),
-('TRAN10', 'Higado', 'Organo para trasplante', 'organo');
+
+
+
+INSERT INTO chofer (ci_chofer, nombre_chofer, apellido_chofer, telefono) VALUES 
+('45678912', 'Esteban', 'Silva', '099123456'),
+('32165498', 'Marcelo', 'Rios', '098654321'),
+('78912345', 'Gabriel', 'Benitez', '097111222'),
+('65498732', 'Diego', 'Fagundez', '096333444'),
+('14725836', 'Fernando', 'Acosta', '095555666');
+
+INSERT INTO vehiculo (matricula, modelo, capacidad, tipo_vehiculo, camilla, observaciones) VALUES 
+('SCA1001', 'Mercedes Sprinter', '4', 'ambulancia', 1, 'Equipamiento UTI movil'),
+('SCA1002', 'Fiat Ducato', '3', 'ambulancia', 1, 'Oxigeno disponible'),
+('SCA1003', 'Renault Kangoo', '1', 'auto', 0, 'Traslado de personal o insumos'),
+('SCA1004', 'Peugeot Partner', '1', 'auto', 0, 'Documentacion urgente'),
+('SCA1005', 'Ford Transit', '6', 'otro', 1, 'Minibus de traslado sanitario');
+
+INSERT INTO conduce (ci_chofer, matricula) VALUES 
+('45678912', 'SCA1001'),
+('32165498', 'SCA1002'),
+('78912345', 'SCA1003'),
+('65498732', 'SCA1004'),
+('14725836', 'SCA1005');
+
+INSERT INTO destino (id_destino, nombre_destino, direccion, ruta) VALUES 
+('DES01', 'Hospital de Clinicas', 'Av. Italia s/n', 'Ruta 1'),
+('DES02', 'Sanatorio Americano', 'Av. 8 de Octubre 2720', 'Ruta 2'),
+('DES03', 'Hospital Maciel', '25 de Mayo 174', 'Ruta 3'),
+('DES04', 'Centro de Asistencia Medica', 'Bv. Artigas 1550', 'Ruta 4'),
+('DES05', 'Sanatorio Britanico', 'Avenida General Garibaldi 2764', 'Ruta 5');
+
+INSERT INTO traslado (id_traslado, ci_chofer, matricula, id_destino, fecha_traslado, hora_salida, hora_llegada, lugar_origen, estado_traslado, ci_solicitante, estado_solicitud, observaciones) VALUES 
+('TRS01', '45678912', 'SCA1001', 'DES01', '2026-06-01', '08:00:00', '08:45:00', 'Hospital Central', 'finalizado', '88888888', 'aprobado', 'Traslado de paciente critico'),
+('TRS02', '32165498', 'SCA1002', 'DES02', '2026-06-02', '09:30:00', '10:15:00', 'Hospital Central', 'aprobado', '55667788', 'aprobado', 'Derivacion a cuidados moderados'),
+('TRS03', '78912345', 'SCA1003', 'DES03', '2026-06-03', '11:00:00', '11:30:00', 'Hospital Central', 'en proceso', '11111111', 'aprobado', 'Envio de documentacion medica'),
+('TRS04', '65498732', 'SCA1004', 'DES04', '2026-06-04', '13:00:00', '13:40:00', 'Hospital Central', 'pendiente', '55667788', 'pendiente', 'Solicitud en evaluacion'),
+('TRS05', '14725836', 'SCA1005', 'DES05', '2026-06-05', '15:00:00', '15:50:00', 'Hospital Central', 'denegado', '22222222', 'rechazado', 'Suspendido por centro receptor');
+
+INSERT INTO notifica (id_traslado, ci_chofer, matricula, id_destino, ci_admin, ci_emisor, fecha_envio, leido, titulo_not, descripcion_not, ci_receptor) VALUES 
+('TRS01', '45678912', 'SCA1001', 'DES01', '12345678', '12345678', '2026-06-01', 1, 'Asignación de Urgencia', 'Se ha asignado el traslado crítico al Hospital de Clínicas.', '87654321'),
+('TRS02', '32165498', 'SCA1002', 'DES02', '55667788', '55667788', '2026-06-02', 1, 'Derivación Aprobada', 'Derivación a cuidados moderados aprobada por el sanatorio.', '11223344'),
+('TRS03', '78912345', 'SCA1003', 'DES03', '12345678', '12345678', '2026-06-03', 0, 'Envío de Documentación', 'Documentación médica en camino hacia el Hospital Maciel.', '99887766'),
+('TRS04', '65498732', 'SCA1004', 'DES04', '55667788', '55667788', '2026-06-04', 0, 'Solicitud Pendiente', 'La solicitud de traslado está bajo evaluación médica.', '87654321'),
+('TRS05', '14725836', 'SCA1005', 'DES05', '12345678', '12345678', '2026-06-05', 1, 'Traslado Suspendido', 'El centro receptor ha suspendido la recepción temporalmente.', '11223344');
+
+INSERT INTO enfermero (ci_enfermero, nombre_enfermero, apellido_enfermero) VALUES 
+('22334455', 'Agustina', 'Duarte'),
+('33445566', 'Matias', 'Suarez'),
+('44556677', 'Sofia', 'Pereira'),
+('55667788', 'Agustin', 'Pereyra'),
+('66778899', 'Bennet', 'Alvarez');
+
+INSERT INTO transportable (id_transportable, ci_enfermero, habitacion_retiro, piso_retiro) VALUES 
+('TRP01', '22334455', 'Habitacion 204', 'Piso 2'),
+('TRP02', '33445566', 'Habitacion 310', 'Piso 3'),
+('TRP03', '44556677', 'Sala de Esterilizacion', 'Planta Baja'),
+('TRP04', '55667788', 'Habitacion 105', 'Piso 1'),
+('TRP05', '66778899', 'Laboratorio Central', 'Subsuelo'),
+('TRP06', '22334455', 'Cti Adultos', 'Piso 4'),
+('TRP07', '33445566', 'Archivo Central', 'Subsuelo'),
+('TRP08', '44556677', 'Farmacia', 'Planta Baja');
+
+INSERT INTO paciente (id_transportable, ci_paciente, nombre_paciente, accesorio, oxigeno, aislamiento) VALUES 
+('TRP01', '98765432', 'Roberto Gomez', 'silla', 1, 0),
+('TRP02', '87654321', 'Ana Maria Sosa', 'baston', 0, 1),
+('TRP04', '76543210', 'Jorge Ramirez', 'otro', 1, 0);
+
+INSERT INTO elemento (id_transportable, nombre_elemento, descripcion_elemento, tipo_elemento) VALUES 
+('TRP03', 'Valvula Cardiaca', 'Valvula biologica para cirugia cardiovascular', 'organo'),
+('TRP05', 'Historias Clinicas Legales', 'Carpeta con expedientes archivados', 'documentacion'),
+('TRP06', 'Riñon para Transplante', 'Tejido vivo conservado en frio', 'organo'),
+('TRP07', 'Expedientes de Auditoria', 'Documentacion confidencial de pacientes', 'documentacion'),
+('TRP08', 'Insumos Quirurgicos Especiales', 'Instrumental esterilizado de alta complejidad', 'otro');
+
+INSERT INTO transporta (id_transportable, id_traslado, ci_chofer, matricula, id_destino) VALUES 
+('TRP01', 'TRS01', '45678912', 'SCA1001', 'DES01'),
+('TRP02', 'TRS02', '32165498', 'SCA1002', 'DES02'),
+('TRP03', 'TRS03', '78912345', 'SCA1003', 'DES03'),
+('TRP04', 'TRS04', '65498732', 'SCA1004', 'DES04'),
+('TRP05', 'TRS05', '14725836', 'SCA1005', 'DES05');

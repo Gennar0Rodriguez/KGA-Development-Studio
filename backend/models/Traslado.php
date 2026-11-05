@@ -259,10 +259,14 @@ class Traslado
             $this->conexion->beginTransaction();
 
             // Verificar que el chofer esté asociado al vehículo.
-            if (!$this->validarConduce(
-                $datos['ci_chofer'],
-                $datos['matricula']
-            )) {
+        if (!$this->validarConduce(
+            $datos['ci_chofer'],
+            $datos['matricula']
+        )) {
+            $this->conexion->rollBack();
+            error_log("El chofer no está asociado al vehículo seleccionado.");
+            return false;
+        }
 
                 $this->conexion->rollBack();
 
