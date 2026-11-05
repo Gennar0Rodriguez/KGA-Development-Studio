@@ -552,7 +552,7 @@ function renderizarTarjetasTraslado(lista) {
 
                 <p><strong>Tipo:</strong> Ambulancia</p>
                 <p><strong>Destino:</strong> ${item.nombre_destino || 'No asignado'}</p>
-                <p><strong>Estado:</strong> ${item.estado || 'Programado'}</p>
+                <p><strong>Estado:</strong> ${item.estado_traslado || 'Pendiente'}</p>
                 <p><strong>Solicitud:</strong> ${item.estado_solicitud || 'Sin estado'}</p>
                 <p><strong>Hora salida:</strong> ${item.hora_salida || 'Pendiente'}</p>
                 <p><strong>Hora llegada:</strong> ${item.hora_llegada || 'Pendiente'}</p>
@@ -716,8 +716,8 @@ function editarTraslado(idTraslado, idTransportable) {
     document.getElementById('observaciones').value = traslado.observaciones || '';
 
     document.getElementById('estado').value =
-        (traslado.estado === 'aprobado') ? 'Finalizado' : 'En curso';
-
+        (traslado.estado_traslado === 'finalizado') ? 'Finalizado' : 'En curso';
+        
     document.getElementById('oxigeno').value =
         (Number(traslado.oxigeno) === 1) ? 'Si' : 'No';
 

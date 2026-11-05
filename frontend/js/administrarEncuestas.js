@@ -19,9 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event Listeners
     comboEncuestas.addEventListener('change', (e) => {
-        const idEncuesta = e.target.value;
-        if (idEncuesta) {
-            cargarDetalleEncuesta(idEncuesta);
+        const [idEncuesta, idCategoria] = e.target.value.split('|');
+
+        if (idEncuesta && idCategoria) {
+            cargarDetalleEncuesta(idEncuesta, idCategoria);
         }
     });
 
@@ -56,17 +57,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            encuestas.forEach(encuesta => {
-                const option = document.createElement('option');
-                option.value = encuesta.id_encuesta;
-                option.textContent = encuesta.titulo_enc;
-                comboEncuestas.appendChild(option);
-            });
+        encuestas.forEach(encuesta => {
+
+            const option = document.createElement('option');
+
+            // Identificamos la encuesta con su ID y su categoría.
+            option.value = `${encuesta.id_encuesta}|${encuesta.id_categoria}`;
+
+            option.textContent = encuesta.titulo_enc;
+
+            comboEncuestas.appendChild(option);
+
+        });
 
             // Carga inicial de la primera encuesta
-            if (comboEncuestas.value) {
-                cargarDetalleEncuesta(comboEncuestas.value);
-            }
+        if (comboEncuestas.value) {
+
+            const [idEncuesta, idCategoria] = comboEncuestas.value.split('|');
+
+            cargarDetalleEncuesta(idEncuesta, idCategoria);
+        }
 
         } catch (error) {
             console.error('Error al cargar encuestas:', error);
@@ -80,24 +90,24 @@ document.addEventListener('DOMContentLoaded', () => {
 /**
  * Obtiene las preguntas y estadísticas de la encuesta seleccionada.
  */
-async function cargarDetalleEncuesta(idEncuesta) {
+async function cargarDetalleEncuesta(idEncuesta, idCategoria) {
+
     try {
 
-        // Primero cargamos las preguntas.
+        // Obtener las preguntas de la encuesta y categoría seleccionadas.
         const resPreguntas = await fetch(
-            `/kgade/KGA-Development-Studio/API/preguntas/preguntas.php?accion=obtenerPorEncuesta&id_encuesta=${encodeURIComponent(idEncuesta)}`
+            `/kgade/KGA-Development-Studio/API/preguntas/preguntas.php?accion=obtenerPorEncuesta&id_encuesta=${encodeURIComponent(idEncuesta)}&id_categoria=${encodeURIComponent(idCategoria)}`
         );
 
         const preguntas = await leerRespuestaJSON(resPreguntas);
 
-        // Mostramos las preguntas aunque después falle la petición de estadísticas.
         renderizarPreguntas(preguntas);
 
         try {
 
-            // Solicitamos las estadísticas de la encuesta.
+            // Obtener estadísticas de esa misma encuesta y categoría.
             const resEstadisticas = await fetch(
-                `/kgade/KGA-Development-Studio/API/respuestas/respuestas.php?accion=obtenerEstadisticas&id_encuesta=${encodeURIComponent(idEncuesta)}`
+                `/kgade/KGA-Development-Studio/API/respuestas/respuestas.php?accion=obtenerEstadisticas&id_encuesta=${encodeURIComponent(idEncuesta)}&id_categoria=${encodeURIComponent(idCategoria)}`
             );
 
             const estadisticas = await leerRespuestaJSON(resEstadisticas);
@@ -108,7 +118,6 @@ async function cargarDetalleEncuesta(idEncuesta) {
 
             console.error('Error al cargar las estadísticas:', error);
 
-            // Si las estadísticas fallan, mostramos valores iniciales.
             renderizarEstadisticas({
                 promedioGeneral: 0,
                 totalRespuestas: 0,
@@ -117,7 +126,9 @@ async function cargarDetalleEncuesta(idEncuesta) {
         }
 
     } catch (error) {
+
         console.error('Error al cargar las preguntas:', error);
+
     }
 }
 
@@ -307,18 +318,17 @@ async function leerRespuestaJSON(respuesta) {
             const respuesta = await fetch('/kgade/KGA-Development-Studio/API/encuestas/encuestas.php?accion=crear', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id_encuesta: idEncuesta,
-                    id_categoria: idCategoria,
-                    titulo_enc: titulo,
-                    descripcion_enc: ''
-                })
+        body: JSON.stringify({
+            id_encuesta: idEncuestaActual,
+            id_categoria: idCategoriaActual,
+            preguntas: preguntasAEnviar
+        })
             });
             const resultado = await respuesta.json();
             if (resultado.exito) {
                 await cargarEncuestas();
-                comboEncuestas.value = idEncuesta;
-                cargarDetalleEncuesta(idEncuesta);
+        comboEncuestas.value = `${idEncuesta}|${idCategoria}`;
+        cargarDetalleEncuesta(idEncuesta, idCategoria);
             } else {
                 alert('No se pudo crear la encuesta.');
             }
@@ -331,8 +341,9 @@ async function leerRespuestaJSON(respuesta) {
      * Sincroniza y guarda los cambios de todas las preguntas de la encuesta actual.
      */
     async function guardarCambiosEncuesta() {
-        const idEncuestaActual = comboEncuestas.value;
-        if (!idEncuestaActual) return;
+        const [idEncuestaActual, idCategoriaActual] = comboEncuestas.value.split('|');
+
+        if (!idEncuestaActual || !idCategoriaActual) return;
 
         const listaNodos = contenedorPreguntas.querySelectorAll('.pregunta');
         const preguntasAEnviar = [];
@@ -361,6 +372,7 @@ async function leerRespuestaJSON(respuesta) {
                 preguntasAEnviar.push({
                     id_pregunta: idPregunta,
                     id_encuesta: idEncuestaActual,
+                    id_categoria: idCategoriaActual,
                     nombre_pregunta: texto,
                     tipo: tipo
                 });
@@ -371,16 +383,17 @@ async function leerRespuestaJSON(respuesta) {
             const respuesta = await fetch('/kgade/KGA-Development-Studio/API/preguntas/preguntas.php?accion=guardarLote', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id_encuesta: idEncuestaActual,
-                    preguntas: preguntasAEnviar
-                })
+            body: JSON.stringify({
+                id_encuesta: idEncuestaActual,
+                id_categoria: idCategoriaActual,
+                preguntas: preguntasAEnviar
+            })
             });
 
             const resultado = await respuesta.json();
             if (resultado.exito) {
                 alert('Cambios guardados con éxito.');
-                cargarDetalleEncuesta(idEncuestaActual);
+                cargarDetalleEncuesta(idEncuestaActual, idCategoriaActual);
             } else {
                 alert('Error al guardar cambios.');
             }

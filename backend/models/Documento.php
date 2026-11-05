@@ -10,90 +10,143 @@ class Documento
         $this->conexion = Database::getInstancia()->getConexion();
     }
 
+    // ======================================================
+    // OBTENER TODOS LOS DOCUMENTOS
+    // ======================================================
+
     public function obtenerTodos(): array {
-        $sql = "SELECT d.id_documentos, d.titulo_docs, d.descripcion_docs, d.id_categoria,
-                       c.fecha, c.hora, c.ci_admin, cat.nombre_cat
+
+        $sql = "SELECT
+                    d.id_documentos,
+                    d.titulo_docs,
+                    d.descripcion_docs,
+                    d.id_categoria,
+                    d.fecha_carga AS fecha,
+                    d.hora_carga AS hora,
+                    d.ci_admin,
+                    cat.nombre_cat
                 FROM documentos d
-                LEFT JOIN carga c ON d.id_documentos = c.id_documentos
-                LEFT JOIN categoria cat ON d.id_categoria = cat.id_categoria
-                ORDER BY c.fecha DESC, c.hora DESC";
+                LEFT JOIN categoria cat
+                    ON d.id_categoria = cat.id_categoria
+                ORDER BY d.fecha_carga DESC, d.hora_carga DESC";
 
         $sentencia = $this->conexion->prepare($sql);
         $sentencia->execute();
+
         return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Buscar un documento por su ID (devuelve null si no existe)
+
+    // ======================================================
+    // BUSCAR UN DOCUMENTO POR ID
+    // ======================================================
+
     public function buscarPorId(string $idDoc): ?array {
-        $sql = "SELECT id_documentos, id_categoria, titulo_docs, descripcion_docs,
-                       nombre_archivo, ruta_archivo
+
+        $sql = "SELECT
+                    id_documentos,
+                    id_categoria,
+                    titulo_docs,
+                    descripcion_docs,
+                    nombre_archivo,
+                    ruta_archivo
                 FROM documentos
                 WHERE id_documentos = :id";
 
         $sentencia = $this->conexion->prepare($sql);
-        $sentencia->bindParam(':id', $idDoc);
+        $sentencia->bindValue(':id', $idDoc);
         $sentencia->execute();
-        return ($sentencia->fetch(PDO::FETCH_ASSOC)) ?: null;
+
+        return $sentencia->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function crear(string $idDoc, string $idCat, string $titulo, string $descripcion, string $nombreArchivo, string $rutaArchivo, string $ciAdmin): bool {
+
+    // ======================================================
+    // CREAR UN DOCUMENTO
+    // ======================================================
+
+    public function crear(
+        string $idDoc,
+        string $idCat,
+        string $titulo,
+        string $descripcion,
+        string $nombreArchivo,
+        string $rutaArchivo,
+        string $ciAdmin
+    ): bool {
+
         try {
-            $this->conexion->beginTransaction();
 
-            $sqlDoc = "INSERT INTO documentos (id_documentos, id_categoria, titulo_docs, descripcion_docs, nombre_archivo, ruta_archivo)
-                       VALUES (:id, :cat, :titulo, :desc, :nombre, :ruta)";
+            // Ya no necesitamos insertar en una segunda tabla.
+            // La fecha, hora y CI se guardan directamente en documentos.
 
-            $sentencia = $this->conexion->prepare($sqlDoc);
-            $sentencia->bindParam(':id', $idDoc);
-            $sentencia->bindParam(':cat', $idCat);
-            $sentencia->bindParam(':titulo', $titulo);
-            $sentencia->bindParam(':desc', $descripcion);
-            $sentencia->bindParam(':nombre', $nombreArchivo);
-            $sentencia->bindParam(':ruta', $rutaArchivo);
-            $sentencia->execute();
+            $sql = "INSERT INTO documentos (
+                        id_documentos,
+                        ci_admin,
+                        id_categoria,
+                        hora_carga,
+                        fecha_carga,
+                        titulo_docs,
+                        descripcion_docs,
+                        nombre_archivo,
+                        ruta_archivo
+                    )
+                    VALUES (
+                        :id,
+                        :ci,
+                        :cat,
+                        CURTIME(),
+                        CURDATE(),
+                        :titulo,
+                        :descripcion,
+                        :nombre,
+                        :ruta
+                    )";
 
-            $sqlCarga = "INSERT INTO carga (ci_admin, id_documentos, hora, fecha)
-                         VALUES (:ci, :idDoc, CURTIME(), CURDATE())";
+            $sentencia = $this->conexion->prepare($sql);
 
-            $sentencia = $this->conexion->prepare($sqlCarga);
-            $sentencia->bindParam(':ci', $ciAdmin);
-            $sentencia->bindParam(':idDoc', $idDoc);
-            $sentencia->execute();
+            $sentencia->bindValue(':id', $idDoc);
+            $sentencia->bindValue(':ci', $ciAdmin);
+            $sentencia->bindValue(':cat', $idCat);
+            $sentencia->bindValue(':titulo', $titulo);
+            $sentencia->bindValue(':descripcion', $descripcion);
+            $sentencia->bindValue(':nombre', $nombreArchivo);
+            $sentencia->bindValue(':ruta', $rutaArchivo);
 
-            $this->conexion->commit();
-            return true;
+            return $sentencia->execute();
 
-        } catch (Exception $e) {
-            if ($this->conexion->inTransaction()) {
-                $this->conexion->rollBack();
-            }
+        } catch (Throwable $e) {
+
+            error_log("Error al crear documento: " . $e->getMessage());
+
             return false;
         }
     }
 
+
+    // ======================================================
+    // ELIMINAR UN DOCUMENTO
+    // ======================================================
+
     public function eliminar(string $idDoc): bool {
+
         try {
-            $this->conexion->beginTransaction();
 
-            // Eliminar primero de la tabla carga
-            $sqlCarga = "DELETE FROM carga WHERE id_documentos = :id";
-            $sentencia = $this->conexion->prepare($sqlCarga);
-            $sentencia->bindParam(':id', $idDoc);
-            $sentencia->execute();
+            // Ya no existe la tabla carga.
+            // Eliminamos directamente el registro del documento.
 
-            // Despues eliminar de la tabla documentos
-            $sqlDoc = "DELETE FROM documentos WHERE id_documentos = :id";
-            $sentencia = $this->conexion->prepare($sqlDoc);
-            $sentencia->bindParam(':id', $idDoc);
-            $sentencia->execute();
+            $sql = "DELETE FROM documentos
+                    WHERE id_documentos = :id";
 
-            $this->conexion->commit();
-            return true;
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->bindValue(':id', $idDoc);
 
-        } catch (Exception $e) {
-            if ($this->conexion->inTransaction()) {
-                $this->conexion->rollBack();
-            }
+            return $sentencia->execute();
+
+        } catch (Throwable $e) {
+
+            error_log("Error al eliminar documento: " . $e->getMessage());
+
             return false;
         }
     }

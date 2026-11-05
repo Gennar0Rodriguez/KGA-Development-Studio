@@ -78,45 +78,12 @@ async function iniciarPollingNotificaciones() {
     }
 }
 
-function actualizarBadgeContador(noLeidas) {
-    const badge = document.getElementById('badgeNotificaciones');
-
-    // La barra lateral puede no haberse insertado todavía.
-    if (!badge) {
-        return;
-    }
-
-    const cantidad = Math.max(0, Math.floor(Number(noLeidas) || 0));
-
-    if (cantidad === 0) {
-        badge.textContent = '';
-        badge.style.display = 'none';
-        badge.removeAttribute('title');
-        badge.setAttribute('aria-label', 'No tienes notificaciones sin leer');
-        return;
-    }
-
-    // Mostrar 1 a 9; a partir de 10, mostrar 9+.
-    badge.textContent = cantidad > 9 ? '9+' : String(cantidad);
-
-    // El CSS define display:flex para centrar el número.
-    badge.style.display = 'inline-flex';
-
-    badge.title = `${cantidad} notificación${cantidad === 1 ? '' : 'es'} sin leer`;
-    badge.setAttribute(
-        'aria-label',
-        `${cantidad} notificación${cantidad === 1 ? '' : 'es'} sin leer`
-    );
-}
-
 function renderizarNotificaciones(lista) {
+
     const main = document.querySelector('main');
 
-    if (!main) {
-        return;
-    }
+    if (!main) return;
 
-    // Crear el encabezado sin destruir otros elementos de la página.
     let titulo = main.querySelector('h2');
 
     if (!titulo) {
@@ -126,7 +93,6 @@ function renderizarNotificaciones(lista) {
 
     titulo.textContent = '🔔 Notificaciones';
 
-    // Crear o reutilizar el contenedor de las tarjetas.
     let contenedor = main.querySelector('.lista-notificaciones');
 
     if (!contenedor) {
@@ -138,14 +104,18 @@ function renderizarNotificaciones(lista) {
     contenedor.replaceChildren();
 
     if (lista.length === 0) {
+
         const mensaje = document.createElement('p');
         mensaje.className = 'sin-notificaciones';
         mensaje.textContent = 'No tienes notificaciones pendientes.';
+
         contenedor.appendChild(mensaje);
+
         return;
     }
 
     lista.forEach(item => {
+
         const card = document.createElement('article');
         card.className = 'card-notificacion';
 
@@ -162,15 +132,70 @@ function renderizarNotificaciones(lista) {
         const boton = document.createElement('button');
         boton.className = 'btn-leido';
         boton.type = 'button';
-        boton.textContent = 'Marcar como leído';
 
-        boton.addEventListener('click', () => {
-            eliminarNotificacion(item.id_notificacion);
-        });
+        if (Number(item.leido) === 1) {
+
+            boton.textContent = 'Leída';
+            boton.disabled = true;
+
+        } else {
+
+            boton.textContent = 'Marcar como leído';
+
+            boton.addEventListener('click', () => {
+                marcarNotificacionLeida(item);
+            });
+        }
 
         card.append(tituloCard, descripcion, fecha, boton);
+
         contenedor.appendChild(card);
+
     });
+}
+
+// ======================================================
+// MARCAR NOTIFICACIÓN COMO LEÍDA
+// ======================================================
+
+async function marcarNotificacionLeida(item) {
+
+    try {
+
+        const response = await fetch(
+            '/kgade/KGA-Development-Studio/API/notificaciones/notificaciones.php',
+            {
+                method: 'PUT',
+
+                credentials: 'same-origin',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    id_traslado: item.id_traslado,
+                    ci_chofer: item.ci_chofer,
+                    matricula: item.matricula,
+                    id_destino: item.id_destino
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'No se pudo actualizar');
+        }
+
+        // Actualizamos el contador y las tarjetas.
+        await iniciarPollingNotificaciones();
+
+    } catch (error) {
+
+        console.error('Error al marcar como leída:', error);
+
+    }
 }
 
 async function eliminarNotificacion(id) {

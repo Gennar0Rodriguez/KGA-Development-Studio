@@ -1,52 +1,132 @@
 <?php
 require_once __DIR__ . '/../../backend/models/Pregunta.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
-$accion = $_GET['accion'] ?? '';
-$preguntaModelo = new Pregunta();
+try {
 
-switch ($accion) {
-    case 'obtenerPorEncuesta':
-        $idEncuesta = $_GET['id_encuesta'] ?? '';
-        if (!empty($idEncuesta)) {
-            $preguntas = $preguntaModelo->obtenerPorEncuesta($idEncuesta);
+    $accion = $_GET['accion'] ?? '';
+    $preguntaModelo = new Pregunta();
+
+    switch ($accion) {
+
+        // ==============================================
+        // OBTENER PREGUNTAS DE UNA ENCUESTA
+        // ==============================================
+
+        case 'obtenerPorEncuesta':
+
+            $idEncuesta = $_GET['id_encuesta'] ?? '';
+            $idCategoria = $_GET['id_categoria'] ?? '';
+
+            if (empty($idEncuesta) || empty($idCategoria)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Falta el ID de la encuesta o categoría']);
+                exit;
+            }
+
+            $preguntas = $preguntaModelo->obtenerPorEncuesta(
+                $idEncuesta,
+                $idCategoria
+            );
+
             echo json_encode($preguntas);
-        } else {
-            echo json_encode([]);
-        }
-        break;
 
-    case 'guardarLote':
-        $datos = json_decode(file_get_contents('php://input'), true);
-        if ($datos && isset($datos['id_encuesta'], $datos['preguntas'])) {
+            exit;
+
+
+        // ==============================================
+        // GUARDAR PREGUNTAS
+        // ==============================================
+
+        case 'guardarLote':
+
+            $datos = json_decode(file_get_contents('php://input'), true);
+
+            if (
+                !$datos ||
+                empty($datos['id_encuesta']) ||
+                empty($datos['id_categoria']) ||
+                !isset($datos['preguntas']) ||
+                !is_array($datos['preguntas'])
+            ) {
+                http_response_code(400);
+                echo json_encode(['exito' => false, 'mensaje' => 'Datos inválidos']);
+                exit;
+            }
+
             $idEncuesta = $datos['id_encuesta'];
-            $preguntasNuevas = $datos['preguntas'];
+            $idCategoria = $datos['id_categoria'];
 
-            // Eliminamos las preguntas anteriores de esta encuesta para sincronizar el lote actual
-            // (O puedes implementar una lógica de actualización individual según prefieras)
             $exitoGlobal = true;
 
-            foreach ($preguntasNuevas as $p) {
-                // Verificamos si ya existe o la creamos
-                $existente = $preguntaModelo->obtenerPorId($p['id_pregunta'], $idEncuesta);
-                if ($existente) {
-                    $res = $preguntaModelo->editarPregunta($p['id_pregunta'], $idEncuesta, $p['nombre_pregunta'], $p['tipo']);
-                } else {
-                    $res = $preguntaModelo->crear($p['id_pregunta'], $idEncuesta, $p['nombre_pregunta'], $p['tipo']);
+            foreach ($datos['preguntas'] as $pregunta) {
+
+                if (
+                    empty($pregunta['id_pregunta']) ||
+                    empty($pregunta['nombre_pregunta']) ||
+                    !in_array(
+                        $pregunta['tipo'] ?? '',
+                        ['opcion multiple', 'texto'],
+                        true
+                    )
+                ) {
+                    $exitoGlobal = false;
+                    continue;
                 }
-                if (!$res) {
+
+                // Comprobamos si la pregunta ya existe.
+                $existente = $preguntaModelo->obtenerPorId(
+                    $pregunta['id_pregunta'],
+                    $idEncuesta,
+                    $idCategoria
+                );
+
+                if ($existente) {
+
+                    $resultado = $preguntaModelo->editarPregunta(
+                        $pregunta['id_pregunta'],
+                        $idEncuesta,
+                        $idCategoria,
+                        $pregunta['nombre_pregunta'],
+                        $pregunta['tipo']
+                    );
+
+                } else {
+
+                    $resultado = $preguntaModelo->crear(
+                        $pregunta['id_pregunta'],
+                        $idEncuesta,
+                        $idCategoria,
+                        $pregunta['nombre_pregunta'],
+                        $pregunta['tipo']
+                    );
+                }
+
+                if (!$resultado) {
                     $exitoGlobal = false;
                 }
             }
 
             echo json_encode(['exito' => $exitoGlobal]);
-        } else {
-            echo json_encode(['exito' => false]);
-        }
-        break;
 
-    default:
-        echo json_encode(['error' => 'Acción no válida']);
-        break;
+            exit;
+
+
+        default:
+
+            http_response_code(400);
+            echo json_encode(['error' => 'Acción no válida']);
+
+            exit;
+    }
+
+} catch (Throwable $e) {
+
+    error_log('Error en preguntas.php: ' . $e->getMessage());
+
+    http_response_code(500);
+    echo json_encode(['error' => 'Error interno del servidor']);
+
+    exit;
 }

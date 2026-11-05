@@ -10,100 +10,222 @@ class Notificacion
         $this->conexion = Database::getInstancia()->getConexion();
     }
 
-    // Obtener las notificaciones de un usuario
+    // ======================================================
+    // OBTENER NOTIFICACIONES DE UN USUARIO
+    // ======================================================
+
     public function obtenerPorUsuario(string $ciReceptor): array {
-        // titulo_not y descripcion_not se devuelven como titulo y descripcion
-        // para que la API y el JS sigan funcionando igual
-        $sql = "SELECT n.id_notificacion, n.titulo_not AS titulo, n.descripcion_not AS descripcion,
-                       r.fecha_envio, r.ci_emisor, r.leido
-                FROM notificacion n
-                INNER JOIN recibe r ON n.id_notificacion = r.id_notificacion
-                WHERE r.ci_admin = :ci
-                ORDER BY r.fecha_envio DESC";
+
+        $sql = "SELECT
+                    id_traslado,
+                    ci_chofer,
+                    matricula,
+                    id_destino,
+                    ci_admin,
+                    ci_emisor,
+                    ci_receptor,
+                    titulo_not AS titulo,
+                    descripcion_not AS descripcion,
+                    fecha_envio,
+                    leido
+                FROM notifica
+                WHERE ci_receptor = :ci
+                ORDER BY fecha_envio DESC";
 
         $sentencia = $this->conexion->prepare($sql);
-        $sentencia->bindParam(':ci', $ciReceptor);
+        $sentencia->bindValue(':ci', $ciReceptor);
         $sentencia->execute();
+
         return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Crear una notificacion (se guarda en notificacion y en recibe)
-    public function crear(string $titulo, string $descripcion, string $ciReceptor, ?string $ciEmisor = null): bool {
-        $emisorLimpio = (!empty($ciEmisor) && trim($ciEmisor) !== '') ? $ciEmisor : null;
 
-        // La tabla limita el largo: titulo 50 y descripcion 100
-        $titulo = mb_substr($titulo, 0, 50);
-        $descripcion = mb_substr($descripcion, 0, 100);
+    // ======================================================
+    // CREAR UNA NOTIFICACIÓN
+    // ======================================================
 
-        $idNotificacion = $this->generarId();
+    public function crear(
+        string $idTraslado,
+        string $ciChofer,
+        string $matricula,
+        string $idDestino,
+        string $ciEmisor,
+        string $ciReceptor,
+        string $titulo,
+        string $descripcion
+    ): bool {
 
-        // 1. La notificacion
-        $sql = "INSERT INTO notificacion (id_notificacion, titulo_not, descripcion_not)
-                VALUES (:id, :titulo, :desc)";
+        // Limitar los textos al tamaño definido en la base de datos.
+        $titulo = mb_substr($titulo, 0, 100);
+        $descripcion = mb_substr($descripcion, 0, 255);
+
+        /*
+         * ci_admin representa la relación con administrativo.
+         * Utilizamos la CI del receptor, ya que tanto empleados
+         * como administradores pertenecen a esa entidad.
+         */
+
+        $sql = "INSERT INTO notifica (
+                    id_traslado,
+                    ci_chofer,
+                    matricula,
+                    id_destino,
+                    ci_admin,
+                    ci_emisor,
+                    fecha_envio,
+                    leido,
+                    titulo_not,
+                    descripcion_not,
+                    ci_receptor
+                )
+                VALUES (
+                    :id_traslado,
+                    :ci_chofer,
+                    :matricula,
+                    :id_destino,
+                    :ci_admin,
+                    :ci_emisor,
+                    CURDATE(),
+                    FALSE,
+                    :titulo,
+                    :descripcion,
+                    :ci_receptor
+                )";
 
         $sentencia = $this->conexion->prepare($sql);
-        $sentencia->bindParam(':id', $idNotificacion);
-        $sentencia->bindParam(':titulo', $titulo);
-        $sentencia->bindParam(':desc', $descripcion);
-        $sentencia->execute();
 
-        // 2. Quien la recibe
-        $sql = "INSERT INTO recibe (ci_admin, id_notificacion, ci_emisor, ci_receptor, fecha_envio, leido)
-                VALUES (:ci_admin, :id, :emisor, :receptor, NOW(), 0)";
+        $sentencia->bindValue(':id_traslado', $idTraslado);
+        $sentencia->bindValue(':ci_chofer', $ciChofer);
+        $sentencia->bindValue(':matricula', $matricula);
+        $sentencia->bindValue(':id_destino', $idDestino);
 
-        $sentencia = $this->conexion->prepare($sql);
-        $sentencia->bindParam(':ci_admin', $ciReceptor);
-        $sentencia->bindParam(':id', $idNotificacion);
-        $sentencia->bindParam(':emisor', $emisorLimpio);
-        $sentencia->bindParam(':receptor', $ciReceptor);
+        // La relación administrativa corresponde al receptor.
+        $sentencia->bindValue(':ci_admin', $ciReceptor);
+
+        $sentencia->bindValue(':ci_emisor', $ciEmisor);
+        $sentencia->bindValue(':ci_receptor', $ciReceptor);
+
+        $sentencia->bindValue(':titulo', $titulo);
+        $sentencia->bindValue(':descripcion', $descripcion);
 
         return $sentencia->execute();
     }
 
-    // Genera un id de 8 caracteres (NOT + 5 numeros) que no exista todavia
-    private function generarId(): string {
-        do {
-            $id = 'NOT' . rand(10000, 99999);
 
-            $sql = "SELECT COUNT(*) FROM notificacion WHERE id_notificacion = :id";
-            $sentencia = $this->conexion->prepare($sql);
-            $sentencia->bindParam(':id', $id);
-            $sentencia->execute();
-            $existe = $sentencia->fetchColumn() > 0;
-        } while ($existe);
+    // ======================================================
+    // NOTIFICAR A TODOS LOS ADMINISTRADORES
+    // ======================================================
 
-        return $id;
-    }
+    public function notificarATodos(
+        string $idTraslado,
+        string $ciChofer,
+        string $matricula,
+        string $idDestino,
+        string $ciEmisor,
+        string $titulo,
+        string $descripcion
+    ): bool {
 
-    // Notificar a todos los administrativos
-    public function notificarATodos(string $titulo, string $descripcion, ?string $ciEmisor = null): bool {
         try {
-            $sql = "SELECT ci_admin FROM administrativo";
+
+            // Las nuevas solicitudes se notifican a los administradores.
+            $sql = "SELECT ci_admin
+                    FROM administrativo
+                    WHERE cargo = 'administrador'";
+
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->execute();
-            $administrativos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
-            if (empty($administrativos)) {
-                // Si no hay administrativos, se usa una CI predeterminada
-                return $this->crear($titulo, $descripcion, '11111111', null);
+            $administradores = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($administradores)) {
+                return false;
             }
 
-            foreach ($administrativos as $admin) {
-                $this->crear($titulo, $descripcion, $admin['ci_admin'], $ciEmisor);
+            $resultado = true;
+
+            foreach ($administradores as $admin) {
+
+                $creada = $this->crear(
+                    $idTraslado,
+                    $ciChofer,
+                    $matricula,
+                    $idDestino,
+                    $ciEmisor,
+                    $admin['ci_admin'],
+                    $titulo,
+                    $descripcion
+                );
+
+                if (!$creada) {
+                    $resultado = false;
+                }
             }
 
-            return true;
+            return $resultado;
 
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
+
+            error_log("Error al notificar administradores: " . $e->getMessage());
+
             return false;
         }
     }
 
-    // Al borrar la notificacion, recibe se borra sola (ON DELETE CASCADE)
-    public function eliminar(string $idNotificacion): bool {
-        $sql = "DELETE FROM notificacion WHERE id_notificacion = :id";
+
+    // ======================================================
+    // MARCAR UNA NOTIFICACIÓN COMO LEÍDA
+    // ======================================================
+
+    public function marcarComoLeida(array $datos, string $ciReceptor): bool {
+
+        $sql = "UPDATE notifica
+                SET leido = TRUE
+                WHERE id_traslado = :id_traslado
+                AND ci_chofer = :ci_chofer
+                AND matricula = :matricula
+                AND id_destino = :id_destino
+                AND ci_admin = :ci_admin
+                AND ci_receptor = :ci_receptor";
+
         $sentencia = $this->conexion->prepare($sql);
-        $sentencia->bindParam(':id', $idNotificacion);
+
+        $sentencia->bindValue(':id_traslado', $datos['id_traslado']);
+        $sentencia->bindValue(':ci_chofer', $datos['ci_chofer']);
+        $sentencia->bindValue(':matricula', $datos['matricula']);
+        $sentencia->bindValue(':id_destino', $datos['id_destino']);
+
+        // El usuario solamente puede modificar sus propias notificaciones.
+        $sentencia->bindValue(':ci_admin', $ciReceptor);
+        $sentencia->bindValue(':ci_receptor', $ciReceptor);
+
+        return $sentencia->execute();
+    }
+
+
+    // ======================================================
+    // ELIMINAR UNA NOTIFICACIÓN
+    // ======================================================
+
+    public function eliminar(array $datos, string $ciReceptor): bool {
+
+        $sql = "DELETE FROM notifica
+                WHERE id_traslado = :id_traslado
+                AND ci_chofer = :ci_chofer
+                AND matricula = :matricula
+                AND id_destino = :id_destino
+                AND ci_admin = :ci_admin
+                AND ci_receptor = :ci_receptor";
+
+        $sentencia = $this->conexion->prepare($sql);
+
+        $sentencia->bindValue(':id_traslado', $datos['id_traslado']);
+        $sentencia->bindValue(':ci_chofer', $datos['ci_chofer']);
+        $sentencia->bindValue(':matricula', $datos['matricula']);
+        $sentencia->bindValue(':id_destino', $datos['id_destino']);
+        $sentencia->bindValue(':ci_admin', $ciReceptor);
+        $sentencia->bindValue(':ci_receptor', $ciReceptor);
+
         return $sentencia->execute();
     }
 }

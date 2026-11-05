@@ -4,83 +4,161 @@ session_start();
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 
 require_once __DIR__ . '/../../backend/models/Notificacion.php';
 
-$metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$notificacion = new Notificacion();
+// No utilizamos una CI predeterminada.
+// Cada usuario debe tener una sesión válida.
+$ciUsuario = $_SESSION['usuario']['ci_admin'] ?? null;
 
-$ciUsuario = $_SESSION['usuario']['ci_admin'] 
-    ?? $_SESSION['ci_admin'] 
-    ?? $_SESSION['ci'] 
-    ?? '11111111'; // Fallback para pruebas locales si no hay sesión iniciada
+if (!$ciUsuario) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Debe iniciar sesión']);
+    exit;
+}
 
 try {
+
+    $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    $notificacion = new Notificacion();
+
     switch ($metodo) {
-    case 'GET':
-        $lista = $notificacion->obtenerPorUsuario($ciUsuario);
 
-        $noLeidas = 0;
+        // ==============================================
+        // OBTENER NOTIFICACIONES
+        // ==============================================
 
-        foreach ($lista as $item) {
-            if ((int)($item['leido'] ?? 0) === 0) {
-                $noLeidas++;
+        case 'GET':
+
+            $lista = $notificacion->obtenerPorUsuario($ciUsuario);
+
+            $noLeidas = 0;
+
+            foreach ($lista as $item) {
+                if ((int)$item['leido'] === 0) {
+                    $noLeidas++;
+                }
             }
-        }
 
-        echo json_encode([
-            'notificaciones' => $lista,
-            'no_leidas' => $noLeidas
-        ]);
+            echo json_encode([
+                'notificaciones' => $lista,
+                'no_leidas' => $noLeidas
+            ]);
 
-        exit;
+            exit;
+
+
+        // ==============================================
+        // ENVIAR UNA NOTIFICACIÓN
+        // ==============================================
 
         case 'POST':
+
             $datos = json_decode(file_get_contents('php://input'), true);
 
-            if (empty($datos['titulo']) || empty($datos['descripcion'])) {
+            if (
+                empty($datos['id_traslado']) ||
+                empty($datos['ci_chofer']) ||
+                empty($datos['matricula']) ||
+                empty($datos['id_destino']) ||
+                empty($datos['ci_receptor']) ||
+                empty($datos['titulo']) ||
+                empty($datos['descripcion'])
+            ) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Título y descripción son obligatorios']);
+                echo json_encode(['error' => 'Faltan datos de la notificación']);
                 exit;
             }
 
-            if (!empty($datos['ci_receptor'])) {
-                $res = $notificacion->crear($datos['titulo'], $datos['descripcion'], $datos['ci_receptor'], $ciUsuario);
-            } else {
-                // Si no se especifica un receptor, se notifica a todos
-                $res = $notificacion->notificarATodos($datos['titulo'], $datos['descripcion'], $ciUsuario);
-            }
+            $resultado = $notificacion->crear(
+                $datos['id_traslado'],
+                $datos['ci_chofer'],
+                $datos['matricula'],
+                $datos['id_destino'],
+                $ciUsuario,
+                $datos['ci_receptor'],
+                $datos['titulo'],
+                $datos['descripcion']
+            );
 
-            if ($res) {
+            if ($resultado) {
                 http_response_code(201);
-                echo json_encode(['mensaje' => 'Notificación enviada con éxito']);
+                echo json_encode(['mensaje' => 'Notificación enviada correctamente']);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'No se pudo enviar la notificación']);
             }
+
             exit;
 
-        case 'DELETE':
-            $id = $_GET['id'] ?? null;
-            if (!$id) {
+
+        // ==============================================
+        // MARCAR COMO LEÍDA
+        // ==============================================
+
+        case 'PUT':
+
+            $datos = json_decode(file_get_contents('php://input'), true);
+
+            if (
+                empty($datos['id_traslado']) ||
+                empty($datos['ci_chofer']) ||
+                empty($datos['matricula']) ||
+                empty($datos['id_destino'])
+            ) {
                 http_response_code(400);
-                echo json_encode(['error' => 'ID de notificación requerido']);
+                echo json_encode(['error' => 'Faltan identificadores de la notificación']);
                 exit;
             }
 
-            if ($notificacion->eliminar((string)$id)) {
+            if ($notificacion->marcarComoLeida($datos, $ciUsuario)) {
+                echo json_encode(['mensaje' => 'Notificación marcada como leída']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'No se pudo actualizar la notificación']);
+            }
+
+            exit;
+
+
+        // ==============================================
+        // ELIMINAR UNA NOTIFICACIÓN
+        // ==============================================
+
+        case 'DELETE':
+
+            $datos = json_decode(file_get_contents('php://input'), true);
+
+            if (!$datos) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Faltan los datos de la notificación']);
+                exit;
+            }
+
+            if ($notificacion->eliminar($datos, $ciUsuario)) {
                 echo json_encode(['mensaje' => 'Notificación eliminada']);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'No se pudo eliminar la notificación']);
             }
+
+            exit;
+
+
+        default:
+
+            http_response_code(405);
+            echo json_encode(['error' => 'Método HTTP no permitido']);
             exit;
     }
-} catch (Exception $e) {
+
+} catch (Throwable $e) {
+
+    error_log("Error en notificaciones.php: " . $e->getMessage());
+
     http_response_code(500);
-    echo json_encode(['error' => 'Error en el servidor: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Error interno del servidor']);
     exit;
 }
