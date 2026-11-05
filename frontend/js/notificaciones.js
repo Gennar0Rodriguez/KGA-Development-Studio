@@ -78,6 +78,26 @@ async function iniciarPollingNotificaciones() {
     }
 }
 
+// ======================================================
+// ACTUALIZAR CONTADOR DE NOTIFICACIONES
+// ======================================================
+
+function actualizarBadgeContador(cantidad) {
+
+    const badge = document.getElementById('badgeNotificaciones');
+
+    // Si la barra lateral todavía no está cargada, no hacemos nada.
+    if (!badge) return;
+
+    if (cantidad > 0) {
+        badge.textContent = cantidad > 9 ? '+9' : cantidad;
+        badge.style.display = 'inline-block';
+    } else {
+        badge.textContent = '';
+        badge.style.display = 'none';
+    }
+}
+
 function renderizarNotificaciones(lista) {
 
     const main = document.querySelector('main');

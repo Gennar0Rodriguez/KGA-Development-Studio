@@ -259,14 +259,20 @@ class Traslado
             $this->conexion->beginTransaction();
 
             // Verificar que el chofer esté asociado al vehículo.
-        if (!$this->validarConduce(
-            $datos['ci_chofer'],
-            $datos['matricula']
-        )) {
-            $this->conexion->rollBack();
-            error_log("El chofer no está asociado al vehículo seleccionado.");
-            return false;
-        }
+            if (!$this->validarConduce(
+                $datos['ci_chofer'],
+                $datos['matricula']
+            )) {
+                $this->conexion->rollBack();
+
+                error_log("El chofer no está asociado al vehículo seleccionado.");
+
+                return false;
+            }
+
+            // A partir de acá continúa la creación del traslado.
+            $idTraslado = $this->generarIdTraslado();
+            $idTransportable = $this->generarIdTransportable();
 
                 $this->conexion->rollBack();
 
