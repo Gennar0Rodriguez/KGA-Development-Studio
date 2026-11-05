@@ -274,16 +274,6 @@ class Traslado
             $idTraslado = $this->generarIdTraslado();
             $idTransportable = $this->generarIdTransportable();
 
-                $this->conexion->rollBack();
-
-                error_log("El chofer no está asociado al vehículo seleccionado.");
-
-                return false;
-            }
-
-            $idTraslado = $this->generarIdTraslado();
-            $idTransportable = $this->generarIdTransportable();
-
             /*
              * La solicitud empieza pendiente.
              * El estado operativo se actualiza cuando el administrador
