@@ -4,7 +4,7 @@ let modoEdicion = false;
 let trasladoEditando = null;
 
 // Guardamos los choferes para utilizarlos en el autocompletado.
-choferesDisponibles = listas.choferes || [];
+let choferesDisponibles = [];
 
 // Guarda el rol y los filtros de solicitudes.
 let esAdministrador = false;
@@ -17,18 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
 
     console.log('JS Traslados cargado correctamente');
-
-        // Comprobamos que la CI corresponda a un chofer existente.
-    const ciChoferSeleccionado = document.getElementById('conductor').value;
-
-    const choferValido = choferesDisponibles.some(chofer =>
-        String(chofer.ci_chofer) === ciChoferSeleccionado
-    );
-
-    if (!choferValido) {
-        alert('Debe seleccionar un conductor de la lista de sugerencias.');
-        return;
-    }
 
     // Consultamos la sesión para saber qué opciones mostrar.
     const datosSesion = await obtenerSesion();
@@ -124,6 +112,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (!vehiculoValido) {
                 alert('Debe seleccionar un vehículo de la lista de sugerencias.');
+                return;
+            }
+
+            // Comprobamos que el chofer seleccionado exista en la lista.
+            const ciChoferSeleccionado = document.getElementById('conductor').value;
+
+            const choferValido = choferesDisponibles.some(chofer =>
+                String(chofer.ci_chofer) === ciChoferSeleccionado
+            );
+
+            if (!choferValido) {
+                alert('Debe seleccionar un conductor de la lista de sugerencias.');
                 return;
             }
 
@@ -338,7 +338,7 @@ async function cargarOpcionesFormulario() {
 
         }
 
-        const listas = await res.json();
+        choferesDisponibles = listas.choferes || [];
 
         // Guardamos los vehículos para utilizarlos en el autocompletado.
         vehiculosDisponibles = listas.vehiculos || [];
