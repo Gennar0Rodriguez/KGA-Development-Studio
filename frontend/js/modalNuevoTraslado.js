@@ -398,7 +398,7 @@ async function cargarOpcionesFormulario() {
 
         console.log('Opciones cargadas correctamente:', {
             choferes: choferesDisponibles.length,
-            vehiculos: vehiculosDisponibles.length
+            vehiculos: vehiculosDisponibles.lengthg
         });
 
     } catch (error) {
