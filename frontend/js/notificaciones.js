@@ -193,12 +193,13 @@ async function marcarNotificacionLeida(item) {
                     'Content-Type': 'application/json'
                 },
 
-                body: JSON.stringify({
-                    id_traslado: item.id_traslado,
-                    ci_chofer: item.ci_chofer,
-                    matricula: item.matricula,
-                    id_destino: item.id_destino
-                })
+            body: JSON.stringify({
+                id_traslado: item.id_traslado,
+                ci_chofer: item.ci_chofer,
+                matricula: item.matricula,
+                id_destino: item.id_destino,
+                ci_admin: item.ci_admin
+            })
             }
         );
 

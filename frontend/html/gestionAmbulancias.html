@@ -157,25 +157,31 @@
                 >
 
 
-                <label for="conductor">
-                    Conductor
-                </label>
+        <label for="buscadorConductor">
+            Conductor
+        </label>
 
-                <select id="conductor">
+        <div class="campo-busqueda-ambulancia">
 
-                    <option value="">
-                        Seleccione un conductor
-                    </option>
+            <!-- El usuario busca por nombre, apellido o CI. -->
+            <input
+                type="text"
+                id="buscadorConductor"
+                placeholder="Escriba un nombre o CI..."
+                autocomplete="off"
+                required
+            >
 
-                    <option value="Juan Pérez">
-                        Juan Pérez
-                    </option>
+            <!-- Acá aparecen los choferes encontrados. -->
+            <div
+                id="sugerenciasConductor"
+                class="sugerencias-ambulancia"
+            ></div>
 
-                    <option value="Ana García">
-                        Ana García
-                    </option>
+            <!-- Guardamos la CI real del chofer seleccionado. -->
+            <input type="hidden" id="conductor">
 
-                </select>
+        </div>
 
 
                 <label for="enfermero">

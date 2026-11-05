@@ -106,6 +106,7 @@ try {
                 empty($datos['id_traslado']) ||
                 empty($datos['ci_chofer']) ||
                 empty($datos['matricula']) ||
+                empty($datos['ci_admin']) ||
                 empty($datos['id_destino'])
             ) {
                 http_response_code(400);

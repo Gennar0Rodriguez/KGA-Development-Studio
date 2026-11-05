@@ -196,7 +196,7 @@ class Notificacion
         $sentencia->bindValue(':id_destino', $datos['id_destino']);
 
         // El usuario solamente puede modificar sus propias notificaciones.
-        $sentencia->bindValue(':ci_admin', $ciReceptor);
+        $sentencia->bindValue(':ci_admin', $datos['ci_admin']);
         $sentencia->bindValue(':ci_receptor', $ciReceptor);
 
         return $sentencia->execute();

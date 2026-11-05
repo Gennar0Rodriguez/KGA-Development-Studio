@@ -3,8 +3,8 @@ let todosLosTraslados = [];
 let modoEdicion = false;
 let trasladoEditando = null;
 
-// Guarda los vehículos recibidos desde la base de datos.
-let vehiculosDisponibles = [];
+// Guardamos los choferes para utilizarlos en el autocompletado.
+choferesDisponibles = listas.choferes || [];
 
 // Guarda el rol y los filtros de solicitudes.
 let esAdministrador = false;
@@ -14,7 +14,21 @@ let textoBusqueda = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
 
+    
+
     console.log('JS Traslados cargado correctamente');
+
+        // Comprobamos que la CI corresponda a un chofer existente.
+    const ciChoferSeleccionado = document.getElementById('conductor').value;
+
+    const choferValido = choferesDisponibles.some(chofer =>
+        String(chofer.ci_chofer) === ciChoferSeleccionado
+    );
+
+    if (!choferValido) {
+        alert('Debe seleccionar un conductor de la lista de sugerencias.');
+        return;
+    }
 
     // Consultamos la sesión para saber qué opciones mostrar.
     const datosSesion = await obtenerSesion();
@@ -92,6 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 3. Configurar el buscador de ambulancias.
     buscarAmbulancias();
+    buscarChoferes();
 
     // 4. Envío del formulario.
     if (formTraslado) {
@@ -484,6 +499,106 @@ function buscarAmbulancias() {
 
 }
 
+// ======================================================
+// BUSCADOR AUTOMÁTICO DE CHOFERES
+// ======================================================
+
+function buscarChoferes() {
+
+    const input = document.getElementById('buscadorConductor');
+    const campoCI = document.getElementById('conductor');
+    const sugerencias = document.getElementById('sugerenciasConductor');
+
+    if (!input || !campoCI || !sugerencias) return;
+
+    // Detectamos cada vez que el usuario escribe.
+    input.addEventListener('input', () => {
+
+        const texto = input.value.toLowerCase().trim();
+
+        // Si modifica el texto, deja de haber un chofer seleccionado.
+        campoCI.value = '';
+
+        // Limpiamos los resultados anteriores.
+        sugerencias.innerHTML = '';
+
+        if (texto === '') return;
+
+        // Buscamos coincidencias por nombre, apellido o CI.
+        const resultados = choferesDisponibles.filter(chofer => {
+
+            const nombreCompleto = (
+                chofer.nombre_chofer + ' ' + chofer.apellido_chofer
+            ).toLowerCase();
+
+            const ci = String(chofer.ci_chofer);
+
+            return (
+                nombreCompleto.includes(texto) ||
+                ci.includes(texto)
+            );
+
+        });
+
+        // Mostramos cada chofer encontrado.
+        resultados.forEach(chofer => {
+
+            const opcion = document.createElement('button');
+
+            opcion.type = 'button';
+            opcion.className = 'opcion-ambulancia';
+
+            opcion.textContent =
+                chofer.nombre_chofer + ' ' +
+                chofer.apellido_chofer +
+                ' - CI: ' + chofer.ci_chofer;
+
+            // Al seleccionar, guardamos su CI.
+            opcion.addEventListener('click', () => {
+
+                input.value =
+                    chofer.nombre_chofer + ' ' +
+                    chofer.apellido_chofer +
+                    ' - CI: ' + chofer.ci_chofer;
+
+                campoCI.value = chofer.ci_chofer;
+
+                sugerencias.innerHTML = '';
+
+            });
+
+            sugerencias.appendChild(opcion);
+
+        });
+
+        // Mensaje cuando no existen coincidencias.
+        if (resultados.length === 0) {
+
+            const mensaje = document.createElement('p');
+
+            mensaje.textContent = 'No se encontraron choferes.';
+            mensaje.className = 'sin-resultados-ambulancia';
+
+            sugerencias.appendChild(mensaje);
+
+        }
+
+    });
+
+    // Cerramos las sugerencias al hacer clic fuera.
+    document.addEventListener('click', (e) => {
+
+        if (
+            !input.contains(e.target) &&
+            !sugerencias.contains(e.target)
+        ) {
+            sugerencias.innerHTML = '';
+        }
+
+    });
+
+}
+
 
 // ======================================================
 // CARGAR TRASLADOS DESDE LA BASE DE DATOS
@@ -702,7 +817,15 @@ function editarTraslado(idTraslado, idTransportable) {
 
     document.getElementById('paciente').value = traslado.nombre_paciente || '';
 
+    const chofer = choferesDisponibles.find(c =>
+        String(c.ci_chofer) === String(traslado.ci_chofer)
+    );
+
     document.getElementById('conductor').value = traslado.ci_chofer || '';
+
+    document.getElementById('buscadorConductor').value = chofer
+        ? `${chofer.nombre_chofer} ${chofer.apellido_chofer} - CI: ${chofer.ci_chofer}`
+        : '';
 
     document.getElementById('enfermero').value = traslado.ci_enfermero || '';
 
