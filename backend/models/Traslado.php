@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../config/Database.php';
 
 class Traslado
@@ -15,8 +16,8 @@ class Traslado
     // GENERAR IDENTIFICADORES
     // ======================================================
 
-    private function generarIdTraslado(): string {
-
+    private function generarIdTraslado(): string
+    {
         do {
 
             $id = 'TRAS' . strtoupper(bin2hex(random_bytes(4)));
@@ -37,8 +38,8 @@ class Traslado
     }
 
 
-    private function generarIdTransportable(): string {
-
+    private function generarIdTransportable(): string
+    {
         do {
 
             $id = 'TRAN' . strtoupper(bin2hex(random_bytes(4)));
@@ -60,14 +61,13 @@ class Traslado
 
 
     // ======================================================
-    // CONVERTIR EL ESTADO DEL FORMULARIO
+    // NORMALIZAR ESTADO
     // ======================================================
 
-    private function normalizarEstado(string $estado): string {
-
+    private function normalizarEstado(string $estado): string
+    {
         $estado = strtolower(trim($estado));
 
-        // Adaptamos los nombres utilizados por el formulario.
         if ($estado === 'en curso') {
             return 'en proceso';
         }
@@ -96,7 +96,10 @@ class Traslado
     // COMPROBAR SI EL CHOFER PUEDE UTILIZAR EL VEHÍCULO
     // ======================================================
 
-    private function validarConduce(string $ciChofer, string $matricula): bool {
+    private function validarConduce(
+        string $ciChofer,
+        string $matricula
+    ): bool {
 
         $sql = "SELECT COUNT(*)
                 FROM conduce
@@ -118,7 +121,15 @@ class Traslado
     // OBTENER TODOS LOS TRASLADOS
     // ======================================================
 
-    public function obtenerTodos(?string $ciSolicitante = null): array {
+    public function obtenerTodos(?string $ciSolicitante = null): array
+    {
+        /*
+         * Un traslado puede transportar un paciente o un órgano.
+         * Por eso consultamos ambas tablas mediante LEFT JOIN.
+         *
+         * El tipo_transportable permite que JavaScript sepa
+         * qué información debe mostrar en cada tarjeta.
+         */
 
         $sql = "SELECT
                     t.id_traslado,
@@ -152,8 +163,20 @@ class Traslado
 
                     tr.id_transportable,
 
+                    CASE
+                        WHEN p.id_transportable IS NOT NULL
+                            THEN 'paciente'
+                        WHEN el.id_transportable IS NOT NULL
+                            THEN 'organo'
+                        ELSE 'desconocido'
+                    END AS tipo_transportable,
+
                     p.nombre_paciente,
-                    p.oxigeno
+                    p.oxigeno,
+
+                    el.nombre_elemento,
+                    el.descripcion_elemento,
+                    el.tipo_elemento
 
                 FROM traslado t
 
@@ -175,11 +198,16 @@ class Traslado
                 LEFT JOIN paciente p
                     ON tr_able.id_transportable = p.id_transportable
 
+                LEFT JOIN elemento el
+                    ON tr_able.id_transportable = el.id_transportable
+
                 " . ($ciSolicitante !== null
                     ? "WHERE t.ci_solicitante = :ci_solicitante"
                     : "") . "
 
-                ORDER BY t.fecha_traslado DESC, t.hora_salida DESC";
+                ORDER BY
+                    t.fecha_traslado DESC,
+                    t.hora_salida DESC";
 
         $sentencia = $this->conexion->prepare($sql);
 
@@ -197,8 +225,8 @@ class Traslado
     // OBTENER OPCIONES PARA EL FORMULARIO
     // ======================================================
 
-    public function obtenerListasAuxiliares(): array {
-
+    public function obtenerListasAuxiliares(): array
+    {
         // Obtener vehículos.
         $sql = "SELECT matricula, modelo
                 FROM vehiculo";
@@ -210,7 +238,10 @@ class Traslado
 
 
         // Obtener conductores.
-        $sql = "SELECT ci_chofer, nombre_chofer, apellido_chofer
+        $sql = "SELECT
+                    ci_chofer,
+                    nombre_chofer,
+                    apellido_chofer
                 FROM chofer";
 
         $sentencia = $this->conexion->prepare($sql);
@@ -220,7 +251,10 @@ class Traslado
 
 
         // Obtener enfermeros.
-        $sql = "SELECT ci_enfermero, nombre_enfermero, apellido_enfermero
+        $sql = "SELECT
+                    ci_enfermero,
+                    nombre_enfermero,
+                    apellido_enfermero
                 FROM enfermero";
 
         $sentencia = $this->conexion->prepare($sql);
@@ -252,23 +286,51 @@ class Traslado
     // CREAR UN TRASLADO
     // ======================================================
 
-    public function crear(array $datos, string $ciSolicitante): bool {
+    public function crear(
+        array $datos,
+        string $ciSolicitante
+    ): bool {
 
         try {
 
+            // Determinar qué tipo de elemento se va a transportar.
+            $tipoTransportable = $datos['tipo_transportable'] ?? 'paciente';
+
+            if (!in_array($tipoTransportable, ['paciente', 'organo'], true)) {
+                return false;
+            }
+
+            // Comprobar los datos específicos del tipo seleccionado.
+            if ($tipoTransportable === 'paciente') {
+
+                if (empty(trim($datos['paciente'] ?? ''))) {
+                    return false;
+                }
+
+            } else {
+
+                if (
+                    empty(trim($datos['nombre_elemento'] ?? '')) ||
+                    empty(trim($datos['descripcion_elemento'] ?? ''))
+                ) {
+                    return false;
+                }
+
+            }
+
+            // El enfermero es obligatorio para ambos tipos.
+            if (empty($datos['ci_enfermero'])) {
+                return false;
+            }
+
+
             $this->conexion->beginTransaction();
 
-
-            // A partir de acá continúa la creación del traslado.
             $idTraslado = $this->generarIdTraslado();
+
             $idTransportable = $this->generarIdTransportable();
 
-            /*
-             * La solicitud empieza pendiente.
-             * El estado operativo se actualiza cuando el administrador
-             * la aprueba o cuando se comienza/finaliza el traslado.
-             */
-
+            // Toda solicitud comienza pendiente.
             $estadoTraslado = 'pendiente';
 
 
@@ -311,8 +373,9 @@ class Traslado
             $sentencia->bindValue(':id_destino', $datos['id_destino']);
             $sentencia->bindValue(':fecha', $datos['fecha']);
 
-            // Si no se indicó una hora, guardamos NULL.
-            $hora = !empty($datos['hora']) ? $datos['hora'] : null;
+            $hora = !empty($datos['hora'])
+                ? $datos['hora']
+                : null;
 
             $sentencia->bindValue(
                 ':hora',
@@ -337,6 +400,12 @@ class Traslado
             // INSERTAR TRANSPORTABLE
             // ----------------------------------------------
 
+            /*
+             * Esta tabla se utiliza tanto para pacientes como
+             * para órganos. El enfermero queda relacionado
+             * con el transportable en ambos casos.
+             */
+
             $sqlTransportable = "INSERT INTO transportable (
                                     id_transportable,
                                     ci_enfermero,
@@ -359,43 +428,90 @@ class Traslado
 
 
             // ----------------------------------------------
-            // INSERTAR PACIENTE
+            // INSERTAR PACIENTE U ÓRGANO
             // ----------------------------------------------
 
-            $sqlPaciente = "INSERT INTO paciente (
-                                id_transportable,
-                                ci_paciente,
-                                nombre_paciente,
-                                accesorio,
-                                oxigeno,
-                                aislamiento
-                            )
-                            VALUES (
-                                :id,
-                                :ci_paciente,
-                                :nombre,
-                                'silla',
-                                :oxigeno,
-                                FALSE
-                            )";
+            if ($tipoTransportable === 'paciente') {
 
-            $sentencia = $this->conexion->prepare($sqlPaciente);
+                // Guardar los datos en la tabla paciente.
 
-            $ciPaciente = (string) rand(10000000, 99999999);
+                $sqlPaciente = "INSERT INTO paciente (
+                                    id_transportable,
+                                    ci_paciente,
+                                    nombre_paciente,
+                                    accesorio,
+                                    oxigeno,
+                                    aislamiento
+                                )
+                                VALUES (
+                                    :id,
+                                    :ci_paciente,
+                                    :nombre,
+                                    'silla',
+                                    :oxigeno,
+                                    FALSE
+                                )";
 
-            $nombrePaciente = $datos['paciente'];
+                $sentencia = $this->conexion->prepare($sqlPaciente);
 
-            $oxigeno = (
-                ($datos['oxigeno'] ?? '') === 'Si' ||
-                ($datos['oxigeno'] ?? '') === '1'
-            ) ? 1 : 0;
+                // La CI se mantiene generada como en la implementación anterior.
+                $ciPaciente = (string) rand(10000000, 99999999);
 
-            $sentencia->bindValue(':id', $idTransportable);
-            $sentencia->bindValue(':ci_paciente', $ciPaciente);
-            $sentencia->bindValue(':nombre', $nombrePaciente);
-            $sentencia->bindValue(':oxigeno', $oxigeno, PDO::PARAM_INT);
+                $oxigeno = (
+                    ($datos['oxigeno'] ?? '') === 'Si' ||
+                    ($datos['oxigeno'] ?? '') === '1'
+                ) ? 1 : 0;
 
-            $sentencia->execute();
+                $sentencia->bindValue(':id', $idTransportable);
+                $sentencia->bindValue(':ci_paciente', $ciPaciente);
+                $sentencia->bindValue(
+                    ':nombre',
+                    trim($datos['paciente'])
+                );
+
+                $sentencia->bindValue(
+                    ':oxigeno',
+                    $oxigeno,
+                    PDO::PARAM_INT
+                );
+
+                $sentencia->execute();
+
+            } else {
+
+                // Guardar los datos en la tabla elemento.
+                // El tipo se establece como 'organo' según el MER.
+
+                $sqlElemento = "INSERT INTO elemento (
+                                    id_transportable,
+                                    nombre_elemento,
+                                    descripcion_elemento,
+                                    tipo_elemento
+                                )
+                                VALUES (
+                                    :id,
+                                    :nombre,
+                                    :descripcion,
+                                    'organo'
+                                )";
+
+                $sentencia = $this->conexion->prepare($sqlElemento);
+
+                $sentencia->bindValue(':id', $idTransportable);
+
+                $sentencia->bindValue(
+                    ':nombre',
+                    trim($datos['nombre_elemento'])
+                );
+
+                $sentencia->bindValue(
+                    ':descripcion',
+                    trim($datos['descripcion_elemento'])
+                );
+
+                $sentencia->execute();
+
+            }
 
 
             // ----------------------------------------------
@@ -443,12 +559,15 @@ class Traslado
                 $datos['id_destino'],
                 $ciSolicitante,
                 'Nueva solicitud de traslado',
-                'Se registró una nueva solicitud para la ambulancia ' . $datos['matricula']
+                'Se registró una nueva solicitud para el vehículo ' .
+                    $datos['matricula']
             );
 
-            // La solicitud se guarda aunque no se haya podido notificar.
+            // La solicitud se guarda aunque falle alguna notificación.
             if (!$resultadoNotificacion) {
-                error_log("No se pudieron enviar todas las notificaciones de la solicitud.");
+                error_log(
+                    "No se pudieron enviar todas las notificaciones de la solicitud."
+                );
             }
 
             $this->conexion->commit();
@@ -506,7 +625,6 @@ class Traslado
                 return false;
             }
 
-            // El estado operativo también refleja la resolución.
             $estadoTraslado = (
                 $estadoSolicitud === 'aprobado'
             ) ? 'aprobado' : 'denegado';
@@ -556,7 +674,6 @@ class Traslado
                 $mensaje
             );
 
-            // Si no se puede notificar, no confirmamos la resolución.
             if (!$resultadoNotificacion) {
 
                 $this->conexion->rollBack();
@@ -585,12 +702,39 @@ class Traslado
     // ACTUALIZAR UN TRASLADO
     // ======================================================
 
-    public function actualizar(array $datos): bool {
-
+    public function actualizar(array $datos): bool
+    {
         try {
 
-            $this->conexion->beginTransaction();
+            $tipoTransportable = $datos['tipo_transportable'] ?? 'paciente';
 
+            if (!in_array($tipoTransportable, ['paciente', 'organo'], true)) {
+                return false;
+            }
+
+            if ($tipoTransportable === 'paciente') {
+
+                if (empty(trim($datos['paciente'] ?? ''))) {
+                    return false;
+                }
+
+            } else {
+
+                if (
+                    empty(trim($datos['nombre_elemento'] ?? '')) ||
+                    empty(trim($datos['descripcion_elemento'] ?? ''))
+                ) {
+                    return false;
+                }
+
+            }
+
+            if (empty($datos['ci_enfermero'])) {
+                return false;
+            }
+
+
+            $this->conexion->beginTransaction();
 
             $estadoTraslado = $this->normalizarEstado(
                 $datos['estado'] ?? ''
@@ -618,7 +762,9 @@ class Traslado
             $sentencia->bindValue(':id_destino', $datos['id_destino']);
             $sentencia->bindValue(':fecha', $datos['fecha']);
 
-            $hora = !empty($datos['hora']) ? $datos['hora'] : null;
+            $hora = !empty($datos['hora'])
+                ? $datos['hora']
+                : null;
 
             $sentencia->bindValue(
                 ':hora',
@@ -636,7 +782,7 @@ class Traslado
 
 
             // ----------------------------------------------
-            // ACTUALIZAR LA RELACIÓN TRANSPORTA
+            // ACTUALIZAR RELACIÓN TRANSPORTA
             // ----------------------------------------------
 
             $sqlTransporta = "UPDATE transporta
@@ -652,13 +798,16 @@ class Traslado
             $sentencia->bindValue(':matricula', $datos['matricula']);
             $sentencia->bindValue(':id_destino', $datos['id_destino']);
             $sentencia->bindValue(':id_traslado', $datos['id_traslado']);
-            $sentencia->bindValue(':id_transportable', $datos['id_transportable']);
+            $sentencia->bindValue(
+                ':id_transportable',
+                $datos['id_transportable']
+            );
 
             $sentencia->execute();
 
 
             // ----------------------------------------------
-            // ACTUALIZAR LOS DATOS DE NOTIFICACIONES
+            // ACTUALIZAR NOTIFICACIONES
             // ----------------------------------------------
 
             $sqlNotificaciones = "UPDATE notifica
@@ -694,26 +843,128 @@ class Traslado
 
 
             // ----------------------------------------------
-            // ACTUALIZAR PACIENTE
+            // ACTUALIZAR PACIENTE U ÓRGANO
             // ----------------------------------------------
 
-            $sqlPaciente = "UPDATE paciente
-                            SET nombre_paciente = :nombre,
-                                oxigeno = :oxigeno
-                            WHERE id_transportable = :id";
+            /*
+             * Eliminamos los datos anteriores de ambas tablas.
+             * Luego insertamos solamente el tipo seleccionado.
+             *
+             * Así también se permite cambiar un traslado que antes
+             * transportaba un paciente para que ahora transporte
+             * un órgano, o viceversa.
+             */
 
-            $sentencia = $this->conexion->prepare($sqlPaciente);
+            $sqlEliminarPaciente = "DELETE FROM paciente
+                                    WHERE id_transportable = :id";
 
-            $oxigeno = (
-                ($datos['oxigeno'] ?? '') === 'Si' ||
-                ($datos['oxigeno'] ?? '') === '1'
-            ) ? 1 : 0;
-
-            $sentencia->bindValue(':nombre', $datos['paciente']);
-            $sentencia->bindValue(':oxigeno', $oxigeno, PDO::PARAM_INT);
+            $sentencia = $this->conexion->prepare($sqlEliminarPaciente);
             $sentencia->bindValue(':id', $datos['id_transportable']);
-
             $sentencia->execute();
+
+
+            $sqlEliminarElemento = "DELETE FROM elemento
+                                    WHERE id_transportable = :id";
+
+            $sentencia = $this->conexion->prepare($sqlEliminarElemento);
+            $sentencia->bindValue(':id', $datos['id_transportable']);
+            $sentencia->execute();
+
+
+            if ($tipoTransportable === 'paciente') {
+
+                $sqlPaciente = "INSERT INTO paciente (
+                                    id_transportable,
+                                    ci_paciente,
+                                    nombre_paciente,
+                                    accesorio,
+                                    oxigeno,
+                                    aislamiento
+                                )
+                                VALUES (
+                                    :id,
+                                    :ci_paciente,
+                                    :nombre,
+                                    'silla',
+                                    :oxigeno,
+                                    FALSE
+                                )";
+
+                $sentencia = $this->conexion->prepare($sqlPaciente);
+
+                // Si ya existía un paciente, conservamos su CI.
+                // Si el traslado antes era un órgano, generamos una nueva.
+                $sqlCI = "SELECT ci_paciente
+                          FROM paciente
+                          WHERE id_transportable = :id";
+
+                /*
+                 * La fila anterior ya fue eliminada, por lo que
+                 * en este caso se genera una CI nueva.
+                 */
+                $ciPaciente = (string) rand(10000000, 99999999);
+
+                $oxigeno = (
+                    ($datos['oxigeno'] ?? '') === 'Si' ||
+                    ($datos['oxigeno'] ?? '') === '1'
+                ) ? 1 : 0;
+
+                $sentencia->bindValue(
+                    ':id',
+                    $datos['id_transportable']
+                );
+
+                $sentencia->bindValue(':ci_paciente', $ciPaciente);
+
+                $sentencia->bindValue(
+                    ':nombre',
+                    trim($datos['paciente'])
+                );
+
+                $sentencia->bindValue(
+                    ':oxigeno',
+                    $oxigeno,
+                    PDO::PARAM_INT
+                );
+
+                $sentencia->execute();
+
+            } else {
+
+                $sqlElemento = "INSERT INTO elemento (
+                                    id_transportable,
+                                    nombre_elemento,
+                                    descripcion_elemento,
+                                    tipo_elemento
+                                )
+                                VALUES (
+                                    :id,
+                                    :nombre,
+                                    :descripcion,
+                                    'organo'
+                                )";
+
+                $sentencia = $this->conexion->prepare($sqlElemento);
+
+                $sentencia->bindValue(
+                    ':id',
+                    $datos['id_transportable']
+                );
+
+                $sentencia->bindValue(
+                    ':nombre',
+                    trim($datos['nombre_elemento'])
+                );
+
+                $sentencia->bindValue(
+                    ':descripcion',
+                    trim($datos['descripcion_elemento'])
+                );
+
+                $sentencia->execute();
+
+            }
+
 
             $this->conexion->commit();
 
@@ -736,13 +987,13 @@ class Traslado
     // ELIMINAR UN TRASLADO
     // ======================================================
 
-    public function eliminar(string $idTraslado): bool {
-
+    public function eliminar(string $idTraslado): bool
+    {
         try {
 
             $this->conexion->beginTransaction();
 
-            // Primero recuperamos los transportables relacionados.
+            // Recuperar los transportables relacionados.
             $sql = "SELECT id_transportable
                     FROM transporta
                     WHERE id_traslado = :id";
@@ -754,7 +1005,7 @@ class Traslado
             $transportables = $sentencia->fetchAll(PDO::FETCH_COLUMN);
 
 
-            // Primero eliminamos las notificaciones relacionadas.
+            // Eliminar notificaciones relacionadas.
             $sql = "DELETE FROM notifica
                     WHERE id_traslado = :id";
 
@@ -763,7 +1014,7 @@ class Traslado
             $sentencia->execute();
 
 
-            // Después eliminamos las relaciones.
+            // Eliminar relaciones.
             $sql = "DELETE FROM transporta
                     WHERE id_traslado = :id";
 
@@ -772,7 +1023,7 @@ class Traslado
             $sentencia->execute();
 
 
-            // Finalmente eliminamos el traslado.
+            // Eliminar traslado.
             $sql = "DELETE FROM traslado
                     WHERE id_traslado = :id";
 
@@ -781,7 +1032,7 @@ class Traslado
             $sentencia->execute();
 
 
-            // Eliminar los transportables que ya no estén asociados
+            // Eliminar transportables que ya no estén asociados
             // a ningún otro traslado.
             foreach ($transportables as $idTransportable) {
 
@@ -797,6 +1048,7 @@ class Traslado
 
                 if (!$sigueUtilizado) {
 
+                    // Eliminar paciente si existe.
                     $sql = "DELETE FROM paciente
                             WHERE id_transportable = :id";
 
@@ -805,6 +1057,7 @@ class Traslado
                     $sentencia->execute();
 
 
+                    // Eliminar elemento si existe.
                     $sql = "DELETE FROM elemento
                             WHERE id_transportable = :id";
 
@@ -813,13 +1066,16 @@ class Traslado
                     $sentencia->execute();
 
 
+                    // Eliminar transportable.
                     $sql = "DELETE FROM transportable
                             WHERE id_transportable = :id";
 
                     $sentencia = $this->conexion->prepare($sql);
                     $sentencia->bindValue(':id', $idTransportable);
                     $sentencia->execute();
+
                 }
+
             }
 
             $this->conexion->commit();
@@ -837,4 +1093,5 @@ class Traslado
             return false;
         }
     }
+
 }

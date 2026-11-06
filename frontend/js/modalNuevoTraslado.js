@@ -2,23 +2,22 @@ let todosLosTraslados = [];
 let modoEdicion = false;
 let trasladoEditando = null;
 
-// Listas que se cargan desde la API.
 let choferesDisponibles = [];
 let vehiculosDisponibles = [];
 
-// Guarda el rol y los filtros de solicitudes.
 let esAdministrador = false;
 let filtroSolicitud = 'pendiente';
 let textoBusqueda = '';
 
 
-document.addEventListener('DOMContentLoaded', async () => {
+// ======================================================
+// INICIO
+// ======================================================
 
-    
+document.addEventListener('DOMContentLoaded', async () => {
 
     console.log('JS Traslados cargado correctamente');
 
-    // Consultamos la sesión para saber qué opciones mostrar.
     const datosSesion = await obtenerSesion();
 
     if (!datosSesion || !datosSesion.autenticado) {
@@ -28,54 +27,76 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const usuarioActual = datosSesion.usuario || {};
 
-    esAdministrador = (usuarioActual.cargo || '').toLowerCase() === 'administrador';
+    esAdministrador =
+        (usuarioActual.cargo || '').toLowerCase() === 'administrador';
 
     const modal = document.getElementById('modalNuevoTraslado');
+    const formulario = document.getElementById('formNuevoTraslado');
+
     const btnAbrir = document.getElementById('btnAbrirModalTraslado');
     const btnCerrar = document.getElementById('btnCerrarModalTraslado');
     const btnCancelar = document.getElementById('btnCancelarModalTraslado');
-    const formTraslado = document.getElementById('formNuevoTraslado');
 
-    // Creamos los botones para cambiar entre solicitudes.
+    const selectorTipo = document.getElementById('tipoTransportable');
+
     configurarFiltrosSolicitudes();
+    configurarTipoTransportable();
 
-    // 1. Manejo de apertura del modal.
+    // Abrir modal para crear un traslado.
     if (btnAbrir && modal) {
 
         btnAbrir.addEventListener('click', async (e) => {
 
             e.preventDefault();
 
+            modoEdicion = false;
+            trasladoEditando = null;
+
+            formulario.reset();
+
+            actualizarCamposTransportable();
+
+            const titulo = document.querySelector(
+                '.modal-traslado-header h2'
+            );
+
+            if (titulo) {
+                titulo.textContent = 'Nuevo Traslado';
+            }
+
             modal.style.display = 'flex';
 
-            // Actualizamos los vehículos cada vez que abrimos el formulario.
             await cargarOpcionesFormulario();
 
         });
 
     }
 
-    // Función para cerrar y reiniciar el formulario.
+    // Cerrar y limpiar el formulario.
     const cerrarModal = () => {
 
-        if (modal) modal.style.display = 'none';
-        if (formTraslado) formTraslado.reset();
-
-        // Limpiamos las sugerencias del buscador.
-        const sugerencias = document.getElementById('sugerenciasAmbulancia');
-
-        if (sugerencias) {
-            sugerencias.innerHTML = '';
+        if (modal) {
+            modal.style.display = 'none';
         }
 
-        // Volvemos al modo de creación de un traslado.
+        if (formulario) {
+            formulario.reset();
+        }
+
+        document.getElementById('sugerenciasAmbulancia').innerHTML = '';
+        document.getElementById('sugerenciasConductor').innerHTML = '';
+
         modoEdicion = false;
         trasladoEditando = null;
 
-        const tituloModal = document.querySelector('.modal-traslado-header h2');
+        actualizarCamposTransportable();
 
-        if (tituloModal) {
-            tituloModal.textContent = 'Nuevo Traslado';
+        const titulo = document.querySelector(
+            '.modal-traslado-header h2'
+        );
+
+        if (titulo) {
+            titulo.textContent = 'Nuevo Traslado';
         }
 
     };
@@ -88,121 +109,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnCancelar.addEventListener('click', cerrarModal);
     }
 
-    // 2. Cargar opciones iniciales y traslados.
+    // Cargar datos auxiliares y traslados.
     await cargarOpcionesFormulario();
-    await cargarTraslados();
 
-    // 3. Configurar el buscador de ambulancias.
     buscarAmbulancias();
     buscarChoferes();
 
-    // 4. Envío del formulario.
-    if (formTraslado) {
+    await cargarTraslados();
 
-        formTraslado.addEventListener('submit', async (e) => {
+    // Envío del formulario.
+    if (formulario) {
+
+        formulario.addEventListener('submit', async (e) => {
 
             e.preventDefault();
 
-            const matriculaSeleccionada = document.getElementById('ambulancia').value;
-
-            // Comprobamos que la matrícula corresponda a un vehículo existente.
-            const vehiculoValido = vehiculosDisponibles.some(vehiculo =>
-                vehiculo.matricula.toLowerCase() === matriculaSeleccionada.toLowerCase()
-            );
-
-            if (!vehiculoValido) {
-                alert('Debe seleccionar un vehículo de la lista de sugerencias.');
-                return;
-            }
-
-            // Comprobamos que el chofer seleccionado exista en la lista.
-            const ciChoferSeleccionado = document.getElementById('conductor').value;
-
-            const choferValido = choferesDisponibles.some(chofer =>
-                String(chofer.ci_chofer) === ciChoferSeleccionado
-            );
-
-            if (!choferValido) {
-                alert('Debe seleccionar un conductor de la lista de sugerencias.');
-                return;
-            }
-
-            // Datos que se enviarán al servidor.
-            const payload = {
-
-                matricula: matriculaSeleccionada,
-                paciente: document.getElementById('paciente')?.value,
-                ci_chofer: document.getElementById('conductor')?.value,
-                ci_enfermero: document.getElementById('enfermero')?.value,
-                id_destino: document.getElementById('destino')?.value,
-                fecha: document.getElementById('fecha')?.value,
-                hora: document.getElementById('hora')?.value,
-
-                // Enviamos las observaciones para guardarlas en MySQL.
-                observaciones: document.getElementById('observaciones')?.value,
-
-                estado: document.getElementById('estado')?.value,
-                oxigeno: document.getElementById('oxigeno')?.value,
-                camilla: document.getElementById('camilla')?.value
-
-            };
-
-            // Si estamos editando, enviamos también los identificadores.
-            if (modoEdicion) {
-
-                payload.id_traslado = trasladoEditando.id_traslado;
-                payload.id_transportable = trasladoEditando.id_transportable;
-
-            }
-
-            const metodoHttp = modoEdicion ? 'PUT' : 'POST';
-
-            console.log('Enviando datos de traslado:', payload);
-
-            try {
-
-                const response = await fetch('/kgade/KGA-Development-Studio/API/traslados/traslados.php', {
-
-                    method: metodoHttp,
-
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-
-                    body: JSON.stringify(payload)
-
-                });
-
-                const res = await response.json();
-
-                if (response.ok) {
-
-                    alert(res.mensaje || 'Traslado guardado correctamente');
-
-                    cerrarModal();
-
-                    await cargarTraslados();
-
-                } else {
-
-                    alert(res.error || 'Error al guardar el traslado');
-
-                }
-
-            } catch (error) {
-
-                console.error('Error al guardar traslado:', error);
-
-                alert('Ocurrió un error en la conexión.');
-
-            }
+            await guardarTraslado(cerrarModal);
 
         });
 
     }
 
-    // 5. Buscador general de traslados por matrícula.
-    const inputBuscador = document.querySelector('.btn-principal .buscador');
+    // Buscador general.
+    const inputBuscador = document.querySelector(
+        '.btn-principal .buscador'
+    );
 
     if (inputBuscador) {
 
@@ -220,16 +151,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 // ======================================================
-// OBTENER SESIÓN DEL USUARIO
+// OBTENER SESIÓN
 // ======================================================
 
 async function obtenerSesion() {
 
     try {
 
-        const response = await fetch('/kgade/KGA-Development-Studio/API/sesion.php');
+        const response = await fetch(
+            '/kgade/KGA-Development-Studio/API/sesion.php'
+        );
 
-        if (!response.ok) return null;
+        if (!response.ok) {
+            return null;
+        }
 
         return await response.json();
 
@@ -245,6 +180,221 @@ async function obtenerSesion() {
 
 
 // ======================================================
+// CAMBIAR ENTRE PACIENTE Y ÓRGANO
+// ======================================================
+
+function configurarTipoTransportable() {
+
+    const selector = document.getElementById('tipoTransportable');
+
+    if (!selector) return;
+
+    selector.addEventListener('change', actualizarCamposTransportable);
+
+    actualizarCamposTransportable();
+
+}
+
+
+function actualizarCamposTransportable() {
+
+    const tipo = document.getElementById('tipoTransportable')?.value;
+
+    const camposPaciente = document.getElementById('camposPaciente');
+    const camposOrgano = document.getElementById('camposOrgano');
+
+    const paciente = document.getElementById('paciente');
+    const oxigeno = document.getElementById('oxigeno');
+
+    const nombreElemento = document.getElementById('nombreElemento');
+    const descripcionElemento = document.getElementById(
+        'descripcionElemento'
+    );
+
+    const esPaciente = tipo === 'paciente';
+
+    if (camposPaciente) {
+        camposPaciente.style.display = esPaciente ? 'block' : 'none';
+    }
+
+    if (camposOrgano) {
+        camposOrgano.style.display = esPaciente ? 'none' : 'block';
+    }
+
+    // Los campos ocultos no deben ser obligatorios.
+    if (paciente) {
+        paciente.required = esPaciente;
+    }
+
+    if (oxigeno) {
+        oxigeno.required = esPaciente;
+    }
+
+    if (nombreElemento) {
+        nombreElemento.required = !esPaciente;
+    }
+
+    if (descripcionElemento) {
+        descripcionElemento.required = !esPaciente;
+    }
+
+}
+
+
+// ======================================================
+// GUARDAR O ACTUALIZAR TRASLADO
+// ======================================================
+
+async function guardarTraslado(cerrarModal) {
+
+    const matriculaSeleccionada = document.getElementById(
+        'ambulancia'
+    ).value.trim();
+
+    const vehiculoValido = vehiculosDisponibles.some(vehiculo =>
+        String(vehiculo.matricula).toLowerCase() ===
+        matriculaSeleccionada.toLowerCase()
+    );
+
+    if (!vehiculoValido) {
+
+        alert('Debe seleccionar un vehículo de la lista de sugerencias.');
+
+        return;
+
+    }
+
+    const ciChoferSeleccionado = document.getElementById(
+        'conductor'
+    ).value;
+
+    const choferValido = choferesDisponibles.some(chofer =>
+        String(chofer.ci_chofer) === String(ciChoferSeleccionado)
+    );
+
+    if (!choferValido) {
+
+        alert('Debe seleccionar un conductor de la lista de sugerencias.');
+
+        return;
+
+    }
+
+    const tipoTransportable = document.getElementById(
+        'tipoTransportable'
+    ).value;
+
+    const payload = {
+
+        // Datos generales del traslado.
+        matricula: matriculaSeleccionada,
+
+        ci_chofer: ciChoferSeleccionado,
+
+        ci_enfermero: document.getElementById('enfermero').value,
+
+        id_destino: document.getElementById('destino').value,
+
+        fecha: document.getElementById('fecha').value,
+
+        hora: document.getElementById('hora').value,
+
+        observaciones: document.getElementById('observaciones').value,
+
+        estado: document.getElementById('estado').value,
+
+        // Tipo de elemento que se transporta.
+        tipo_transportable: tipoTransportable,
+
+        // Datos del paciente.
+        paciente: tipoTransportable === 'paciente'
+            ? document.getElementById('paciente').value.trim()
+            : '',
+
+        oxigeno: tipoTransportable === 'paciente'
+            ? document.getElementById('oxigeno').value
+            : 'No',
+
+        // Datos del órgano.
+        nombre_elemento: tipoTransportable === 'organo'
+            ? document.getElementById('nombreElemento').value.trim()
+            : '',
+
+        descripcion_elemento: tipoTransportable === 'organo'
+            ? document.getElementById('descripcionElemento').value.trim()
+            : ''
+
+    };
+
+    if (!payload.ci_enfermero) {
+
+        alert('Debe seleccionar un enfermero.');
+
+        return;
+
+    }
+
+    if (!payload.id_destino) {
+
+        alert('Debe seleccionar un destino.');
+
+        return;
+
+    }
+
+    if (modoEdicion && trasladoEditando) {
+
+        payload.id_traslado = trasladoEditando.id_traslado;
+
+        payload.id_transportable = trasladoEditando.id_transportable;
+
+    }
+
+    const metodoHttp = modoEdicion ? 'PUT' : 'POST';
+
+    try {
+
+        const response = await fetch(
+            '/kgade/KGA-Development-Studio/API/traslados/traslados.php',
+            {
+                method: metodoHttp,
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify(payload)
+            }
+        );
+
+        const resultado = await response.json();
+
+        if (!response.ok) {
+
+            alert(resultado.error || 'No se pudo guardar el traslado.');
+
+            return;
+
+        }
+
+        alert(resultado.mensaje || 'Traslado guardado correctamente.');
+
+        cerrarModal();
+
+        await cargarTraslados();
+
+    } catch (error) {
+
+        console.error('Error al guardar el traslado:', error);
+
+        alert('Ocurrió un error en la conexión.');
+
+    }
+
+}
+
+
+// ======================================================
 // CONFIGURAR FILTROS DE SOLICITUDES
 // ======================================================
 
@@ -252,7 +402,10 @@ function configurarFiltrosSolicitudes() {
 
     const contenedor = document.querySelector('.contenedor-ambulancias');
 
-    if (!contenedor) return;
+    if (!contenedor || !contenedor.parentNode) return;
+
+    // Evitamos crear los filtros más de una vez.
+    if (document.querySelector('.filtros-solicitudes')) return;
 
     const filtros = document.createElement('section');
 
@@ -272,7 +425,6 @@ function configurarFiltrosSolicitudes() {
         </button>
     `;
 
-    // Insertamos los filtros antes de las tarjetas.
     contenedor.parentNode.insertBefore(filtros, contenedor);
 
     filtros.querySelectorAll('.btn-filtro').forEach(boton => {
@@ -281,7 +433,6 @@ function configurarFiltrosSolicitudes() {
 
             filtroSolicitud = boton.dataset.estado;
 
-            // Actualizamos cuál botón está seleccionado.
             filtros.querySelectorAll('.btn-filtro').forEach(b => {
                 b.classList.remove('activo');
             });
@@ -305,7 +456,8 @@ function filtrarTraslados() {
 
     const filtrados = todosLosTraslados.filter(traslado => {
 
-        const coincideEstado = traslado.estado_solicitud === filtroSolicitud;
+        const coincideEstado =
+            traslado.estado_solicitud === filtroSolicitud;
 
         const coincideBusqueda = String(traslado.matricula || '')
             .toLowerCase()
@@ -324,17 +476,15 @@ function filtrarTraslados() {
 // CARGAR OPCIONES DEL FORMULARIO
 // ======================================================
 
-// ======================================================
-// CARGAR OPCIONES DEL FORMULARIO
-// ======================================================
-
 async function cargarOpcionesFormulario() {
 
     try {
 
-        const res = await fetch('/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=auxiliares');
+        const response = await fetch(
+            '/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=auxiliares'
+        );
 
-        if (!res.ok) {
+        if (!response.ok) {
 
             console.error('No se pudieron cargar las opciones del formulario.');
 
@@ -342,26 +492,28 @@ async function cargarOpcionesFormulario() {
 
         }
 
-        // Convertimos la respuesta de PHP en un objeto JavaScript.
-        const listas = await res.json();
+        const listas = await response.json();
 
-        // Guardamos los datos para utilizarlos en los autocompletados.
         choferesDisponibles = listas.choferes || [];
         vehiculosDisponibles = listas.vehiculos || [];
 
-        // Cargar enfermeros.
+        // Enfermeros.
         const selectEnfermero = document.getElementById('enfermero');
 
-        if (selectEnfermero && listas.enfermeros) {
+        if (selectEnfermero) {
 
-            selectEnfermero.innerHTML = '<option value="">Seleccione un enfermero</option>';
+            selectEnfermero.innerHTML =
+                '<option value="">Seleccione un enfermero</option>';
 
-            listas.enfermeros.forEach(e => {
+            (listas.enfermeros || []).forEach(enfermero => {
 
                 const opcion = document.createElement('option');
 
-                opcion.value = e.ci_enfermero;
-                opcion.textContent = e.nombre_enfermero + ' ' + e.apellido_enfermero;
+                opcion.value = enfermero.ci_enfermero;
+
+                opcion.textContent =
+                    enfermero.nombre_enfermero + ' ' +
+                    enfermero.apellido_enfermero;
 
                 selectEnfermero.appendChild(opcion);
 
@@ -369,36 +521,31 @@ async function cargarOpcionesFormulario() {
 
         }
 
-        // Transformar el campo de destino en un selector.
-        const inputDestino = document.getElementById('destino');
+        // Destinos.
+        const selectDestino = document.getElementById('destino');
 
-        if (inputDestino && listas.destinos) {
+        if (selectDestino) {
 
-            const selectDestino = document.createElement('select');
+            selectDestino.innerHTML =
+                '<option value="">Seleccione un destino</option>';
 
-            selectDestino.id = 'destino';
-            selectDestino.required = true;
-
-            selectDestino.innerHTML = '<option value="">Seleccione un destino</option>';
-
-            listas.destinos.forEach(d => {
+            (listas.destinos || []).forEach(destino => {
 
                 const opcion = document.createElement('option');
 
-                opcion.value = d.id_destino;
-                opcion.textContent = d.nombre_destino;
+                opcion.value = destino.id_destino;
+
+                opcion.textContent = destino.nombre_destino;
 
                 selectDestino.appendChild(opcion);
 
             });
 
-            inputDestino.replaceWith(selectDestino);
-
         }
 
         console.log('Opciones cargadas correctamente:', {
             choferes: choferesDisponibles.length,
-            vehiculos: vehiculosDisponibles.lengthg
+            vehiculos: vehiculosDisponibles.length
         });
 
     } catch (error) {
@@ -409,47 +556,50 @@ async function cargarOpcionesFormulario() {
 
 }
 
+
 // ======================================================
-// BUSCADOR AUTOMÁTICO DE VEHÍCULOS
+// BUSCADOR DE VEHÍCULOS
 // ======================================================
 
 function buscarAmbulancias() {
 
     const input = document.getElementById('ambulancia');
-    const sugerencias = document.getElementById('sugerenciasAmbulancia');
+
+    const sugerencias = document.getElementById(
+        'sugerenciasAmbulancia'
+    );
 
     if (!input || !sugerencias) return;
 
-    // Detectamos cada vez que el usuario escribe.
     input.addEventListener('input', () => {
 
         const texto = input.value.toLowerCase().trim();
 
-        // Limpiamos los resultados anteriores.
         sugerencias.innerHTML = '';
 
-        // Si el campo está vacío, no mostramos sugerencias.
         if (texto === '') return;
 
-        // Buscamos por matrícula o modelo.
-        const resultados = vehiculosDisponibles.filter(vehiculo =>
+        const resultados = vehiculosDisponibles.filter(vehiculo => {
 
-            vehiculo.matricula.toLowerCase().includes(texto) ||
-            vehiculo.modelo.toLowerCase().includes(texto)
+            const matricula = String(vehiculo.matricula || '').toLowerCase();
 
-        );
+            const modelo = String(vehiculo.modelo || '').toLowerCase();
 
-        // Mostramos cada vehículo encontrado.
+            return matricula.includes(texto) || modelo.includes(texto);
+
+        });
+
         resultados.forEach(vehiculo => {
 
             const opcion = document.createElement('button');
 
             opcion.type = 'button';
+
             opcion.className = 'opcion-ambulancia';
 
-            opcion.textContent = vehiculo.matricula + ' - ' + vehiculo.modelo;
+            opcion.textContent =
+                vehiculo.matricula + ' - ' + vehiculo.modelo;
 
-            // Al seleccionar, guardamos únicamente la matrícula.
             opcion.addEventListener('click', () => {
 
                 input.value = vehiculo.matricula;
@@ -462,12 +612,12 @@ function buscarAmbulancias() {
 
         });
 
-        // Mensaje cuando no existen coincidencias.
         if (resultados.length === 0) {
 
             const mensaje = document.createElement('p');
 
             mensaje.textContent = 'No se encontraron vehículos.';
+
             mensaje.className = 'sin-resultados-ambulancia';
 
             sugerencias.appendChild(mensaje);
@@ -476,66 +626,66 @@ function buscarAmbulancias() {
 
     });
 
-    // Si el usuario hace clic fuera del buscador, cerramos las sugerencias.
     document.addEventListener('click', (e) => {
 
-        if (!input.contains(e.target) && !sugerencias.contains(e.target)) {
-
+        if (
+            !input.contains(e.target) &&
+            !sugerencias.contains(e.target)
+        ) {
             sugerencias.innerHTML = '';
-
         }
 
     });
 
 }
 
+
 // ======================================================
-// BUSCADOR AUTOMÁTICO DE CHOFERES
+// BUSCADOR DE CHOFERES
 // ======================================================
 
 function buscarChoferes() {
 
     const input = document.getElementById('buscadorConductor');
+
     const campoCI = document.getElementById('conductor');
-    const sugerencias = document.getElementById('sugerenciasConductor');
+
+    const sugerencias = document.getElementById(
+        'sugerenciasConductor'
+    );
 
     if (!input || !campoCI || !sugerencias) return;
 
-    // Detectamos cada vez que el usuario escribe.
     input.addEventListener('input', () => {
 
         const texto = input.value.toLowerCase().trim();
 
-        // Si modifica el texto, deja de haber un chofer seleccionado.
+        // Si cambia el texto, se invalida el chofer seleccionado.
         campoCI.value = '';
 
-        // Limpiamos los resultados anteriores.
         sugerencias.innerHTML = '';
 
         if (texto === '') return;
 
-        // Buscamos coincidencias por nombre, apellido o CI.
         const resultados = choferesDisponibles.filter(chofer => {
 
             const nombreCompleto = (
-                chofer.nombre_chofer + ' ' + chofer.apellido_chofer
+                chofer.nombre_chofer + ' ' +
+                chofer.apellido_chofer
             ).toLowerCase();
 
             const ci = String(chofer.ci_chofer);
 
-            return (
-                nombreCompleto.includes(texto) ||
-                ci.includes(texto)
-            );
+            return nombreCompleto.includes(texto) || ci.includes(texto);
 
         });
 
-        // Mostramos cada chofer encontrado.
         resultados.forEach(chofer => {
 
             const opcion = document.createElement('button');
 
             opcion.type = 'button';
+
             opcion.className = 'opcion-ambulancia';
 
             opcion.textContent =
@@ -543,7 +693,6 @@ function buscarChoferes() {
                 chofer.apellido_chofer +
                 ' - CI: ' + chofer.ci_chofer;
 
-            // Al seleccionar, guardamos su CI.
             opcion.addEventListener('click', () => {
 
                 input.value =
@@ -561,12 +710,12 @@ function buscarChoferes() {
 
         });
 
-        // Mensaje cuando no existen coincidencias.
         if (resultados.length === 0) {
 
             const mensaje = document.createElement('p');
 
             mensaje.textContent = 'No se encontraron choferes.';
+
             mensaje.className = 'sin-resultados-ambulancia';
 
             sugerencias.appendChild(mensaje);
@@ -575,7 +724,6 @@ function buscarChoferes() {
 
     });
 
-    // Cerramos las sugerencias al hacer clic fuera.
     document.addEventListener('click', (e) => {
 
         if (
@@ -598,7 +746,9 @@ async function cargarTraslados() {
 
     try {
 
-        const response = await fetch('/kgade/KGA-Development-Studio/API/traslados/traslados.php');
+        const response = await fetch(
+            '/kgade/KGA-Development-Studio/API/traslados/traslados.php'
+        );
 
         if (!response.ok) {
 
@@ -635,7 +785,11 @@ function renderizarTarjetasTraslado(lista) {
 
     if (!Array.isArray(lista) || lista.length === 0) {
 
-        contenedor.innerHTML = '<p style="text-align:center; width:100%; grid-column: 1/-1;">No hay solicitudes en esta sección.</p>';
+        contenedor.innerHTML = `
+            <p style="text-align:center; width:100%; grid-column:1/-1;">
+                No hay solicitudes en esta sección.
+            </p>
+        `;
 
         return;
 
@@ -647,20 +801,51 @@ function renderizarTarjetasTraslado(lista) {
 
         card.className = 'card-ambulancia';
 
+        const esOrgano = item.tipo_transportable === 'organo';
+
+        const descripcionTransportable = esOrgano
+            ? `
+                <p><strong>Órgano:</strong> ${item.nombre_elemento || 'Sin nombre'}</p>
+                <p><strong>Descripción:</strong> ${item.descripcion_elemento || 'Sin descripción'}</p>
+            `
+            : `
+                <p><strong>Paciente:</strong> ${item.nombre_paciente || 'Sin nombre'}</p>
+                <p><strong>Oxígeno:</strong> ${Number(item.oxigeno) === 1 ? 'Sí' : 'No'}</p>
+            `;
+
+        const estado = item.estado_traslado || 'Pendiente';
+
         card.innerHTML = `
 
-            <h3>Matrícula: ${item.matricula}</h3>
+            <h3>Matrícula: ${item.matricula || 'Sin matrícula'}</h3>
 
-            <img src="../img/ambulanciaIMG.png" alt="Ambulancia">
+            <img src="../img/ambulanciaIMG.png" alt="Vehículo">
 
             <div class="info-principal">
 
-                <p><strong>Tipo:</strong> Ambulancia</p>
-                <p><strong>Destino:</strong> ${item.nombre_destino || 'No asignado'}</p>
-                <p><strong>Estado:</strong> ${item.estado_traslado || 'Pendiente'}</p>
-                <p><strong>Solicitud:</strong> ${item.estado_solicitud || 'Sin estado'}</p>
-                <p><strong>Hora salida:</strong> ${item.hora_salida || 'Pendiente'}</p>
-                <p><strong>Hora llegada:</strong> ${item.hora_llegada || 'Pendiente'}</p>
+                <p><strong>Tipo:</strong> Traslado</p>
+
+                <p><strong>Transportable:</strong>
+                    ${esOrgano ? 'Órgano' : 'Paciente'}
+                </p>
+
+                <p><strong>Destino:</strong>
+                    ${item.nombre_destino || 'No asignado'}
+                </p>
+
+                <p><strong>Estado:</strong> ${estado}</p>
+
+                <p><strong>Solicitud:</strong>
+                    ${item.estado_solicitud || 'Sin estado'}
+                </p>
+
+                <p><strong>Hora salida:</strong>
+                    ${item.hora_salida || 'Pendiente'}
+                </p>
+
+                <p><strong>Hora llegada:</strong>
+                    ${item.hora_llegada || 'Pendiente'}
+                </p>
 
             </div>
 
@@ -668,55 +853,61 @@ function renderizarTarjetasTraslado(lista) {
 
                 <h3>INFORMACIÓN EXTRA</h3>
 
-                <p><strong>Conductor:</strong> ${item.chofer || 'No asignado'}</p>
-                <p><strong>Enfermero:</strong> ${item.enfermero || 'No asignado'}</p>
-                <p><strong>Paciente:</strong> ${item.nombre_paciente || 'N/A'}</p>
+                <p><strong>Conductor:</strong>
+                    ${item.chofer || 'No asignado'}
+                </p>
 
-                <!-- Mostramos las observaciones guardadas en la base de datos. -->
-                <p><strong>Observaciones:</strong> ${item.observaciones || 'Sin observaciones'}</p>
+                <p><strong>Enfermero:</strong>
+                    ${item.enfermero || 'No asignado'}
+                </p>
 
-                <p><strong>Oxígeno:</strong> ${item.oxigeno ? 'Sí' : 'No'}</p>
+                ${descripcionTransportable}
+
+                <p><strong>Observaciones:</strong>
+                    ${item.observaciones || 'Sin observaciones'}
+                </p>
 
             </div>
 
-    ${esAdministrador ? `
+            ${esAdministrador ? `
 
-        <div class="acciones">
+                <div class="acciones">
 
-            <!-- El administrador siempre puede editar. -->
-            <button class="btn-editar"
-                onclick="editarTraslado('${item.id_traslado}', '${item.id_transportable}')">
-                Editar
-            </button>
+                    <button
+                        class="btn-editar"
+                        onclick="editarTraslado('${item.id_traslado}', '${item.id_transportable}')">
+                        Editar
+                    </button>
 
-            <!-- Confirmar y rechazar solamente aparecen si está pendiente. -->
-            ${item.estado_solicitud === 'pendiente' ? `
+                    ${item.estado_solicitud === 'pendiente' ? `
 
-                <button class="btn-aprobar"
-                    onclick="resolverSolicitud('${item.id_traslado}', 'aprobado')">
-                    Confirmar
-                </button>
+                        <button
+                            class="btn-aprobar"
+                            onclick="resolverSolicitud('${item.id_traslado}', 'aprobado')">
+                            Confirmar
+                        </button>
 
-                <button class="btn-rechazar"
-                    onclick="resolverSolicitud('${item.id_traslado}', 'rechazado')">
-                    Rechazar
-                </button>
+                        <button
+                            class="btn-rechazar"
+                            onclick="resolverSolicitud('${item.id_traslado}', 'rechazado')">
+                            Rechazar
+                        </button>
+
+                    ` : ''}
+
+                    ${item.estado_solicitud === 'aprobado' ? `
+
+                        <button
+                            class="btn-eliminar"
+                            onclick="eliminarTraslado('${item.id_traslado}')">
+                            Eliminar
+                        </button>
+
+                    ` : ''}
+
+                </div>
 
             ` : ''}
-
-            <!-- Eliminar solamente aparece si ya fue aprobado. -->
-            ${item.estado_solicitud === 'aprobado' ? `
-
-                <button class="btn-eliminar"
-                    onclick="eliminarTraslado('${item.id_traslado}')">
-                    Eliminar
-                </button>
-
-            ` : ''}
-
-        </div>
-
-    ` : ''}
 
         `;
 
@@ -728,7 +919,7 @@ function renderizarTarjetasTraslado(lista) {
 
 
 // ======================================================
-// RESOLVER UNA SOLICITUD
+// RESOLVER SOLICITUD
 // ======================================================
 
 async function resolverSolicitud(idTraslado, estadoSolicitud) {
@@ -757,20 +948,19 @@ async function resolverSolicitud(idTraslado, estadoSolicitud) {
             }
         );
 
-        const res = await response.json();
+        const resultado = await response.json();
 
-        if (response.ok) {
+        if (!response.ok) {
 
-            alert(res.mensaje);
+            alert(resultado.error || 'No se pudo actualizar la solicitud.');
 
-            // Actualizamos las tarjetas para reflejar el nuevo estado.
-            await cargarTraslados();
-
-        } else {
-
-            alert(res.error || 'No se pudo actualizar la solicitud');
+            return;
 
         }
+
+        alert(resultado.mensaje || 'Solicitud actualizada.');
+
+        await cargarTraslados();
 
     } catch (error) {
 
@@ -784,67 +974,102 @@ async function resolverSolicitud(idTraslado, estadoSolicitud) {
 
 
 // ======================================================
-// EDITAR UN TRASLADO
+// EDITAR TRASLADO
 // ======================================================
 
-function editarTraslado(idTraslado, idTransportable) {
+async function editarTraslado(idTraslado, idTransportable) {
 
-    const traslado = todosLosTraslados.find(t =>
+    const traslado = todosLosTraslados.find(item =>
 
-        String(t.id_traslado) === idTraslado &&
-        String(t.id_transportable) === idTransportable
+        String(item.id_traslado) === String(idTraslado) &&
+        String(item.id_transportable) === String(idTransportable)
 
     );
 
-    if (!traslado) return;
+    if (!traslado) {
+
+        alert('No se encontró el traslado.');
+
+        return;
+
+    }
 
     modoEdicion = true;
 
     trasladoEditando = traslado;
 
-    // Recuperamos los datos del traslado.
-    document.getElementById('ambulancia').value = traslado.matricula || '';
+    // Cargamos nuevamente las opciones para asegurar que los
+    // select tengan sus valores antes de asignarlos.
+    await cargarOpcionesFormulario();
 
-    document.getElementById('paciente').value = traslado.nombre_paciente || '';
+    const tipo = traslado.tipo_transportable === 'organo'
+        ? 'organo'
+        : 'paciente';
 
-    const chofer = choferesDisponibles.find(c =>
-        String(c.ci_chofer) === String(traslado.ci_chofer)
+    document.getElementById('tipoTransportable').value = tipo;
+
+    actualizarCamposTransportable();
+
+    document.getElementById('ambulancia').value =
+        traslado.matricula || '';
+
+    document.getElementById('paciente').value =
+        traslado.nombre_paciente || '';
+
+    document.getElementById('oxigeno').value =
+        Number(traslado.oxigeno) === 1 ? 'Si' : 'No';
+
+    document.getElementById('nombreElemento').value =
+        traslado.nombre_elemento || '';
+
+    document.getElementById('descripcionElemento').value =
+        traslado.descripcion_elemento || '';
+
+    const chofer = choferesDisponibles.find(item =>
+        String(item.ci_chofer) === String(traslado.ci_chofer)
     );
 
-    document.getElementById('conductor').value = traslado.ci_chofer || '';
+    document.getElementById('conductor').value =
+        traslado.ci_chofer || '';
 
     document.getElementById('buscadorConductor').value = chofer
         ? `${chofer.nombre_chofer} ${chofer.apellido_chofer} - CI: ${chofer.ci_chofer}`
         : '';
 
-    document.getElementById('enfermero').value = traslado.ci_enfermero || '';
+    document.getElementById('enfermero').value =
+        traslado.ci_enfermero || '';
 
-    document.getElementById('destino').value = traslado.id_destino || '';
+    document.getElementById('destino').value =
+        traslado.id_destino || '';
 
-    document.getElementById('fecha').value = traslado.fecha_traslado || '';
+    document.getElementById('fecha').value =
+        traslado.fecha_traslado || '';
 
-    document.getElementById('hora').value = traslado.hora_salida || '';
+    document.getElementById('hora').value =
+        traslado.hora_salida || '';
 
-    // Recuperamos las observaciones para que aparezcan al editar.
-    document.getElementById('observaciones').value = traslado.observaciones || '';
+    document.getElementById('observaciones').value =
+        traslado.observaciones || '';
+
+    const estado = traslado.estado_traslado;
 
     document.getElementById('estado').value =
-        (traslado.estado_traslado === 'finalizado') ? 'Finalizado' : 'En curso';
-        
-    document.getElementById('oxigeno').value =
-        (Number(traslado.oxigeno) === 1) ? 'Si' : 'No';
+        estado === 'finalizado'
+            ? 'Finalizado'
+            : estado === 'en proceso'
+                ? 'En curso'
+                : 'Programado';
 
-    // Limpiamos cualquier sugerencia anterior.
-    const sugerencias = document.getElementById('sugerenciasAmbulancia');
+    document.getElementById('sugerenciasAmbulancia').innerHTML = '';
 
-    if (sugerencias) {
-        sugerencias.innerHTML = '';
-    }
+    document.getElementById('sugerenciasConductor').innerHTML = '';
 
-    const tituloModal = document.querySelector('.modal-traslado-header h2');
+    const titulo = document.querySelector(
+        '.modal-traslado-header h2'
+    );
 
-    if (tituloModal) {
-        tituloModal.textContent = 'Editar Traslado';
+    if (titulo) {
+        titulo.textContent = 'Editar Traslado';
     }
 
     document.getElementById('modalNuevoTraslado').style.display = 'flex';
@@ -853,7 +1078,7 @@ function editarTraslado(idTraslado, idTransportable) {
 
 
 // ======================================================
-// ELIMINAR UN TRASLADO
+// ELIMINAR TRASLADO
 // ======================================================
 
 async function eliminarTraslado(id) {
@@ -863,29 +1088,31 @@ async function eliminarTraslado(id) {
     try {
 
         const response = await fetch(
-            `/kgade/KGA-Development-Studio/API/traslados/traslados.php?id=${id}`,
+            `/kgade/KGA-Development-Studio/API/traslados/traslados.php?id=${encodeURIComponent(id)}`,
             {
                 method: 'DELETE'
             }
         );
 
-        const res = await response.json();
+        const resultado = await response.json();
 
-        if (response.ok) {
+        if (!response.ok) {
 
-            alert(res.mensaje);
+            alert(resultado.error || 'No se pudo eliminar el traslado.');
 
-            await cargarTraslados();
-
-        } else {
-
-            alert(res.error || 'No se pudo eliminar');
+            return;
 
         }
 
+        alert(resultado.mensaje || 'Traslado eliminado correctamente.');
+
+        await cargarTraslados();
+
     } catch (error) {
 
-        console.error('Error al eliminar:', error);
+        console.error('Error al eliminar traslado:', error);
+
+        alert('Ocurrió un error en la conexión.');
 
     }
 
