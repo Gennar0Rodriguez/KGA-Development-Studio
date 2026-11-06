@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -34,6 +35,7 @@
 
             <section class="contenido">
 
+                <!-- Encabezado de la página -->
                 <div class="encabezado-contenido">
 
                     <div>
@@ -44,8 +46,63 @@
                         </p>
                     </div>
 
+                    <button
+                        class="btn-agregar-encuesta"
+                        id="btnNuevaCategoria"
+                        type="button"
+                    >
+                        <i class="fa-solid fa-plus"></i>
+                        Nueva categoría
+                    </button>
+
                 </div>
 
+                <!-- Administración de categorías -->
+                <section class="panel-categorias">
+
+                    <div class="titulo-categorias">
+
+                        <div>
+                            <h3>Categorías de encuestas</h3>
+
+                            <p>
+                                Administrá las categorías disponibles para los pacientes.
+                            </p>
+                        </div>
+
+                        <span id="contadorCategorias">0 de 6 activas</span>
+
+                    </div>
+
+                    <div class="tabla-contenedor">
+
+                        <table class="tabla-categorias">
+
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tablaCategorias">
+
+                                <tr>
+                                    <td colspan="3">
+                                        Cargando categorías...
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+                <!-- Panel original de preguntas y estadísticas -->
                 <div class="panel-principal">
 
                     <section class="panel-preguntas">
@@ -141,6 +198,58 @@
         </main>
 
     </div>
+
+    <!-- Modal para crear una categoría -->
+    <dialog id="modalCategoria" class="modal-categoria">
+
+        <form id="formCategoria">
+
+            <div class="modal-categoria-encabezado">
+
+                <h3>Nueva categoría</h3>
+
+                <button
+                    type="button"
+                    id="cerrarModalCategoria"
+                    class="btn-cerrar-modal"
+                    aria-label="Cerrar"
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+            <p>
+                Se creará automáticamente una encuesta con el mismo nombre.
+            </p>
+
+            <label for="nombreCategoria">
+                Nombre de la categoría
+            </label>
+
+            <input
+                type="text"
+                id="nombreCategoria"
+                maxlength="50"
+                placeholder="Ej. Atención al paciente"
+                required
+            >
+
+            <div class="modal-categoria-acciones">
+
+                <button type="button" id="cancelarCategoria">
+                    Cancelar
+                </button>
+
+                <button type="submit" id="guardarCategoria">
+                    Crear categoría
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
 
     <script src="../js/sidebarAdmin.js"></script>
     <script src="../js/administrarEncuestas.js"></script>

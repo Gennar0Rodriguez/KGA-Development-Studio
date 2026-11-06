@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', () => {
 
     const comboCategoria = document.getElementById('categoriaEncuesta');
@@ -6,30 +7,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const formulario = document.getElementById('formEncuesta');
     const mensaje = document.getElementById('mensajeEncuesta');
 
+    const botonEnviar = formulario.querySelector('button[type="submit"]');
+
     const rutaAPI = '/kgade/KGA-Development-Studio/API';
 
     let encuestas = [];
 
-    // Cargar las cuatro encuestas disponibles.
+    // Cargar únicamente las encuestas habilitadas.
     cargarEncuestas();
 
+    // Cuando se selecciona otra categoría, cargar sus preguntas.
     comboCategoria.addEventListener('change', () => {
 
-        const idEncuesta = comboCategoria.value;
+        const valorSeleccionado = comboCategoria.value;
 
-        if (idEncuesta) {
-            cargarPreguntas(idEncuesta);
+        if (valorSeleccionado) {
+            cargarPreguntas(valorSeleccionado);
+        } else {
+            tituloEncuesta.innerHTML = '';
+            listaPreguntas.innerHTML =
+                '<p>Seleccione una categoría para comenzar.</p>';
         }
 
     });
 
-    // Obtener las encuestas desde la base de datos.
+
+    // ==========================================
+    // CARGAR ENCUESTAS ACTIVAS
+    // ==========================================
+
     async function cargarEncuestas() {
 
         try {
 
             const respuesta = await fetch(
-                `${rutaAPI}/encuestas/encuestas.php?accion=obtenerTodas`
+                `${rutaAPI}/encuestas/encuestas.php?accion=obtenerActivas`
             );
 
             encuestas = await leerJSON(respuesta);
@@ -37,11 +49,29 @@ document.addEventListener('DOMContentLoaded', () => {
             comboCategoria.innerHTML =
                 '<option value="">Seleccione una categoría</option>';
 
+            // Si no existen categorías activas, informar al paciente.
+            if (encuestas.length === 0) {
+
+                comboCategoria.innerHTML =
+                    '<option value="">No hay encuestas disponibles</option>';
+
+                tituloEncuesta.innerHTML = '';
+
+                listaPreguntas.innerHTML =
+                    '<p>Actualmente no hay encuestas habilitadas.</p>';
+
+                botonEnviar.disabled = true;
+
+                return;
+            }
+
+            botonEnviar.disabled = false;
+
             encuestas.forEach(encuesta => {
 
                 const opcion = document.createElement('option');
 
-                // Guardamos ambos identificadores.
+                // Guardar ambos identificadores.
                 opcion.value =
                     `${encuesta.id_encuesta}|${encuesta.id_categoria}`;
 
@@ -57,10 +87,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             comboCategoria.innerHTML =
                 '<option value="">No se pudieron cargar las categorías</option>';
+
+            listaPreguntas.innerHTML =
+                '<p>No se pudieron cargar las encuestas.</p>';
+
+            botonEnviar.disabled = true;
         }
     }
 
-    // Obtener las preguntas de la categoría seleccionada.
+
+    // ==========================================
+    // CARGAR PREGUNTAS
+    // ==========================================
+
     async function cargarPreguntas(valorSeleccionado) {
 
         const [idEncuesta, idCategoria] = valorSeleccionado.split('|');
@@ -75,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tituloEncuesta.innerHTML = '';
 
         const titulo = document.createElement('h3');
+
         titulo.textContent = encuesta.titulo_enc;
 
         tituloEncuesta.appendChild(titulo);
@@ -102,7 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Mostrar las preguntas con los cinco círculos azules.
+
+    // ==========================================
+    // MOSTRAR PREGUNTAS
+    // ==========================================
+
     function renderizarPreguntas(preguntas) {
 
         listaPreguntas.innerHTML = '';
@@ -118,14 +162,18 @@ document.addEventListener('DOMContentLoaded', () => {
         preguntas.forEach((pregunta, index) => {
 
             const contenedor = document.createElement('div');
+
             contenedor.classList.add('pregunta');
 
             const texto = document.createElement('label');
-            texto.textContent = `${index + 1}. ${pregunta.nombre_pregunta}`;
+
+            texto.textContent =
+                `${index + 1}. ${pregunta.nombre_pregunta}`;
 
             contenedor.appendChild(texto);
 
             const escala = document.createElement('div');
+
             escala.classList.add('escala');
 
             for (let numero = 1; numero <= 5; numero++) {
@@ -139,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 input.value = numero;
 
                 const circulo = document.createElement('span');
+
                 circulo.textContent = numero;
 
                 opcion.appendChild(input);
@@ -153,7 +202,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Enviar las respuestas seleccionadas.
+
+    // ==========================================
+    // ENVIAR RESPUESTAS
+    // ==========================================
+
     formulario.addEventListener('submit', async (evento) => {
 
         evento.preventDefault();
@@ -161,7 +214,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const valorSeleccionado = comboCategoria.value;
 
         if (!valorSeleccionado) {
+
             mensaje.textContent = 'Seleccione una categoría.';
+
             return;
         }
 
@@ -223,7 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Leer respuestas JSON y detectar errores del servidor.
+
+    // ==========================================
+    // LEER RESPUESTAS JSON
+    // ==========================================
+
     async function leerJSON(respuesta) {
 
         const contenido = await respuesta.text();
@@ -231,13 +290,21 @@ document.addEventListener('DOMContentLoaded', () => {
         let datos;
 
         try {
+
             datos = JSON.parse(contenido);
+
         } catch (error) {
-            throw new Error('El servidor devolvió una respuesta inválida.');
+
+            throw new Error(
+                'El servidor devolvió una respuesta inválida.'
+            );
         }
 
         if (!respuesta.ok) {
-            throw new Error(datos.error || datos.mensaje || 'Error del servidor.');
+
+            throw new Error(
+                datos.error || datos.mensaje || 'Error del servidor.'
+            );
         }
 
         return datos;

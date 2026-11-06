@@ -1,4 +1,9 @@
+
 document.addEventListener('DOMContentLoaded', () => {
+
+    // ==========================================
+    // ELEMENTOS DEL PANEL DE ENCUESTAS
+    // ==========================================
 
     const comboEncuestas = document.getElementById('encuesta');
     const contenedorPreguntas = document.querySelector('.lista-preguntas');
@@ -11,26 +16,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const contenedorResultados = document.querySelector('.resultados');
     const elemTotalRespuestas = document.querySelector('.cantidad-respuestas strong');
 
+    // Elementos de administración de categorías.
+    const btnNuevaCategoria = document.getElementById('btnNuevaCategoria');
+    const modalCategoria = document.getElementById('modalCategoria');
+    const formCategoria = document.getElementById('formCategoria');
+    const inputNombreCategoria = document.getElementById('nombreCategoria');
+
+    const btnCerrarModal = document.getElementById('cerrarModalCategoria');
+    const btnCancelarCategoria = document.getElementById('cancelarCategoria');
+
+    const tablaCategorias = document.getElementById('tablaCategorias');
+    const contadorCategorias = document.getElementById('contadorCategorias');
+
     const rutaAPI = '/kgade/KGA-Development-Studio/API';
 
-    // Cargar las encuestas al entrar en la página.
-    cargarEncuestas();
 
-    // Cuando se selecciona otra categoría, cargar sus preguntas.
+    // ==========================================
+    // INICIALIZACIÓN
+    // ==========================================
+
+    cargarEncuestas();
+    cargarCategorias();
+
+
+    // ==========================================
+    // EVENTOS DE ENCUESTAS
+    // ==========================================
+
+    // Cuando se selecciona otra encuesta, cargar su información.
     comboEncuestas.addEventListener('change', () => {
 
         const [idEncuesta, idCategoria] = comboEncuestas.value.split('|');
 
         if (idEncuesta && idCategoria) {
             cargarDetalleEncuesta(idEncuesta, idCategoria);
+        } else {
+            limpiarDetalleEncuesta();
         }
-
     });
 
     // Agregar una pregunta nueva.
     btnAgregarPregunta.addEventListener('click', agregarPregunta);
 
-    // Guardar todas las modificaciones.
+    // Guardar las modificaciones.
     btnGuardar.addEventListener('click', guardarCambios);
 
     // Eliminar preguntas mediante delegación de eventos.
@@ -39,19 +67,57 @@ document.addEventListener('DOMContentLoaded', () => {
         const botonEliminar = evento.target.closest('.btn-eliminar');
 
         if (botonEliminar) {
-
             const pregunta = botonEliminar.closest('.pregunta');
-
             eliminarPregunta(pregunta);
         }
-
     });
+
+
+    // ==========================================
+    // EVENTOS DE CATEGORÍAS
+    // ==========================================
+
+    // Abrir el modal.
+    btnNuevaCategoria.addEventListener('click', () => {
+
+        formCategoria.reset();
+
+        modalCategoria.showModal();
+
+        inputNombreCategoria.focus();
+    });
+
+    // Cerrar el modal.
+    btnCerrarModal.addEventListener('click', () => {
+        modalCategoria.close();
+    });
+
+    btnCancelarCategoria.addEventListener('click', () => {
+        modalCategoria.close();
+    });
+
+    // Crear una categoría.
+    formCategoria.addEventListener('submit', crearCategoria);
+
+    // Cambiar el estado de una categoría.
+    tablaCategorias.addEventListener('click', (evento) => {
+
+        const boton = evento.target.closest('.btn-cambiar-estado');
+
+        if (!boton) return;
+
+        cambiarEstadoCategoria(
+            boton.dataset.id,
+            boton.dataset.estado
+        );
+    });
+
 
     // ==========================================
     // CARGAR ENCUESTAS
     // ==========================================
 
-    async function cargarEncuestas() {
+    async function cargarEncuestas(valorSeleccionado = '') {
 
         try {
 
@@ -70,10 +136,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 opcion.value =
                     `${encuesta.id_encuesta}|${encuesta.id_categoria}`;
 
-                opcion.textContent = encuesta.nombre_cat;
+                // Identificar las encuestas deshabilitadas en el selector.
+                opcion.textContent = encuesta.estado_cat === 'deshabilitada'
+                    ? `${encuesta.nombre_cat} (Deshabilitada)`
+                    : encuesta.nombre_cat;
 
                 comboEncuestas.appendChild(opcion);
-
             });
 
             if (encuestas.length === 0) {
@@ -81,21 +149,260 @@ document.addEventListener('DOMContentLoaded', () => {
                 comboEncuestas.innerHTML =
                     '<option value="">No hay encuestas disponibles</option>';
 
+                limpiarDetalleEncuesta();
+
                 return;
             }
 
-            // Seleccionar la primera encuesta automáticamente.
+            // Mantener seleccionada la encuesta indicada, si existe.
+            if (
+                valorSeleccionado &&
+                [...comboEncuestas.options].some(
+                    opcion => opcion.value === valorSeleccionado
+                )
+            ) {
+                comboEncuestas.value = valorSeleccionado;
+            }
+
+            // Cargar la encuesta seleccionada.
             const [idEncuesta, idCategoria] = comboEncuestas.value.split('|');
 
-            cargarDetalleEncuesta(idEncuesta, idCategoria);
+            await cargarDetalleEncuesta(idEncuesta, idCategoria);
 
         } catch (error) {
 
             console.error('Error al cargar encuestas:', error);
 
-            alert('No se pudieron cargar las encuestas.');
+            alert(error.message || 'No se pudieron cargar las encuestas.');
         }
     }
+
+
+    // ==========================================
+    // CARGAR CATEGORÍAS
+    // ==========================================
+
+    async function cargarCategorias() {
+
+        try {
+
+            const respuesta = await fetch(
+                `${rutaAPI}/encuestas/encuestas.php?accion=obtenerCategorias`
+            );
+
+            const categorias = await leerJSON(respuesta);
+
+            tablaCategorias.innerHTML = '';
+
+            const cantidadActivas = categorias.filter(
+                categoria => categoria.estado_cat === 'activa'
+            ).length;
+
+            contadorCategorias.textContent =
+                `${cantidadActivas} de 6 activas`;
+
+            if (categorias.length === 0) {
+
+                tablaCategorias.innerHTML = `
+                    <tr>
+                        <td colspan="3">
+                            Todavía no hay categorías creadas.
+                        </td>
+                    </tr>
+                `;
+
+                return;
+            }
+
+            categorias.forEach(categoria => {
+
+                const fila = document.createElement('tr');
+
+                // Nombre de la categoría.
+                const celdaNombre = document.createElement('td');
+
+                celdaNombre.textContent = categoria.nombre_cat;
+
+                // Estado actual.
+                const celdaEstado = document.createElement('td');
+
+                const etiquetaEstado = document.createElement('span');
+
+                etiquetaEstado.classList.add('estado-categoria');
+
+                if (categoria.estado_cat === 'activa') {
+
+                    etiquetaEstado.classList.add('estado-activa');
+                    etiquetaEstado.textContent = 'Activa';
+
+                } else {
+
+                    etiquetaEstado.classList.add('estado-deshabilitada');
+                    etiquetaEstado.textContent = 'Deshabilitada';
+                }
+
+                celdaEstado.appendChild(etiquetaEstado);
+
+                // Botón para modificar el estado.
+                const celdaAccion = document.createElement('td');
+
+                const boton = document.createElement('button');
+
+                boton.type = 'button';
+                boton.classList.add('btn-cambiar-estado');
+
+                boton.dataset.id = categoria.id_categoria;
+
+                if (categoria.estado_cat === 'activa') {
+
+                    boton.textContent = 'Deshabilitar';
+                    boton.dataset.estado = 'deshabilitada';
+                    boton.classList.add('btn-deshabilitar');
+
+                } else {
+
+                    boton.textContent = 'Habilitar';
+                    boton.dataset.estado = 'activa';
+                    boton.classList.add('btn-habilitar');
+                }
+
+                celdaAccion.appendChild(boton);
+
+                fila.appendChild(celdaNombre);
+                fila.appendChild(celdaEstado);
+                fila.appendChild(celdaAccion);
+
+                tablaCategorias.appendChild(fila);
+            });
+
+        } catch (error) {
+
+            console.error('Error al cargar categorías:', error);
+
+            tablaCategorias.innerHTML = `
+                <tr>
+                    <td colspan="3">
+                        No se pudieron cargar las categorías.
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+
+    // ==========================================
+    // CREAR CATEGORÍA
+    // ==========================================
+
+    async function crearCategoria(evento) {
+
+        evento.preventDefault();
+
+        const nombre = inputNombreCategoria.value.trim();
+
+        if (nombre === '') {
+
+            alert('Ingresá un nombre para la categoría.');
+
+            inputNombreCategoria.focus();
+
+            return;
+        }
+
+        try {
+
+            const respuesta = await fetch(
+                `${rutaAPI}/encuestas/encuestas.php?accion=crearCategoria`,
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        nombre_cat: nombre
+                    })
+                }
+            );
+
+            const resultado = await leerJSON(respuesta);
+
+            modalCategoria.close();
+
+            formCategoria.reset();
+
+            alert(resultado.mensaje);
+
+            // Actualizar la tabla.
+            await cargarCategorias();
+
+            // Seleccionar automáticamente la encuesta creada.
+            const nuevoValor =
+                `${resultado.id_encuesta}|${resultado.id_categoria}`;
+
+            await cargarEncuestas(nuevoValor);
+
+        } catch (error) {
+
+            console.error('Error al crear categoría:', error);
+
+            alert(error.message || 'No se pudo crear la categoría.');
+        }
+    }
+
+
+    // ==========================================
+    // CAMBIAR ESTADO DE UNA CATEGORÍA
+    // ==========================================
+
+    async function cambiarEstadoCategoria(idCategoria, nuevoEstado) {
+
+        const accion = nuevoEstado === 'activa'
+            ? 'habilitar'
+            : 'deshabilitar';
+
+        if (!confirm(`¿Querés ${accion} esta categoría?`)) {
+            return;
+        }
+
+        try {
+
+            const respuesta = await fetch(
+                `${rutaAPI}/encuestas/encuestas.php?accion=cambiarEstado`,
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        id_categoria: idCategoria,
+                        estado_cat: nuevoEstado
+                    })
+                }
+            );
+
+            const resultado = await leerJSON(respuesta);
+
+            alert(resultado.mensaje);
+
+            await cargarCategorias();
+
+            // Actualizar también el selector administrativo.
+            const valorActual = comboEncuestas.value;
+
+            await cargarEncuestas(valorActual);
+
+        } catch (error) {
+
+            console.error('Error al cambiar el estado:', error);
+
+            alert(error.message || 'No se pudo cambiar el estado.');
+        }
+    }
+
 
     // ==========================================
     // CARGAR PREGUNTAS Y ESTADÍSTICAS
@@ -128,6 +435,31 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('No se pudo cargar la información de la encuesta.');
         }
     }
+
+
+    // ==========================================
+    // LIMPIAR EL DETALLE DE LA ENCUESTA
+    // ==========================================
+
+    function limpiarDetalleEncuesta() {
+
+        contenedorPreguntas.innerHTML = '';
+
+        contadorPreguntas.textContent = '0 preguntas';
+
+        elemPromedio.innerHTML = '0.0 <small>/ 5</small>';
+
+        elemTotalRespuestas.textContent = '0';
+
+        const titulo = contenedorResultados.querySelector('h4');
+
+        contenedorResultados.innerHTML = '';
+
+        if (titulo) {
+            contenedorResultados.appendChild(titulo);
+        }
+    }
+
 
     // ==========================================
     // MOSTRAR PREGUNTAS
@@ -201,9 +533,9 @@ document.addEventListener('DOMContentLoaded', () => {
             fila.appendChild(acciones);
 
             contenedorPreguntas.appendChild(fila);
-
         });
     }
+
 
     // ==========================================
     // MOSTRAR ESTADÍSTICAS
@@ -221,7 +553,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         contenedorResultados.innerHTML = '';
 
-        contenedorResultados.appendChild(titulo);
+        if (titulo) {
+            contenedorResultados.appendChild(titulo);
+        }
 
         if (
             datos.promediosPregunta &&
@@ -246,10 +580,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 resultado.appendChild(promedio);
 
                 contenedorResultados.appendChild(resultado);
-
             });
         }
     }
+
 
     // ==========================================
     // AGREGAR PREGUNTA
@@ -271,6 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const numero = document.createElement('span');
 
         numero.classList.add('numero-pregunta');
+        numero.textContent = 'Nueva pregunta';
 
         const input = document.createElement('input');
 
@@ -322,6 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
         input.focus();
     }
 
+
     // ==========================================
     // ELIMINAR PREGUNTA
     // ==========================================
@@ -336,6 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         actualizarNumeracion();
     }
+
 
     // ==========================================
     // ACTUALIZAR NUMERACIÓN
@@ -354,9 +691,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const numero = pregunta.querySelector('.numero-pregunta');
 
             numero.textContent = `Pregunta ${index + 1}`;
-
         });
     }
+
 
     // ==========================================
     // GUARDAR CAMBIOS
@@ -367,7 +704,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const valorSeleccionado = comboEncuestas.value;
 
         if (!valorSeleccionado) {
+
             alert('Seleccione una encuesta.');
+
             return;
         }
 
@@ -393,17 +732,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Si es una pregunta nueva, generamos un ID.
+            // Generar un ID para las preguntas nuevas.
             const idPregunta = fila.dataset.idPregunta ||
                 'PRG' + Date.now() +
                 Math.random().toString(36).substring(2, 7);
 
             preguntas.push({
-
                 id_pregunta: idPregunta,
-
                 nombre_pregunta: texto
-
             });
         }
 
@@ -419,13 +755,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
 
                     body: JSON.stringify({
-
                         id_encuesta: idEncuesta,
-
                         id_categoria: idCategoria,
-
                         preguntas: preguntas
-
                     })
                 }
             );
@@ -442,7 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Las preguntas se guardaron correctamente.');
 
             // Volver a cargar las preguntas desde MySQL.
-            cargarDetalleEncuesta(idEncuesta, idCategoria);
+            await cargarDetalleEncuesta(idEncuesta, idCategoria);
 
         } catch (error) {
 
@@ -451,6 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(error.message || 'Ocurrió un error al guardar los cambios.');
         }
     }
+
 
     // ==========================================
     // LEER RESPUESTAS JSON

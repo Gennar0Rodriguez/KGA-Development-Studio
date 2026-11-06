@@ -1,3 +1,4 @@
+
 <?php
 require_once __DIR__ . '/../../backend/models/Respuesta.php';
 require_once __DIR__ . '/../../backend/models/Pregunta.php';
@@ -26,6 +27,7 @@ try {
             $idCategoria = $_GET['id_categoria'] ?? '';
 
             if ($idEncuesta === '' || $idCategoria === '') {
+
                 http_response_code(400);
 
                 echo json_encode([
@@ -52,6 +54,7 @@ try {
         case 'guardar':
 
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+
                 http_response_code(405);
 
                 echo json_encode([
@@ -70,6 +73,7 @@ try {
                 !isset($datos['respuestas']) ||
                 !is_array($datos['respuestas'])
             ) {
+
                 http_response_code(400);
 
                 echo json_encode([
@@ -84,6 +88,7 @@ try {
             $respuestas = $datos['respuestas'];
 
             if (count($respuestas) === 0) {
+
                 http_response_code(400);
 
                 echo json_encode([
@@ -93,11 +98,15 @@ try {
                 exit;
             }
 
-            // Comprobar que la encuesta exista.
-            $sqlEncuesta = "SELECT id_encuesta
-                            FROM encuesta
-                            WHERE id_encuesta = :id_encuesta
-                            AND id_categoria = :id_categoria";
+            // Comprobar que la encuesta exista y su categoría siga activa.
+            $sqlEncuesta = "SELECT e.id_encuesta
+                            FROM encuesta e
+                            INNER JOIN categoria c
+                                ON e.id_categoria = c.id_categoria
+                            WHERE e.id_encuesta = :id_encuesta
+                            AND e.id_categoria = :id_categoria
+                            AND c.tipo_cat = 'encuestas'
+                            AND c.estado_cat = 'activa'";
 
             $stmtEncuesta = $conexion->prepare($sqlEncuesta);
 
@@ -107,10 +116,11 @@ try {
             ]);
 
             if (!$stmtEncuesta->fetch()) {
+
                 http_response_code(404);
 
                 echo json_encode([
-                    'error' => 'La encuesta seleccionada no existe'
+                    'error' => 'La encuesta no existe o ya no está habilitada'
                 ]);
 
                 exit;
@@ -130,6 +140,7 @@ try {
             foreach ($respuestas as $respuesta) {
 
                 $idPregunta = $respuesta['id_pregunta'] ?? '';
+
                 $valor = filter_var(
                     $respuesta['valor'] ?? null,
                     FILTER_VALIDATE_INT
@@ -143,6 +154,7 @@ try {
                     !in_array($idPregunta, $idsValidos, true) ||
                     in_array($idPregunta, $idsRecibidos, true)
                 ) {
+
                     http_response_code(400);
 
                     echo json_encode([
@@ -169,7 +181,7 @@ try {
                         $respuesta['id_pregunta'],
                         $idEncuesta,
                         $idCategoria,
-                        (string)$respuesta['valor'],
+                        (string) $respuesta['valor'],
                         'opcion multiple'
                     );
                 }

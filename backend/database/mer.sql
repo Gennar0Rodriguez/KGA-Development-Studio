@@ -11,8 +11,8 @@ CREATE TABLE administrativo (
 
 CREATE TABLE categoria (
     id_categoria VARCHAR(50) PRIMARY KEY NOT NULL,
-    nombre_cat VARCHAR(50) NOT NULL
-    tipo_cat ENUM ('docs', 'encuestas')
+    nombre_cat VARCHAR(50) NOT NULL,
+    tipo_cat ENUM ('docs', 'encuestas'),
     estado_cat ENUM('activa', 'deshabilitada') NOT NULL DEFAULT 'activa'
 );
 
@@ -187,12 +187,12 @@ INSERT INTO administrativo VALUES
 ('55667788', 'Marichal', 'Rodriguez', '789', 'administrador'),
 ('99887766', 'Juan', 'Lopez', '222', 'empleado');
 
-INSERT INTO categoria VALUES
-('CAT01', 'Urgencias'),
-('CAT02', 'Pediatria'),
-('CAT03', 'Cirugia General'),
-('CAT04', 'Farmacia'),
-('CAT05', 'Laboratorio Clinico');
+INSERT INTO categoria VALUES 
+('CAT01', 'Urgencias', 'docs'),
+('CAT02', 'Pediatria', 'docs'),
+('CAT03', 'Cirugia General', 'encuestas'),
+('CAT04', 'Farmacia', 'encuestas'),
+('CAT05', 'Laboratorio Clinico', 'encuestas');
 
 INSERT INTO documentos VALUES
 ('DOC01', '12345678', 'CAT01', '08:30:00', '2026-06-01', 'Protocolo Triaje', 'Protocolo de recepcion de emergencias', 'triaje.pdf', '/docs/urgencias/'),
