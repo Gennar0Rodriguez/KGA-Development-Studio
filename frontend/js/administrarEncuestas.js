@@ -1,404 +1,486 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias al DOM
+
     const comboEncuestas = document.getElementById('encuesta');
     const contenedorPreguntas = document.querySelector('.lista-preguntas');
     const contadorPreguntas = document.querySelector('.titulo-preguntas span');
-    
-    // Botones principales
-    const btnAgregarEncuesta = document.querySelector('.btn-agregar-encuesta');
-    const btnAgregarPregunta = document.querySelector('.btn-agregar-pregunta');
-    const btnGuardarCambios = document.querySelector('.btn-guardar');
 
-    // Referencias de Estadísticas
-    const elemPromedioGeneral = document.querySelector('.promedio strong');
+    const btnAgregarPregunta = document.querySelector('.btn-agregar-pregunta');
+    const btnGuardar = document.querySelector('.btn-guardar');
+
+    const elemPromedio = document.querySelector('.promedio strong');
     const contenedorResultados = document.querySelector('.resultados');
     const elemTotalRespuestas = document.querySelector('.cantidad-respuestas strong');
 
-    // Cargar encuestas al iniciar la vista
+    const rutaAPI = '/kgade/KGA-Development-Studio/API';
+
+    // Cargar las encuestas al entrar en la página.
     cargarEncuestas();
 
-    // Event Listeners
-    comboEncuestas.addEventListener('change', (e) => {
-        const [idEncuesta, idCategoria] = e.target.value.split('|');
+    // Cuando se selecciona otra categoría, cargar sus preguntas.
+    comboEncuestas.addEventListener('change', () => {
+
+        const [idEncuesta, idCategoria] = comboEncuestas.value.split('|');
 
         if (idEncuesta && idCategoria) {
             cargarDetalleEncuesta(idEncuesta, idCategoria);
         }
+
     });
 
-    btnAgregarEncuesta.addEventListener('click', agregarNuevaEncuesta);
-    btnAgregarPregunta.addEventListener('click', agregarFilaPregunta);
-    btnGuardarCambios.addEventListener('click', guardarCambiosEncuesta);
+    // Agregar una pregunta nueva.
+    btnAgregarPregunta.addEventListener('click', agregarPregunta);
 
-    // Delegación de eventos para botones dinámicos (Editar y Eliminar preguntas)
-    contenedorPreguntas.addEventListener('click', (e) => {
-        const btnEliminar = e.target.closest('.btn-eliminar');
-        const btnEditar = e.target.closest('.btn-editar');
+    // Guardar todas las modificaciones.
+    btnGuardar.addEventListener('click', guardarCambios);
 
-        if (btnEliminar) {
-            eliminarPregunta(btnEliminar.closest('.pregunta'));
-        } else if (btnEditar) {
-            habilitarEdicionPregunta(btnEditar.closest('.pregunta'));
+    // Eliminar preguntas mediante delegación de eventos.
+    contenedorPreguntas.addEventListener('click', (evento) => {
+
+        const botonEliminar = evento.target.closest('.btn-eliminar');
+
+        if (botonEliminar) {
+
+            const pregunta = botonEliminar.closest('.pregunta');
+
+            eliminarPregunta(pregunta);
         }
+
     });
 
-    /**
-     * Obtiene y pobla la lista desplegable de encuestas.
-     */
+    // ==========================================
+    // CARGAR ENCUESTAS
+    // ==========================================
+
     async function cargarEncuestas() {
+
         try {
-            const respuesta = await fetch('/kgade/KGA-Development-Studio/API/encuestas/encuestas.php?accion=obtenerTodas');
-            const encuestas = await respuesta.json();
+
+            const respuesta = await fetch(
+                `${rutaAPI}/encuestas/encuestas.php?accion=obtenerTodas`
+            );
+
+            const encuestas = await leerJSON(respuesta);
 
             comboEncuestas.innerHTML = '';
 
+            encuestas.forEach(encuesta => {
+
+                const opcion = document.createElement('option');
+
+                opcion.value =
+                    `${encuesta.id_encuesta}|${encuesta.id_categoria}`;
+
+                opcion.textContent = encuesta.nombre_cat;
+
+                comboEncuestas.appendChild(opcion);
+
+            });
+
             if (encuestas.length === 0) {
-                comboEncuestas.innerHTML = '<option value="">No hay encuestas disponibles</option>';
+
+                comboEncuestas.innerHTML =
+                    '<option value="">No hay encuestas disponibles</option>';
+
                 return;
             }
 
-        encuestas.forEach(encuesta => {
-
-            const option = document.createElement('option');
-
-            // Identificamos la encuesta con su ID y su categoría.
-            option.value = `${encuesta.id_encuesta}|${encuesta.id_categoria}`;
-
-            option.textContent = encuesta.titulo_enc;
-
-            comboEncuestas.appendChild(option);
-
-        });
-
-            // Carga inicial de la primera encuesta
-        if (comboEncuestas.value) {
-
+            // Seleccionar la primera encuesta automáticamente.
             const [idEncuesta, idCategoria] = comboEncuestas.value.split('|');
 
             cargarDetalleEncuesta(idEncuesta, idCategoria);
-        }
 
         } catch (error) {
+
             console.error('Error al cargar encuestas:', error);
+
+            alert('No se pudieron cargar las encuestas.');
         }
     }
 
-    /**
-     * Obtiene las preguntas y estadísticas de la encuesta seleccionada.
-     */
+    // ==========================================
+    // CARGAR PREGUNTAS Y ESTADÍSTICAS
+    // ==========================================
 
-/**
- * Obtiene las preguntas y estadísticas de la encuesta seleccionada.
- */
-async function cargarDetalleEncuesta(idEncuesta, idCategoria) {
-
-    try {
-
-        // Obtener las preguntas de la encuesta y categoría seleccionadas.
-        const resPreguntas = await fetch(
-            `/kgade/KGA-Development-Studio/API/preguntas/preguntas.php?accion=obtenerPorEncuesta&id_encuesta=${encodeURIComponent(idEncuesta)}&id_categoria=${encodeURIComponent(idCategoria)}`
-        );
-
-        const preguntas = await leerRespuestaJSON(resPreguntas);
-
-        renderizarPreguntas(preguntas);
+    async function cargarDetalleEncuesta(idEncuesta, idCategoria) {
 
         try {
 
-            // Obtener estadísticas de esa misma encuesta y categoría.
-            const resEstadisticas = await fetch(
-                `/kgade/KGA-Development-Studio/API/respuestas/respuestas.php?accion=obtenerEstadisticas&id_encuesta=${encodeURIComponent(idEncuesta)}&id_categoria=${encodeURIComponent(idCategoria)}`
+            const respuestaPreguntas = await fetch(
+                `${rutaAPI}/preguntas/preguntas.php?accion=obtenerPorEncuesta&id_encuesta=${encodeURIComponent(idEncuesta)}&id_categoria=${encodeURIComponent(idCategoria)}`
             );
 
-            const estadisticas = await leerRespuestaJSON(resEstadisticas);
+            const preguntas = await leerJSON(respuestaPreguntas);
+
+            renderizarPreguntas(preguntas);
+
+            const respuestaEstadisticas = await fetch(
+                `${rutaAPI}/respuestas/respuestas.php?accion=obtenerEstadisticas&id_encuesta=${encodeURIComponent(idEncuesta)}&id_categoria=${encodeURIComponent(idCategoria)}`
+            );
+
+            const estadisticas = await leerJSON(respuestaEstadisticas);
 
             renderizarEstadisticas(estadisticas);
 
         } catch (error) {
 
-            console.error('Error al cargar las estadísticas:', error);
+            console.error('Error al cargar la encuesta:', error);
 
-            renderizarEstadisticas({
-                promedioGeneral: 0,
-                totalRespuestas: 0,
-                promediosPregunta: []
-            });
+            alert('No se pudo cargar la información de la encuesta.');
         }
-
-    } catch (error) {
-
-        console.error('Error al cargar las preguntas:', error);
-
-    }
-}
-
-
-/**
- * Comprueba la respuesta del servidor y convierte su contenido a JSON.
- * Si PHP devuelve HTML o un error HTTP, muestra información más clara.
- */
-async function leerRespuestaJSON(respuesta) {
-
-    const contenido = await respuesta.text();
-
-    let datos;
-
-    try {
-        datos = JSON.parse(contenido);
-    } catch (error) {
-        throw new Error(
-            `El servidor no devolvió JSON. HTTP ${respuesta.status}. Respuesta: ${contenido.substring(0, 300)}`
-        );
     }
 
-    if (!respuesta.ok) {
-        throw new Error(
-            datos.mensaje || datos.error || `Error HTTP ${respuesta.status}`
-        );
-    }
+    // ==========================================
+    // MOSTRAR PREGUNTAS
+    // ==========================================
 
-    return datos;
-}
-
-
-    /**
-     * Renderiza el listado de preguntas en el DOM.
-     */
     function renderizarPreguntas(preguntas) {
+
         contenedorPreguntas.innerHTML = '';
-        contadorPreguntas.textContent = `${preguntas.length} preguntas`;
+
+        contadorPreguntas.textContent =
+            `${preguntas.length} preguntas`;
 
         preguntas.forEach((pregunta, index) => {
-            const htmlPregunta = document.createElement('div');
-            htmlPregunta.classList.add('pregunta');
-            htmlPregunta.dataset.idPregunta = pregunta.id_pregunta;
 
-            htmlPregunta.innerHTML = `
-                <div class="pregunta-info">
-                    <span class="numero-pregunta">Pregunta ${index + 1}</span>
-                    <p class="texto-pregunta">${pregunta.nombre_pregunta}</p>
-                    <div class="opciones">
-                        <span>1</span>
-                        <span>2</span>
-                        <span>3</span>
-                        <span>4</span>
-                        <span>5</span>
-                    </div>
-                </div>
-                <div class="acciones">
-                    <button class="btn-editar" type="button">
-                        <i class="fa-solid fa-pen"></i>
-                        Editar
-                    </button>
-                    <button class="btn-eliminar" type="button">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            contenedorPreguntas.appendChild(htmlPregunta);
+            const fila = document.createElement('div');
+
+            fila.classList.add('pregunta');
+
+            fila.dataset.idPregunta = pregunta.id_pregunta;
+
+            const informacion = document.createElement('div');
+
+            informacion.classList.add('pregunta-info');
+
+            const numero = document.createElement('span');
+
+            numero.classList.add('numero-pregunta');
+            numero.textContent = `Pregunta ${index + 1}`;
+
+            const input = document.createElement('input');
+
+            input.type = 'text';
+            input.classList.add('input-pregunta');
+            input.value = pregunta.nombre_pregunta;
+            input.maxLength = 50;
+
+            input.style.cssText =
+                'width:100%; padding:10px; margin:8px 0; border:1px solid #d5dce5; border-radius:8px;';
+
+            const escala = document.createElement('div');
+
+            escala.classList.add('opciones');
+
+            for (let numero = 1; numero <= 5; numero++) {
+
+                const opcion = document.createElement('span');
+
+                opcion.textContent = numero;
+
+                escala.appendChild(opcion);
+            }
+
+            informacion.appendChild(numero);
+            informacion.appendChild(input);
+            informacion.appendChild(escala);
+
+            const acciones = document.createElement('div');
+
+            acciones.classList.add('acciones');
+
+            const botonEliminar = document.createElement('button');
+
+            botonEliminar.type = 'button';
+            botonEliminar.classList.add('btn-eliminar');
+            botonEliminar.innerHTML =
+                '<i class="fa-solid fa-trash"></i>';
+
+            acciones.appendChild(botonEliminar);
+
+            fila.appendChild(informacion);
+            fila.appendChild(acciones);
+
+            contenedorPreguntas.appendChild(fila);
+
         });
     }
 
-    /**
-     * Renderiza los promedios y datos en el panel lateral de estadísticas.
-     */
-    function renderizarEstadisticas(data) {
-        elemPromedioGeneral.innerHTML = `${data.promedioGeneral || 0} <small>/ 5</small>`;
-        elemTotalRespuestas.textContent = data.totalRespuestas || 0;
+    // ==========================================
+    // MOSTRAR ESTADÍSTICAS
+    // ==========================================
 
-        // Limpiar el contenedor de resultados individuales manteniendo el título <h4>
-        const tituloResultados = contenedorResultados.querySelector('h4');
+    function renderizarEstadisticas(datos) {
+
+        elemPromedio.innerHTML =
+            `${datos.promedioGeneral || 0} <small>/ 5</small>`;
+
+        elemTotalRespuestas.textContent =
+            datos.totalRespuestas || 0;
+
+        const titulo = contenedorResultados.querySelector('h4');
+
         contenedorResultados.innerHTML = '';
-        contenedorResultados.appendChild(tituloResultados);
 
-        if (data.promediosPregunta && data.promediosPregunta.length > 0) {
-            data.promediosPregunta.forEach((item, index) => {
-                const divResultado = document.createElement('div');
-                divResultado.classList.add('resultado');
-                divResultado.innerHTML = `
-                    <span>Pregunta ${index + 1}</span>
-                    <strong>${item.promedio} / 5</strong>
-                `;
-                contenedorResultados.appendChild(divResultado);
+        contenedorResultados.appendChild(titulo);
+
+        if (
+            datos.promediosPregunta &&
+            datos.promediosPregunta.length > 0
+        ) {
+
+            datos.promediosPregunta.forEach((item, index) => {
+
+                const resultado = document.createElement('div');
+
+                resultado.classList.add('resultado');
+
+                const nombre = document.createElement('span');
+
+                nombre.textContent = `Pregunta ${index + 1}`;
+
+                const promedio = document.createElement('strong');
+
+                promedio.textContent = `${item.promedio} / 5`;
+
+                resultado.appendChild(nombre);
+                resultado.appendChild(promedio);
+
+                contenedorResultados.appendChild(resultado);
+
             });
         }
     }
 
-    /**
-     * Agrega un nuevo elemento de pregunta en la interfaz para ser guardado luego.
-     */
-    function agregarFilaPregunta() {
-        const totalPreguntas = contenedorPreguntas.querySelectorAll('.pregunta').length + 1;
-        const divPregunta = document.createElement('div');
-        divPregunta.classList.add('pregunta', 'nueva-pregunta');
+    // ==========================================
+    // AGREGAR PREGUNTA
+    // ==========================================
 
-        divPregunta.innerHTML = `
-            <div class="pregunta-info" style="width: 100%;">
-                <span class="numero-pregunta">Pregunta ${totalPreguntas}</span>
-                <input type="text" class="input-nueva-pregunta" placeholder="Escriba la nueva pregunta aquí..." style="width: 80%; padding: 8px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px;">
-                <select class="select-tipo-pregunta">
-                    <option value="opcion multiple">Opción Múltiple</option>
-                    <option value="texto">Texto Libre</option>
-                </select>
-            </div>
-            <div class="acciones">
-                <button class="btn-eliminar" type="button">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </div>
-        `;
+    function agregarPregunta() {
 
-        contenedorPreguntas.appendChild(divPregunta);
-        contadorPreguntas.textContent = `${totalPreguntas} preguntas`;
-    }
+        const fila = document.createElement('div');
 
-    /**
-     * Habilita un campo de entrada (input) para modificar la pregunta seleccionada.
-     */
-    function habilitarEdicionPregunta(nodoPregunta) {
-        const elemTexto = nodoPregunta.querySelector('.texto-pregunta');
-        if (!elemTexto) return;
+        fila.classList.add('pregunta');
 
-        const textoActual = elemTexto.textContent;
+        // Las preguntas nuevas todavía no tienen identificador de BD.
+        fila.dataset.idPregunta = '';
+
+        const informacion = document.createElement('div');
+
+        informacion.classList.add('pregunta-info');
+
+        const numero = document.createElement('span');
+
+        numero.classList.add('numero-pregunta');
+
         const input = document.createElement('input');
+
         input.type = 'text';
-        input.value = textoActual;
-        input.classList.add('input-editar-pregunta');
-        input.style.cssText = 'width: 80%; padding: 6px; margin: 5px 0; border: 1px solid #007bff; border-radius: 4px;';
+        input.classList.add('input-pregunta');
+        input.placeholder = 'Escriba la nueva pregunta...';
+        input.maxLength = 50;
 
-        elemTexto.replaceWith(input);
+        input.style.cssText =
+            'width:100%; padding:10px; margin:8px 0; border:1px solid #d5dce5; border-radius:8px;';
+
+        const escala = document.createElement('div');
+
+        escala.classList.add('opciones');
+
+        for (let numero = 1; numero <= 5; numero++) {
+
+            const opcion = document.createElement('span');
+
+            opcion.textContent = numero;
+
+            escala.appendChild(opcion);
+        }
+
+        informacion.appendChild(numero);
+        informacion.appendChild(input);
+        informacion.appendChild(escala);
+
+        const acciones = document.createElement('div');
+
+        acciones.classList.add('acciones');
+
+        const botonEliminar = document.createElement('button');
+
+        botonEliminar.type = 'button';
+        botonEliminar.classList.add('btn-eliminar');
+        botonEliminar.innerHTML =
+            '<i class="fa-solid fa-trash"></i>';
+
+        acciones.appendChild(botonEliminar);
+
+        fila.appendChild(informacion);
+        fila.appendChild(acciones);
+
+        contenedorPreguntas.appendChild(fila);
+
+        actualizarNumeracion();
+
         input.focus();
-
-        input.addEventListener('blur', () => {
-            const nuevoTexto = input.value.trim() || textoActual;
-            const nuevoP = document.createElement('p');
-            nuevoP.classList.add('texto-pregunta');
-            nuevoP.textContent = nuevoTexto;
-            input.replaceWith(nuevoP);
-        });
     }
 
-    /**
-     * Elimina el bloque de la pregunta del DOM.
-     */
-    function eliminarPregunta(nodoPregunta) {
-        if (confirm('¿Desea quitar esta pregunta de la lista?')) {
-            nodoPregunta.remove();
-            actualizarNumeracionPreguntas();
+    // ==========================================
+    // ELIMINAR PREGUNTA
+    // ==========================================
+
+    function eliminarPregunta(fila) {
+
+        if (!confirm('¿Desea eliminar esta pregunta?')) {
+            return;
         }
+
+        fila.remove();
+
+        actualizarNumeracion();
     }
 
-    /**
-     * Recalcula los números de orden de las preguntas tras eliminar una.
-     */
-    function actualizarNumeracionPreguntas() {
-        const lista = contenedorPreguntas.querySelectorAll('.pregunta');
-        contadorPreguntas.textContent = `${lista.length} preguntas`;
-        lista.forEach((nodo, index) => {
-            const spanNumero = nodo.querySelector('.numero-pregunta');
-            if (spanNumero) {
-                spanNumero.textContent = `Pregunta ${index + 1}`;
-            }
+    // ==========================================
+    // ACTUALIZAR NUMERACIÓN
+    // ==========================================
+
+    function actualizarNumeracion() {
+
+        const preguntas =
+            contenedorPreguntas.querySelectorAll('.pregunta');
+
+        contadorPreguntas.textContent =
+            `${preguntas.length} preguntas`;
+
+        preguntas.forEach((pregunta, index) => {
+
+            const numero = pregunta.querySelector('.numero-pregunta');
+
+            numero.textContent = `Pregunta ${index + 1}`;
+
         });
     }
 
-    /**
-     * Crea una nueva encuesta mediante prompt básico y recarga el selector.
-     */
-    async function agregarNuevaEncuesta() {
-        const titulo = prompt('Ingrese el título de la nueva encuesta:');
-        if (!titulo) return;
+    // ==========================================
+    // GUARDAR CAMBIOS
+    // ==========================================
 
-        const idCategoria = prompt('Ingrese el ID de la categoría asociada:');
-        if (!idCategoria) return;
+    async function guardarCambios() {
 
-        const idEncuesta = 'ENC_' + Date.now();
+        const valorSeleccionado = comboEncuestas.value;
+
+        if (!valorSeleccionado) {
+            alert('Seleccione una encuesta.');
+            return;
+        }
+
+        const [idEncuesta, idCategoria] = valorSeleccionado.split('|');
+
+        const filas =
+            contenedorPreguntas.querySelectorAll('.pregunta');
+
+        const preguntas = [];
+
+        for (const fila of filas) {
+
+            const input = fila.querySelector('.input-pregunta');
+
+            const texto = input.value.trim();
+
+            if (texto === '') {
+
+                alert('No puede haber preguntas vacías.');
+
+                input.focus();
+
+                return;
+            }
+
+            // Si es una pregunta nueva, generamos un ID.
+            const idPregunta = fila.dataset.idPregunta ||
+                'PRG' + Date.now() +
+                Math.random().toString(36).substring(2, 7);
+
+            preguntas.push({
+
+                id_pregunta: idPregunta,
+
+                nombre_pregunta: texto
+
+            });
+        }
 
         try {
-            const respuesta = await fetch('/kgade/KGA-Development-Studio/API/encuestas/encuestas.php?accion=crear', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            id_encuesta: idEncuestaActual,
-            id_categoria: idCategoriaActual,
-            preguntas: preguntasAEnviar
-        })
-            });
-            const resultado = await respuesta.json();
-            if (resultado.exito) {
-                await cargarEncuestas();
-        comboEncuestas.value = `${idEncuesta}|${idCategoria}`;
-        cargarDetalleEncuesta(idEncuesta, idCategoria);
-            } else {
-                alert('No se pudo crear la encuesta.');
+
+            const respuesta = await fetch(
+                `${rutaAPI}/preguntas/preguntas.php?accion=guardarLote`,
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+
+                        id_encuesta: idEncuesta,
+
+                        id_categoria: idCategoria,
+
+                        preguntas: preguntas
+
+                    })
+                }
+            );
+
+            const resultado = await leerJSON(respuesta);
+
+            if (!resultado.exito) {
+
+                alert(resultado.mensaje || 'No se pudieron guardar los cambios.');
+
+                return;
             }
+
+            alert('Las preguntas se guardaron correctamente.');
+
+            // Volver a cargar las preguntas desde MySQL.
+            cargarDetalleEncuesta(idEncuesta, idCategoria);
+
         } catch (error) {
-            console.error('Error al crear encuesta:', error);
-        }
-    }
 
-    /**
-     * Sincroniza y guarda los cambios de todas las preguntas de la encuesta actual.
-     */
-    async function guardarCambiosEncuesta() {
-        const [idEncuestaActual, idCategoriaActual] = comboEncuestas.value.split('|');
-
-        if (!idEncuestaActual || !idCategoriaActual) return;
-
-        const listaNodos = contenedorPreguntas.querySelectorAll('.pregunta');
-        const preguntasAEnviar = [];
-
-        listaNodos.forEach(nodo => {
-            const idPregunta = nodo.dataset.idPregunta || ('PREG_' + Math.random().toString(36).substr(2, 9));
-            
-            let texto = '';
-            let tipo = 'opcion multiple';
-
-            const elemP = nodo.querySelector('.texto-pregunta');
-            const elemInputNuevas = nodo.querySelector('.input-nueva-pregunta');
-            const elemTipo = nodo.querySelector('.select-tipo-pregunta');
-
-            if (elemP) {
-                texto = elemP.textContent;
-            } else if (elemInputNuevas) {
-                texto = elemInputNuevas.value;
-            }
-
-            if (elemTipo) {
-                tipo = elemTipo.value;
-            }
-
-            if (texto.trim() !== '') {
-                preguntasAEnviar.push({
-                    id_pregunta: idPregunta,
-                    id_encuesta: idEncuestaActual,
-                    id_categoria: idCategoriaActual,
-                    nombre_pregunta: texto,
-                    tipo: tipo
-                });
-            }
-        });
-
-        try {
-            const respuesta = await fetch('/kgade/KGA-Development-Studio/API/preguntas/preguntas.php?accion=guardarLote', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id_encuesta: idEncuestaActual,
-                id_categoria: idCategoriaActual,
-                preguntas: preguntasAEnviar
-            })
-            });
-
-            const resultado = await respuesta.json();
-            if (resultado.exito) {
-                alert('Cambios guardados con éxito.');
-                cargarDetalleEncuesta(idEncuestaActual, idCategoriaActual);
-            } else {
-                alert('Error al guardar cambios.');
-            }
-        } catch (error) {
             console.error('Error al guardar preguntas:', error);
+
+            alert(error.message || 'Ocurrió un error al guardar los cambios.');
         }
     }
+
+    // ==========================================
+    // LEER RESPUESTAS JSON
+    // ==========================================
+
+    async function leerJSON(respuesta) {
+
+        const contenido = await respuesta.text();
+
+        let datos;
+
+        try {
+
+            datos = JSON.parse(contenido);
+
+        } catch (error) {
+
+            throw new Error(
+                `El servidor devolvió una respuesta inválida. HTTP ${respuesta.status}`
+            );
+        }
+
+        if (!respuesta.ok) {
+
+            throw new Error(
+                datos.error || datos.mensaje || 'Error del servidor.'
+            );
+        }
+
+        return datos;
+    }
+
 });

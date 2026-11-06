@@ -1,91 +1,150 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Editar Encuestas | SIGSM</title>
+
     <link rel="stylesheet" href="../css/stylesadministrarEncuestas.css">
     <link rel="stylesheet" href="../css/header.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"
+        rel="stylesheet">
 </head>
+
 <body data-titulo="Editar Encuestas">
+
     <div id="header"></div>
+
     <hr>
+
     <div class="layout">
+
         <div id="sidebar"></div>
+
         <main>
+
             <section class="contenido">
+
                 <div class="encabezado-contenido">
+
                     <div>
-                        <h2>Editar encuesta</h2>
-                        <p>Administra las preguntas y consulta las estadísticas.</p>
+                        <h2>Editar encuestas</h2>
+
+                        <p>
+                            Administra las preguntas y consulta las estadísticas.
+                        </p>
                     </div>
-                    <button class="btn-agregar-encuesta" type="button">
-                        <i class="fa-solid fa-plus"></i>
-                        Agregar encuesta
-                    </button>
+
                 </div>
+
                 <div class="panel-principal">
+
                     <section class="panel-preguntas">
-                        
-                        <!-- Selector automatizado: se llenará desde la BD -->
+
                         <div class="seleccion-encuesta">
-                            <label for="encuesta">Seleccionar encuesta</label>
+
+                            <label for="encuesta">
+                                Seleccionar categoría
+                            </label>
+
                             <select id="encuesta">
-                                <option value="" disabled selected>Cargando encuestas...</option>
+                                <option value="">Cargando encuestas...</option>
                             </select>
+
                         </div>
 
                         <div class="titulo-preguntas">
+
                             <h3>Preguntas de la encuesta</h3>
+
                             <span>0 preguntas</span>
+
                         </div>
 
-                        <!-- Contenedor dinámico de preguntas -->
                         <div class="lista-preguntas">
-                            <!-- Las preguntas se cargarán automáticamente aquí mediante JS -->
+
+                            <!-- Las preguntas se cargan desde JavaScript. -->
+
                         </div>
 
                         <button class="btn-agregar-pregunta" type="button">
+
                             <i class="fa-solid fa-plus"></i>
                             Agregar pregunta
+
                         </button>
+
                         <button class="btn-guardar" type="button">
+
                             <i class="fa-solid fa-floppy-disk"></i>
                             Guardar cambios
+
                         </button>
+
                     </section>
 
-                    <!-- Panel de estadísticas dinámico -->
                     <aside class="panel-estadisticas">
+
                         <div class="estadisticas-titulo">
+
                             <i class="fa-solid fa-chart-column"></i>
+
                             <h3>Estadísticas</h3>
+
                         </div>
+
                         <div class="promedio">
+
                             <span>Promedio general</span>
-                            <strong>0.0 <small>/ 5</small></strong>
+
+                            <strong>
+                                0.0 <small>/ 5</small>
+                            </strong>
+
                         </div>
+
                         <div class="resultados">
+
                             <h4>Promedio por pregunta</h4>
-                            <!-- Los resultados por pregunta se cargarán dinámicamente aquí -->
+
                         </div>
+
                         <div class="cantidad-respuestas">
+
                             <i class="fa-solid fa-users"></i>
+
                             <div>
+
                                 <strong>0</strong>
+
                                 <span>Respuestas recibidas</span>
+
                             </div>
+
                         </div>
+
                     </aside>
+
                 </div>
+
             </section>
+
         </main>
+
     </div>
-    <script src="../js/sidebarEmpleado.js"></script>
+
+    <script src="../js/sidebarAdmin.js"></script>
     <script src="../js/administrarEncuestas.js"></script>
+
 </body>
+
 </html>

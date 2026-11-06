@@ -1,190 +1,116 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Encuestas Públicas | SIGSM</title>
+
     <link rel="icon" href="../logo/hospital de clinicaslogo.png">
     <link rel="stylesheet" href="../css/stylesencuestasPaciente.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
 
-<header>
-    <img src="../logo/hospital de clinicaslogo.png" alt="Logo">
-    <h1>Encuestas Públicas</h1>
-</header>
+    <header>
+        <img src="../logo/hospital de clinicaslogo.png" alt="Logo del Hospital">
+        <h1>Encuestas Públicas</h1>
+    </header>
 
-<hr>
+    <hr>
 
     <div class="layout">
 
         <aside class="sidebar">
 
-    <div class="logo">
-        <img src="logo.png" alt="">
-    </div>
-        <nav>
+            <nav>
 
-            <a href="documentacionPublica.html">
-                <i class="fa-solid fa-file-medical"></i>
-                Documentación
-            </a>
+                <a href="documentacionPublica.html">
+                    <i class="fa-solid fa-file-medical"></i>
+                    Documentación
+                </a>
 
-    <a href="encuestasPacientes.html"  class="active">
-        <i class="fa-solid fa-clipboard-question"></i>
-        Encuestas
-    </a>
-    </nav>
+                <a href="encuestasPacientes.html" class="active">
+                    <i class="fa-solid fa-clipboard-question"></i>
+                    Encuestas
+                </a>
 
-    <div class="usuario">
-        <img src="../img/invitado.png" alt="">
-        <div>
-            <strong>Invitado</strong>
-            <p>Hospital de Clínicas</p>
-        </div>
-    </div>
-        <button id="btnLogout" class="btn-logout">
-        <i class="fa-solid fa-right-from-bracket"></i>
-        Cerrar Sesión
-    </button>
+            </nav>
 
-    </aside>
+            <div class="usuario">
+                <img src="../img/invitado.png" alt="Usuario invitado">
 
-    <main>
-
-        <div class="titulo">
-            <h2>Ayúdenos a mejorar</h2>
-
-            <p>
-                Esta encuesta es totalmente anónima.
-                Ninguna pregunta es obligatoria.
-            </p>
-        </div>
-
-        <form class="encuesta-card">
-
-        
-
-
-            <div class="pregunta">
-            <label>¿Cómo calificaría la atención brindada por el personal médico?</label>
-
-            <div class="escala">
-                <label><input type="radio" name="medicos">1</label>
-                <label><input type="radio" name="medicos">2</label>
-                <label><input type="radio" name="medicos">3</label>
-                <label><input type="radio" name="medicos">4</label>
-                <label><input type="radio" name="medicos">5</label>
-            </div>
-
-            <div class="pregunta">
-            <label>¿Cómo calificaría la atención brindada por el personal de enfermería?</label>
-
-            <div class="escala">
-                <label><input type="radio" name="enfermeria">1</label>
-                <label><input type="radio" name="enfermeria">2</label>
-                <label><input type="radio" name="enfermeria">3</label>
-                <label><input type="radio" name="enfermeria">4</label>
-                <label><input type="radio" name="enfermeria">5</label>
-            </div>
-        </div>
-        </div>
-
-        <div class="pregunta">
-    <label>¿Cómo calificaría el estado general de las instalaciones?</label>
-
-                <div class="escala">
-                    <label><input type="radio" name="instalaciones">1</label>
-                    <label><input type="radio" name="instalaciones">2</label>
-                    <label><input type="radio" name="instalaciones">3</label>
-                    <label><input type="radio" name="instalaciones">4</label>
-                    <label><input type="radio" name="instalaciones">5</label>
+                <div>
+                    <strong>Invitado</strong>
+                    <p>Hospital de Clínicas</p>
                 </div>
             </div>
 
-            <div class="pregunta">
-            <label>¿Cómo calificaría la limpieza e higiene del hospital?</label>
+        </aside>
 
-            <div class="escala">
-                <label><input type="radio" name="limpieza">1</label>
-                <label><input type="radio" name="limpieza">2</label>
-                <label><input type="radio" name="limpieza">3</label>
-                <label><input type="radio" name="limpieza">4</label>
-                <label><input type="radio" name="limpieza">5</label>
-            </div>
-        </div>
+        <main>
 
-                <div class="pregunta">
-                <label>¿Qué aspecto considera que debería mejorarse?</label>
+            <div class="titulo">
 
-                <select>
-                    <option value="">Seleccione una opción</option>
-                    <option>Tiempo de espera</option>
-                    <option>Atención médica</option>
-                    <option>Atención de enfermería</option>
-                    <option>Limpieza</option>
-                    <option>Infraestructura</option>
-                    <option>Comunicación con el paciente</option>
-                    <option>Otro</option>
-                </select>
-            </div>
+                <h2>Ayúdenos a mejorar</h2>
 
-            <div class="pregunta">
-            <label>¿Recibió información clara sobre su diagnóstico o tratamiento?</label>
-
-            <select>
-                <option value="">Seleccione una opción</option>
-                <option>Sí</option>
-                <option>Parcialmente</option>
-                <option>No</option>
-            </select>
-        </div>
-
-
-        <div class="pregunta">
-
-                <label>
-                    ¿El tiempo de espera fue adecuado?
-                </label>
-
-                <select>
-                    <option value="">Seleccione una opción</option>
-                    <option>Sí</option>
-                    <option>No</option>
-                </select>
+                <p>
+                    Su opinión nos ayuda a mejorar nuestros servicios.
+                    La encuesta es anónima.
+                </p>
 
             </div>
 
-        <div class="pregunta">
+            <form class="encuesta-card" id="formEncuesta">
 
-            <label>
-            Comentarios adicionales
-            </label>
+                <div class="seleccion-categoria">
 
-            <textarea placeholder="Escriba aquí su opinión (opcional)"></textarea>
+                    <label for="categoriaEncuesta">
+                        Seleccione una categoría
+                    </label>
 
-            </div>
+                    <select id="categoriaEncuesta" required>
+                        <option value="">Cargando categorías...</option>
+                    </select>
 
+                </div>
 
+                <div id="tituloEncuesta"></div>
 
-            <button type="submit" class="btn-enviar">
-            <i class="fa-solid fa-paper-plane"></i>
-            Enviar Encuesta
-            </button>
+                <div id="listaPreguntas">
 
-        </form>
+                    <p>Seleccione una categoría para comenzar.</p>
 
-        
+                </div>
 
-    </main>
+                <p id="mensajeEncuesta" role="status"></p>
 
-</div>
+                <button type="submit" class="btn-enviar">
+
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Enviar Encuesta
+
+                </button>
+
+            </form>
+
+        </main>
+
+    </div>
+
+    <script src="../js/logout.js"></script>
+    <script src="../js/encuestasPacientes.js"></script>
 
 </body>
-<script src="../js/logout.js"></script>
+
 </html>

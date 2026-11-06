@@ -43,6 +43,43 @@ hr {
     margin: 20px;
 }
 
+/* Selector de categorías */
+.seleccion-categoria {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.seleccion-categoria label {
+    font-weight: 600;
+}
+
+.seleccion-categoria select {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-family: "Lexend", sans-serif;
+}
+
+/* Título de la encuesta seleccionada */
+#tituloEncuesta h3 {
+    color: #0284c7;
+    text-align: center;
+}
+
+/* Resaltar el círculo seleccionado */
+.escala label:has(input:checked) {
+    background: #075985;
+    transform: scale(1.12);
+}
+
+/* Mensaje de envío */
+#mensajeEncuesta {
+    color: #0284c7;
+    font-size: 14px;
+    font-weight: 500;
+}
+
 .sidebar nav {
     display: flex;
     flex-direction: column;

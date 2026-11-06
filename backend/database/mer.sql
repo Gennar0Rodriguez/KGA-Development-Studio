@@ -182,7 +182,7 @@ CREATE TABLE transporta (
 
 
 INSERT INTO administrativo (ci_admin, nombre_admin, apellido_admin, contraseña_admin, cargo) VALUES 
-('12345678', 'Ezequiel', 'Matta', 'Ari', 'administrador'),
+('cd kg', 'Ezequiel', 'Matta', 'Ari', 'administrador'),
 ('87654321', 'Juan', 'Gomez', '123', 'empleado'),
 ('11223344', 'Carlos', 'Perez', '456', 'empleado'),
 ('55667788', 'Maria', 'Rodriguez', '789', 'administrador'),

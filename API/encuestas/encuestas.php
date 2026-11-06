@@ -1,37 +1,41 @@
 <?php
-require_once __DIR__ . '/../../backend/models/Encuesta.php'; // Ajusta los niveles si es necesario
+require_once __DIR__ . '/../../backend/models/Encuesta.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
-$accion = $_GET['accion'] ?? '';
-$encuestaModelo = new Encuesta();
+try {
 
-switch ($accion) {
-    case 'obtenerTodas':
-        try {
-            $encuestas = $encuestaModelo->obtenerTodos(); 
+    $accion = $_GET['accion'] ?? '';
+
+    $encuestaModelo = new Encuesta();
+
+    switch ($accion) {
+
+        case 'obtenerTodas':
+
+            $encuestas = $encuestaModelo->obtenerTodos();
+
             echo json_encode($encuestas);
-        } catch (Exception $e) {
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-        break;
+            break;
 
-    case 'crear':
-        $datos = json_decode(file_get_contents('php://input'), true);
-        if ($datos) {
-            $resultado = $encuestaModelo->crear(
-                $datos['id_encuesta'],
-                $datos['id_categoria'],
-                $datos['titulo_enc'],
-                $datos['descripcion_enc']
-            );
-            echo json_encode(['exito' => $resultado]);
-        } else {
-            echo json_encode(['exito' => false]);
-        }
-        break;
+        default:
 
-    default:
-        echo json_encode(['error' => 'Acción no válida']);
-        break;
+            http_response_code(400);
+
+            echo json_encode([
+                'error' => 'Acción no válida'
+            ]);
+
+            break;
+    }
+
+} catch (Throwable $e) {
+
+    error_log('Error en encuestas.php: ' . $e->getMessage());
+
+    http_response_code(500);
+
+    echo json_encode([
+        'error' => 'No se pudieron obtener las encuestas'
+    ]);
 }

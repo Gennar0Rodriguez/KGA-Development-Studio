@@ -28,13 +28,25 @@ class Encuesta
         return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function obtenerPorId(string $idEncuesta, string $idCategoria): ?array {
-        $sql = 'SELECT * FROM encuesta WHERE id_encuesta = :id_encuesta AND id_categoria = :id_categoria';
-        $sentencia = $this->conexion->prepare($sql);
-        $sentencia->bindParam(':id_encuesta', $idEncuesta);
-        $sentencia->bindParam(':id_categoria', $idCategoria);
-        $sentencia->execute();
-        return ($sentencia->fetch(PDO::FETCH_ASSOC)) ?: null;
+        public function obtenerPorId(
+            string $idEncuesta,
+            string $idCategoria
+        ): ?array {
+
+            $sql = "SELECT *
+                    FROM encuesta
+                    WHERE id_encuesta = :id_encuesta
+                    AND id_categoria = :id_categoria";
+
+            $sentencia = $this->conexion->prepare($sql);
+
+            $sentencia->bindValue(':id_encuesta', $idEncuesta);
+            $sentencia->bindValue(':id_categoria', $idCategoria);
+
+            $sentencia->execute();
+
+            return $sentencia->fetch(PDO::FETCH_ASSOC) ?: null;
+        }
     }
 
     public function obtenerPorCategoria(string $idCategoria): array {
