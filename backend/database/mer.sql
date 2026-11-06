@@ -12,6 +12,7 @@ CREATE TABLE administrativo (
 CREATE TABLE categoria (
     id_categoria VARCHAR(50) PRIMARY KEY NOT NULL,
     nombre_cat VARCHAR(50) NOT NULL
+    tipo_cat ENUM ('docs', 'encuestas')
 );
 
 CREATE TABLE documentos (
