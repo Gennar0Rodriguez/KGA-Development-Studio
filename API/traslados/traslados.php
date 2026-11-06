@@ -116,8 +116,7 @@ try {
             }
 
             // La CI del solicitante se obtiene de la sesión.
-            if ($traslado->crear($datos, $ciUsuario)) {
-
+            if ($traslado->crear($datos, $ciUsuario, $esAdmin)) {
                 http_response_code(201);
                 echo json_encode(['mensaje' => 'Solicitud de traslado registrada correctamente']);
 

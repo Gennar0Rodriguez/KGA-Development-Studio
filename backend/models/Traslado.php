@@ -286,10 +286,11 @@ class Traslado
     // CREAR UN TRASLADO
     // ======================================================
 
-    public function crear(
-        array $datos,
-        string $ciSolicitante
-    ): bool {
+        public function crear(
+            array $datos,
+            string $ciSolicitante,
+            bool $esAdmin = false
+        ): bool {
 
         try {
 
@@ -331,7 +332,9 @@ class Traslado
             $idTransportable = $this->generarIdTransportable();
 
             // Toda solicitud comienza pendiente.
-            $estadoTraslado = 'pendiente';
+            $estadoSolicitud = $esAdmin ? 'aprobado' : 'pendiente';
+
+            $estadoTraslado = $esAdmin ? 'aprobado' : 'pendiente';
 
 
             // ----------------------------------------------
@@ -361,7 +364,7 @@ class Traslado
                                 :origen,
                                 :estado,
                                 :ci_solicitante,
-                                'pendiente',
+                                :estado_solicitud,
                                 :observaciones
                             )";
 
@@ -388,6 +391,7 @@ class Traslado
             $sentencia->bindValue(':origen', $origen);
             $sentencia->bindValue(':estado', $estadoTraslado);
             $sentencia->bindValue(':ci_solicitante', $ciSolicitante);
+            $sentencia->bindValue(':estado_solicitud', $estadoSolicitud);
 
             $observaciones = $datos['observaciones'] ?? '';
 
@@ -548,26 +552,30 @@ class Traslado
             // NOTIFICAR A LOS ADMINISTRADORES
             // ----------------------------------------------
 
-            require_once __DIR__ . '/Notificacion.php';
+            if (!$esAdmin) {
 
-            $notificacion = new Notificacion();
+                require_once __DIR__ . '/Notificacion.php';
 
-            $resultadoNotificacion = $notificacion->notificarATodos(
-                $idTraslado,
-                $datos['ci_chofer'],
-                $datos['matricula'],
-                $datos['id_destino'],
-                $ciSolicitante,
-                'Nueva solicitud de traslado',
-                'Se registró una nueva solicitud para el vehículo ' .
-                    $datos['matricula']
-            );
+                $notificacion = new Notificacion();
 
-            // La solicitud se guarda aunque falle alguna notificación.
-            if (!$resultadoNotificacion) {
-                error_log(
-                    "No se pudieron enviar todas las notificaciones de la solicitud."
+                $resultadoNotificacion = $notificacion->notificarATodos(
+                    $idTraslado,
+                    $datos['ci_chofer'],
+                    $datos['matricula'],
+                    $datos['id_destino'],
+                    $ciSolicitante,
+                    'Nueva solicitud de traslado',
+                    'Se registró una nueva solicitud para el vehículo ' .
+                        $datos['matricula']
                 );
+
+                // El traslado se guarda aunque falle una notificación.
+                if (!$resultadoNotificacion) {
+                    error_log(
+                        "No se pudieron enviar todas las notificaciones de la solicitud."
+                    );
+                }
+
             }
 
             $this->conexion->commit();
