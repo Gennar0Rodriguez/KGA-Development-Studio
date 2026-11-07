@@ -1142,15 +1142,27 @@ function renderizarTarjetasTraslado(lista) {
 
                     ` : ''}
 
-                    ${item.estado_solicitud === 'aprobado' ? `
+            <!-- Permitir eliminar traslados aprobados o rechazados. -->
+            ${['aprobado', 'rechazado'].includes(item.estado_solicitud) ? `
 
-                        <button
-                            class="btn-eliminar"
-                            onclick="eliminarTraslado('${item.id_traslado}')">
-                            Eliminar
-                        </button>
+                <button
+                    class="btn-eliminar"
+                    onclick="eliminarTraslado('${item.id_traslado}')">
+                    Eliminar
+                </button>
 
-                    ` : ''}
+            ` : ''}
+
+            <!-- Permitir volver a aprobar una solicitud rechazada. -->
+            ${item.estado_solicitud === 'rechazado' ? `
+
+                <button
+                    class="btn-aprobar"
+                    onclick="resolverSolicitud('${item.id_traslado}', 'aprobado')">
+                    Aprobar
+                </button>
+
+            ` : ''}
 
                 </div>
 

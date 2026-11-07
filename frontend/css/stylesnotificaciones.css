@@ -179,3 +179,33 @@ main > h2 {
         width: 100%;
     }
 }
+
+
+/* Botón para eliminar notificaciones. */
+.btn-eliminar-notificacion {
+    align-self: flex-start;
+    background: #dc4444;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-eliminar-notificacion:hover {
+    background: #b83232;
+}
+
+.btn-eliminar-notificacion:focus-visible {
+    outline: 3px solid #f5c2c2;
+    outline-offset: 3px;
+}
+
+@media (max-width: 700px) {
+    .btn-eliminar-notificacion {
+        width: 100%;
+    }
+}

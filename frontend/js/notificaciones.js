@@ -149,25 +149,43 @@ function renderizarNotificaciones(lista) {
         fecha.className = 'fecha-notificacion';
         fecha.textContent = formatearFecha(item.fecha_envio);
 
-        const boton = document.createElement('button');
-        boton.className = 'btn-leido';
-        boton.type = 'button';
+        // Botón para marcar la notificación como leída.
+const botonLeido = document.createElement('button');
+botonLeido.className = 'btn-leido';
+botonLeido.type = 'button';
 
-        if (Number(item.leido) === 1) {
+if (Number(item.leido) === 1) {
 
-            boton.textContent = 'Leída';
-            boton.disabled = true;
+    botonLeido.textContent = 'Leída';
+    botonLeido.disabled = true;
 
-        } else {
+} else {
 
-            boton.textContent = 'Marcar como leído';
+    botonLeido.textContent = 'Marcar como leído';
 
-            boton.addEventListener('click', () => {
-                marcarNotificacionLeida(item);
-            });
-        }
+    botonLeido.addEventListener('click', () => {
+        marcarNotificacionLeida(item);
+    });
 
-        card.append(tituloCard, descripcion, fecha, boton);
+}
+
+    // Botón para eliminar la notificación.
+    const botonEliminar = document.createElement('button');
+    botonEliminar.className = 'btn-eliminar-notificacion';
+    botonEliminar.type = 'button';
+    botonEliminar.textContent = 'Eliminar';
+
+    botonEliminar.addEventListener('click', () => {
+        eliminarNotificacion(item);
+    });
+
+    card.append(
+        tituloCard,
+        descripcion,
+        fecha,
+        botonLeido,
+        botonEliminar
+    );
 
         contenedor.appendChild(card);
 
@@ -219,26 +237,58 @@ async function marcarNotificacionLeida(item) {
     }
 }
 
-async function eliminarNotificacion(id) {
+// ======================================================
+// ELIMINAR UNA NOTIFICACIÓN
+// ======================================================
+
+async function eliminarNotificacion(item) {
+
+    if (!confirm('¿Desea eliminar esta notificación?')) {
+        return;
+    }
+
     try {
+
         const response = await fetch(
-            `/kgade/KGA-Development-Studio/API/notificaciones/notificaciones.php?id=${encodeURIComponent(id)}`,
+            '/kgade/KGA-Development-Studio/API/notificaciones/notificaciones.php',
             {
                 method: 'DELETE',
-                credentials: 'same-origin'
+                credentials: 'same-origin',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                // Enviamos los identificadores que utiliza la tabla notifica.
+                body: JSON.stringify({
+                    id_traslado: item.id_traslado,
+                    ci_chofer: item.ci_chofer,
+                    matricula: item.matricula,
+                    id_destino: item.id_destino,
+                    ci_admin: item.ci_admin
+                })
             }
         );
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || 'No se pudo eliminar la notificación');
+            throw new Error(
+                data.error || 'No se pudo eliminar la notificación.'
+            );
         }
 
+        alert(data.mensaje || 'Notificación eliminada correctamente.');
+
+        // Actualizar las tarjetas y el contador.
         await iniciarPollingNotificaciones();
 
     } catch (error) {
+
         console.error('Error al eliminar la notificación:', error);
+
+        alert('No se pudo eliminar la notificación.');
+
     }
 }
 

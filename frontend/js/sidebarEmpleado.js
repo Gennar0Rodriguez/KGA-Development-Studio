@@ -66,9 +66,11 @@ function cargarSidebar(usuario, cargo) {
             if (!esAdmin) {
                 const navDoc = document.getElementById('navDocumentos');
                 const navUsu = document.getElementById('navUsuarios');
+                const navEnc = document.getElementById('navEncuesta');
 
                 if (navDoc) navDoc.style.setProperty('display', 'none', 'important');
                 if (navUsu) navUsu.style.setProperty('display', 'none', 'important');
+                if (navEnc) navEnc.style.setProperty('display', 'none', 'important');
             }
 
             // Evento para avisar que la sidebar y la campanita se cargaron

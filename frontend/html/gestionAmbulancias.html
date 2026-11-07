@@ -221,13 +221,30 @@
 
                     <!-- Enfermero obligatorio para ambos tipos -->
 
-                    <label for="enfermero">Enfermero responsable</label>
+                    <!-- Buscador de enfermeros responsables -->
 
-                    <select id="enfermero" required>
+                    <label for="buscadorEnfermero">Enfermero responsable</label>
 
-                        <option value="">Seleccione un enfermero</option>
+                    <div class="campo-busqueda-ambulancia">
 
-                    </select>
+                        <input
+                            type="text"
+                            id="buscadorEnfermero"
+                            placeholder="Escriba un nombre, apellido o CI..."
+                            autocomplete="off"
+                            required
+                        >
+
+                        <!-- Aquí aparecen las sugerencias encontradas. -->
+                        <div
+                            id="sugerenciasEnfermero"
+                            class="sugerencias-ambulancia">
+                        </div>
+
+                        <!-- Guardamos la CI del enfermero seleccionado. -->
+                        <input type="hidden" id="enfermero">
+
+                    </div>
 
 
                     <!-- Destino -->

@@ -647,16 +647,17 @@ class Traslado
 
             $this->conexion->beginTransaction();
 
-            // Recuperar los datos necesarios para resolver y notificar.
-            $sql = "SELECT
-                        ci_solicitante,
-                        ci_chofer,
-                        matricula,
-                        id_destino
-                    FROM traslado
-                    WHERE id_traslado = :id
-                    AND estado_solicitud = 'pendiente'
-                    FOR UPDATE";
+        // Se pueden resolver solicitudes pendientes y volver a aprobar
+        // aquellas que anteriormente fueron rechazadas.
+        $sql = "SELECT
+                    ci_solicitante,
+                    ci_chofer,
+                    matricula,
+                    id_destino
+                FROM traslado
+                WHERE id_traslado = :id
+                AND estado_solicitud IN ('pendiente', 'rechazado')
+                FOR UPDATE";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $idTraslado);
