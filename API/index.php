@@ -1,7 +1,7 @@
 <?php
 
 header('Content-Type: application/json charset=utf-8');
-header('Access-Ctonrol-Allow-Origin: *');
+header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 
 $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);

@@ -496,16 +496,22 @@ function filtrarTraslados() {
         const coincideEstado =
             traslado.estado_solicitud === filtroSolicitud;
 
-        const coincideBusqueda = String(traslado.matricula || '')
-            .toLowerCase()
-            .includes(textoBusqueda);
+        // Buscar por matrícula o cédula del paciente.
+        const matricula = String(traslado.matricula || '')
+            .toLowerCase();
+
+        const cedula = String(traslado.ci_paciente || '')
+            .toLowerCase();
+
+        const coincideBusqueda =
+            matricula.includes(textoBusqueda) ||
+            cedula.includes(textoBusqueda);
 
         return coincideEstado && coincideBusqueda;
 
     });
 
     renderizarTarjetasTraslado(filtrados);
-
 }
 
 
