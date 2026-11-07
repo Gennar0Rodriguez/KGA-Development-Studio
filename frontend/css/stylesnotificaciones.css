@@ -1,133 +1,135 @@
-/* Contenedor principal de las notificaciones */
+:root {
+    --capa-1: rgba(255, 255, 255, 0.72);
+    --capa-2: rgba(255, 255, 255, 0.82);
+    --capa-3: rgba(255, 255, 255, 0.91);
+    --capa-4: rgba(255, 255, 255, 0.97);
+    --capa-blur: blur(8px);
+}
+
+main > h2 {
+    background: var(--capa-1);
+    border-radius: 15px;
+    padding: 20px 25px;
+    margin-bottom: 25px;
+    font-size: 23px;
+    color: #263445;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+    backdrop-filter: var(--capa-blur);
+    -webkit-backdrop-filter: var(--capa-blur);
+}
+
 .notificaciones,
 .lista-notificaciones {
     width: 100%;
-    max-width: 900px;
-    margin: 24px auto;
-    box-sizing: border-box;
+    max-width: none;
+    margin: 0;
+    background: var(--capa-1);
+    border-radius: 15px;
+    padding: 25px;
+    min-height: calc(100vh - 290px);
+    backdrop-filter: var(--capa-blur);
+    -webkit-backdrop-filter: var(--capa-blur);
 }
 
-/* Tarjeta individual */
 .card-notificacion {
     display: flex;
     flex-direction: column;
     gap: 10px;
-
-    background: #ffffff;
-    padding: 22px;
-    margin-bottom: 16px;
-
-    border: 1px solid #e5e7eb;
-    border-left: 4px solid #719779;
+    background: var(--capa-2);
+    padding: 20px;
+    margin-bottom: 14px;
+    border: 1px solid #e1e8ef;
+    border-left: 4px solid #159ed0;
     border-radius: 12px;
-
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
 }
 
-.card-notificacion:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);
+.card-notificacion:last-child {
+    margin-bottom: 0;
 }
 
 .card-notificacion h3 {
-    margin: 0;
-    color: #1f2937;
-    font-size: 1.1rem;
-    font-weight: 650;
+    color: #263445;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 .card-notificacion p {
-    margin: 0;
-    color: #4b5563;
-    font-size: 0.95rem;
+    color: #526579;
+    font-size: 13px;
     line-height: 1.6;
 }
 
 .fecha-notificacion {
     display: block;
-    color: #6b7280;
-    font-size: 0.8rem;
+    color: #718096;
+    font-size: 12px;
 }
 
-/* Botón de acción */
 .btn-leido {
     align-self: flex-start;
-
-    background-color: #719779;
-    color: #ffffff;
-
+    background: #159ed0;
+    color: white;
     border: none;
-    border-radius: 8px;
-
+    border-radius: 9px;
     padding: 10px 16px;
-
-    font-size: 0.9rem;
+    font-size: 13px;
     font-weight: 600;
-
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: 0.3s;
 }
 
 .btn-leido:hover {
-    background-color: #587e60;
+    background: #087eaf;
+}
+
+.btn-leido:disabled {
+    background: #edf1f5;
+    color: #718096;
+    cursor: default;
 }
 
 .btn-leido:focus-visible {
-    outline: 3px solid #a7c9ae;
+    outline: 3px solid #c5e8f8;
     outline-offset: 3px;
 }
 
-/* Mensaje cuando no hay notificaciones */
 .sin-notificaciones {
-    margin-top: 20px;
     padding: 24px;
-
-    background: #f9fafb;
-    border: 1px dashed #d1d5db;
-    border-radius: 10px;
-
-    color: #6b7280;
+    background: var(--capa-2);
+    border: 1px dashed #d5dce5;
+    border-radius: 12px;
+    color: #718096;
+    font-size: 13px;
     text-align: center;
 }
 
-/* Botón de cerrar sesión */
 .btn-logout {
-    margin-top: auto;
+    margin-top: 15px;
     width: 100%;
-    padding: 10px;
-
-    background-color: transparent;
-    color: #ef4444;
-
-    border: 1px solid #ef4444;
-    border-radius: 6px;
-
-    font-size: 0.95rem;
+    padding: 12px;
+    background: #fee8e7;
+    color: #c03939;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
     font-weight: 600;
-
     cursor: pointer;
-
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-
-    transition: all 0.2s ease;
+    transition: 0.3s;
 }
 
 .btn-logout:hover {
-    background-color: #ef4444;
-    color: #ffffff;
+    background: #fbd0ce;
 }
 
 .sidebar nav a {
     display: flex;
     align-items: center;
-    gap: 12px; /* Espacio uniforme entre el icono y el texto */
+    gap: 12px;
     position: relative;
 }
 
@@ -136,22 +138,18 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px; /* Ancho fijo igual al de los demás iconos */
+    width: 20px;
     text-align: center;
-}
-
-.sidebar nav a i {
-    font-size: 1.1rem; /* Asegura que la campana tenga el mismo tamaño que los iconos de arriba y abajo */
 }
 
 .badge-notificacion {
     position: absolute;
     top: -8px;
     right: -10px;
-    background-color: #e74c3c;
-    color: #ffffff;
-    font-size: 0.65rem;
-    font-weight: bold;
+    background: #dc4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
     border-radius: 50%;
     padding: 1px 4px;
     min-width: 15px;
@@ -159,16 +157,18 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-/* El contador de la barra lateral se define en sidebar.html,
-   porque esa barra se carga en distintas páginas. */
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
+    main > h2 {
+        padding: 16px;
+        font-size: 20px;
+    }
+
     .notificaciones,
     .lista-notificaciones {
-        width: 100%;
-        margin: 16px auto;
+        padding: 15px;
     }
 
     .card-notificacion {
