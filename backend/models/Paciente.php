@@ -190,13 +190,59 @@ class Paciente
 
     public function eliminar(string $id): bool
     {
-        // La eliminación del transportable elimina su paciente asociado
-        // mediante ON DELETE CASCADE, pero no borra el historial de traslados.
-        $sql = "DELETE FROM transportable WHERE id_transportable = :id";
+        try {
 
-        $consulta = $this->conexion->prepare($sql);
-        $consulta->execute([':id' => $id]);
+            // Iniciamos una transacción para evitar eliminaciones parciales.
+            $this->conexion->beginTransaction();
+            
+            // Primero eliminamos el registro de paciente.
+            $sqlPaciente = "
+                DELETE FROM paciente
+                WHERE id_transportable = :id
+            ";
 
-        return $consulta->rowCount() > 0;
+            $consultaPaciente = $this->conexion->prepare($sqlPaciente);
+            $consultaPaciente->execute([':id' => $id]);
+
+            // Si no encontramos el paciente, cancelamos la operación.
+            if ($consultaPaciente->rowCount() === 0) {
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            // Eliminamos el transportable solamente si no está
+            // relacionado con elementos ni con traslados.
+            $sqlTransportable = "
+                DELETE FROM transportable
+                WHERE id_transportable = :id
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM elemento
+                    WHERE elemento.id_transportable = transportable.id_transportable
+                )
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM transporta
+                    WHERE transporta.id_transportable = transportable.id_transportable
+                )
+            ";
+
+            $consultaTransportable = $this->conexion->prepare($sqlTransportable);
+            $consultaTransportable->execute([':id' => $id]);
+
+            // Confirmamos los cambios.
+            $this->conexion->commit();
+
+            return true;
+
+        } catch (Throwable $error) {
+
+            // Si algo falla, deshacemos todos los cambios.
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+
+            throw $error;
+        }
     }
 }
