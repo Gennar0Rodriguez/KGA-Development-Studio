@@ -6,7 +6,7 @@ const API_DOCUMENTOS =
     '/kgade/KGA-Development-Studio/API/documentos/documentos.php';
 
 const API_CATEGORIAS =
-    '/kgade/KGA-Development-Studio/API/documentos/categorias.php';
+    '/kgade/KGA-Development-Studio/API/categorias/categorias.php';
 
 // Información que se obtiene desde el servidor.
 let todosLosDocumentos = [];
@@ -636,6 +636,15 @@ function ocultarSugerencias() {
         lista.style.display = 'none';
     }
 
+}
+
+
+function inicializarBuscadores() {
+    const inputAdmin = document.getElementById('inputBuscarAdmin');
+
+    if (inputAdmin) {
+        inputAdmin.addEventListener('input', aplicarFiltros);
+    }
 }
 
 
