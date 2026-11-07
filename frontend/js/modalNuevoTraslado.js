@@ -1061,6 +1061,9 @@ function renderizarTarjetasTraslado(lista) {
             `;
 
         const estado = item.estado_traslado || 'Pendiente';
+        const fechaTraslado = item.fecha_traslado
+    ? item.fecha_traslado.split('-').reverse().join('/')
+    : 'Sin fecha';
 
         card.innerHTML = `
 
@@ -1084,6 +1087,10 @@ function renderizarTarjetasTraslado(lista) {
 
                 <p><strong>Solicitud:</strong>
                     ${item.estado_solicitud || 'Sin estado'}
+                </p>
+
+                <p><strong>Fecha del traslado:</strong>
+                    ${fechaTraslado}
                 </p>
 
                 <p><strong>Hora salida:</strong>
