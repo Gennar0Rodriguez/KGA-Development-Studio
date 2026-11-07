@@ -38,7 +38,6 @@ class Enfermero
         ]);
     }
 
-
     public function actualizar(array $datos): bool
     {
         $sql = "UPDATE enfermero
@@ -73,7 +72,6 @@ class Enfermero
         return true;
     }
 
-
     public function eliminar(string $ci): bool
     {
         // Evitamos que la eliminación del enfermero borre transportables
@@ -83,19 +81,4 @@ class Enfermero
                 WHERE ci_enfermero = :ci";
 
         $consulta = $this->conexion->prepare($sql);
-        $consulta->execute([':ci' => $ci]);
-
-        if ((int) $consulta->fetchColumn() > 0) {
-            throw new RuntimeException(
-                'No se puede eliminar el enfermero porque tiene pacientes o elementos asignados.'
-            );
-        }
-
-        $sql = "DELETE FROM enfermero WHERE ci_enfermero = :ci";
-
-        $consulta = $this->conexion->prepare($sql);
-        $consulta->execute([':ci' => $ci]);
-
-        return $consulta->rowCount() > 0;
-    }
-}
+        $consulta

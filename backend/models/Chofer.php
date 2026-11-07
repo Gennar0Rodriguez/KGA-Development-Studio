@@ -13,9 +13,7 @@ class Chofer
 
     public function obtenerTodos(): array
     {
-        $sql = "SELECT ci_chofer, nombre_chofer, apellido_chofer, telefono
-                FROM chofer
-                ORDER BY apellido_chofer, nombre_chofer";
+        $sql = "SELECT ci_chofer, nombre_chofer, apellido_chofer, telefono FROM chofer ORDER BY apellido_chofer, nombre_chofer";
 
         $consulta = $this->conexion->prepare($sql);
         $consulta->execute();
@@ -25,9 +23,7 @@ class Chofer
 
     public function crear(array $datos): void
     {
-        $sql = "INSERT INTO chofer
-                (ci_chofer, nombre_chofer, apellido_chofer, telefono)
-                VALUES (:ci, :nombre, :apellido, :telefono)";
+        $sql = "INSERT INTO chofer (ci_chofer, nombre_chofer, apellido_chofer, telefono) VALUES (:ci, :nombre, :apellido, :telefono)";
 
         $consulta = $this->conexion->prepare($sql);
 
@@ -41,11 +37,7 @@ class Chofer
 
     public function actualizar(array $datos): bool
     {
-        $sql = "UPDATE chofer
-                SET nombre_chofer = :nombre,
-                    apellido_chofer = :apellido,
-                    telefono = :telefono
-                WHERE ci_chofer = :ci";
+        $sql = "UPDATE chofer SET nombre_chofer = :nombre, apellido_chofer = :apellido, telefono = :telefono WHERE ci_chofer = :ci";
 
         $consulta = $this->conexion->prepare($sql);
 

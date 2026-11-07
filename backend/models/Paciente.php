@@ -194,12 +194,9 @@ class Paciente
 
             // Iniciamos una transacción para evitar eliminaciones parciales.
             $this->conexion->beginTransaction();
-            
+
             // Primero eliminamos el registro de paciente.
-            $sqlPaciente = "
-                DELETE FROM paciente
-                WHERE id_transportable = :id
-            ";
+            $sqlPaciente = "DELETE FROM paciente WHERE id_transportable = :id";
 
             $consultaPaciente = $this->conexion->prepare($sqlPaciente);
             $consultaPaciente->execute([':id' => $id]);
@@ -212,20 +209,9 @@ class Paciente
 
             // Eliminamos el transportable solamente si no está
             // relacionado con elementos ni con traslados.
-            $sqlTransportable = "
-                DELETE FROM transportable
-                WHERE id_transportable = :id
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM elemento
-                    WHERE elemento.id_transportable = transportable.id_transportable
-                )
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM transporta
-                    WHERE transporta.id_transportable = transportable.id_transportable
-                )
-            ";
+            $sqlTransportable = " DELETE FROM transportable WHERE id_transportable = :id AND NOT EXISTS 
+            (SELECT 1 FROM elemento WHERE elemento.id_transportable = transportable.id_transportable)
+                AND NOT EXISTS (SELECT 1 FROM transporta WHERE transporta.id_transportable = transportable.id_transportable)";
 
             $consultaTransportable = $this->conexion->prepare($sqlTransportable);
             $consultaTransportable->execute([':id' => $id]);

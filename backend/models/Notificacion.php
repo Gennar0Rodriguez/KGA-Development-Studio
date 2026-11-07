@@ -13,7 +13,6 @@ class Notificacion
     // ======================================================
     // OBTENER NOTIFICACIONES DE UN USUARIO
     // ======================================================
-
     public function obtenerPorUsuario(string $ciReceptor): array {
 
         $sql = "SELECT
@@ -39,11 +38,9 @@ class Notificacion
         return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
     // ======================================================
     // CREAR UNA NOTIFICACIÓN
     // ======================================================
-
     public function crear(
         string $idTraslado,
         string $ciChofer,
@@ -111,11 +108,9 @@ class Notificacion
         return $sentencia->execute();
     }
 
-
     // ======================================================
     // NOTIFICAR A TODOS LOS ADMINISTRADORES
     // ======================================================
-
     public function notificarATodos(
         string $idTraslado,
         string $ciChofer,
@@ -172,11 +167,9 @@ class Notificacion
         }
     }
 
-
     // ======================================================
     // MARCAR UNA NOTIFICACIÓN COMO LEÍDA
     // ======================================================
-
     public function marcarComoLeida(array $datos, string $ciReceptor): bool {
 
         $sql = "UPDATE notifica
@@ -202,11 +195,9 @@ class Notificacion
         return $sentencia->execute();
     }
 
-
     // ======================================================
     // ELIMINAR UNA NOTIFICACIÓN
     // ======================================================
-
     public function eliminar(array $datos, string $ciReceptor): bool {
 
         $sql = "DELETE FROM notifica

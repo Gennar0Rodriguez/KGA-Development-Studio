@@ -13,9 +13,7 @@ class Ambulancia
 
     public function obtenerTodas(): array
     {
-        $sql = "SELECT matricula, modelo, capacidad, tipo_vehiculo, camilla
-                FROM vehiculo
-                ORDER BY matricula";
+        $sql = "SELECT matricula, modelo, capacidad, tipo_vehiculo, camilla FROM vehiculo ORDER BY matricula";
 
         $consulta = $this->conexion->prepare($sql);
         $consulta->execute();
@@ -30,9 +28,7 @@ class Ambulancia
         string $tipo,
         bool $camilla
     ): bool {
-        $sql = "INSERT INTO vehiculo
-                (matricula, modelo, capacidad, tipo_vehiculo, camilla)
-                VALUES (:mat, :mod, :cap, :tipo, :cam)";
+        $sql = "INSERT INTO vehiculo (matricula, modelo, capacidad, tipo_vehiculo, camilla) VALUES (:mat, :mod, :cap, :tipo, :cam)";
 
         $consulta = $this->conexion->prepare($sql);
 
@@ -54,12 +50,7 @@ class Ambulancia
         string $tipo,
         bool $camilla
     ): bool {
-        $sql = "UPDATE vehiculo
-                SET modelo = :mod,
-                    capacidad = :cap,
-                    tipo_vehiculo = :tipo,
-                    camilla = :cam
-                WHERE matricula = :mat";
+        $sql = "UPDATE vehiculo SET modelo = :mod, capacidad = :cap, tipo_vehiculo = :tipo, camilla = :cam WHERE matricula = :mat";
 
         $consulta = $this->conexion->prepare($sql);
 

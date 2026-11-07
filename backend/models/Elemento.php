@@ -16,9 +16,7 @@ class Elemento
         do {
             $id = 'TRP' . strtoupper(bin2hex(random_bytes(4)));
 
-            $sql = "SELECT COUNT(*)
-                    FROM transportable
-                    WHERE id_transportable = :id";
+            $sql = "SELECT COUNT(*) FROM transportable WHERE id_transportable = :id";
 
             $consulta = $this->conexion->prepare($sql);
             $consulta->execute([':id' => $id]);
@@ -32,13 +30,8 @@ class Elemento
 
     public function obtenerTodos(): array
     {
-        $sql = "SELECT
-                    el.id_transportable,
-                    el.nombre_elemento,
-                    el.descripcion_elemento,
-                    el.tipo_elemento,
-                    t.ci_enfermero,
-                    CONCAT(e.nombre_enfermero, ' ', e.apellido_enfermero)
+        $sql = "SELECT el.id_transportable, el.nombre_elemento, el.descripcion_elemento, el.tipo_elemento, t.ci_enfermero,
+        CONCAT(e.nombre_enfermero, ' ', e.apellido_enfermero)
                         AS nombre_enfermero,
                     t.habitacion_retiro,
                     t.piso_retiro
@@ -60,9 +53,7 @@ class Elemento
         try {
             $this->conexion->beginTransaction();
 
-            $sqlEnfermero = "SELECT COUNT(*)
-                             FROM enfermero
-                             WHERE ci_enfermero = :ci";
+            $sqlEnfermero = "SELECT COUNT(*) FROM enfermero WHERE ci_enfermero = :ci";
 
             $consultaEnfermero = $this->conexion->prepare($sqlEnfermero);
             $consultaEnfermero->execute([
@@ -77,9 +68,7 @@ class Elemento
 
             $idTransportable = $this->generarIdTransportable();
 
-            $sqlTransportable = "INSERT INTO transportable
-                (id_transportable, ci_enfermero, habitacion_retiro, piso_retiro)
-                VALUES (:id, :enfermero, :habitacion, :piso)";
+            $sqlTransportable = "INSERT INTO transportable (id_transportable, ci_enfermero, habitacion_retiro, piso_retiro) VALUES (:id, :enfermero, :habitacion, :piso)";
 
             $consultaTransportable = $this->conexion->prepare($sqlTransportable);
 
@@ -90,9 +79,7 @@ class Elemento
                 ':piso' => $datos['piso_retiro']
             ]);
 
-            $sqlElemento = "INSERT INTO elemento
-                (id_transportable, nombre_elemento, descripcion_elemento, tipo_elemento)
-                VALUES (:id, :nombre, :descripcion, :tipo)";
+            $sqlElemento = "INSERT INTO elemento (id_transportable, nombre_elemento, descripcion_elemento, tipo_elemento) VALUES (:id, :nombre, :descripcion, :tipo)";
 
             $consultaElemento = $this->conexion->prepare($sqlElemento);
 
@@ -122,9 +109,7 @@ class Elemento
             $this->conexion->beginTransaction();
 
             // Comprobamos que el enfermero exista.
-            $sqlEnfermero = "SELECT COUNT(*)
-                             FROM enfermero
-                             WHERE ci_enfermero = :ci";
+            $sqlEnfermero = "SELECT COUNT(*) FROM enfermero WHERE ci_enfermero = :ci";
 
             $consultaEnfermero = $this->conexion->prepare($sqlEnfermero);
             $consultaEnfermero->execute([

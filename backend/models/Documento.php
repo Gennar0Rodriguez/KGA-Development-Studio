@@ -14,7 +14,6 @@ class Documento
     // ======================================================
     // OBTENER TODOS LOS DOCUMENTOS
     // ======================================================
-
     public function obtenerTodos(): array
     {
         $sql = "SELECT
@@ -42,7 +41,6 @@ class Documento
     // ======================================================
     // BUSCAR UN DOCUMENTO POR ID
     // ======================================================
-
     public function buscarPorId(string $idDoc): ?array
     {
         $sql = "SELECT
@@ -69,7 +67,6 @@ class Documento
     // ======================================================
     // CREAR UN DOCUMENTO
     // ======================================================
-
     public function crear(
         string $idDoc,
         string $idCat,
@@ -174,7 +171,6 @@ public function actualizar(
     // ======================================================
     // ELIMINAR UN DOCUMENTO
     // ======================================================
-
     public function eliminar(string $idDoc): bool
     {
         try {

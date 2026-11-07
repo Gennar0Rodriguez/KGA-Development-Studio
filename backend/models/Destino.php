@@ -13,9 +13,7 @@ class Destino
 
     public function obtenerTodos(): array
     {
-        $sql = "SELECT id_destino, nombre_destino, direccion, ruta
-                FROM destino
-                ORDER BY nombre_destino";
+        $sql = "SELECT id_destino, nombre_destino, direccion, ruta FROM destino ORDER BY nombre_destino";
 
         $consulta = $this->conexion->prepare($sql);
         $consulta->execute();
@@ -44,9 +42,7 @@ class Destino
     {
         $id = $this->generarId();
 
-        $sql = "INSERT INTO destino
-                (id_destino, nombre_destino, direccion, ruta)
-                VALUES (:id, :nombre, :direccion, :ruta)";
+        $sql = "INSERT INTO destino (id_destino, nombre_destino, direccion, ruta) VALUES (:id, :nombre, :direccion, :ruta)";
 
         $consulta = $this->conexion->prepare($sql);
 
@@ -62,11 +58,7 @@ class Destino
 
     public function actualizar(array $datos): bool
     {
-        $sql = "UPDATE destino
-                SET nombre_destino = :nombre,
-                    direccion = :direccion,
-                    ruta = :ruta
-                WHERE id_destino = :id";
+        $sql = "UPDATE destino SET nombre_destino = :nombre, direccion = :direccion, ruta = :ruta WHERE id_destino = :id";
 
         $consulta = $this->conexion->prepare($sql);
 

@@ -11,7 +11,6 @@ class Traslado
         $this->conexion = Database::getInstancia()->getConexion();
     }
 
-
     // ======================================================
     // GENERAR IDENTIFICADORES
     // ======================================================
@@ -22,9 +21,7 @@ class Traslado
 
             $id = 'TRAS' . strtoupper(bin2hex(random_bytes(4)));
 
-            $sql = "SELECT COUNT(*)
-                    FROM traslado
-                    WHERE id_traslado = :id";
+            $sql = "SELECT COUNT(*) FROM traslado WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $id);
@@ -36,7 +33,6 @@ class Traslado
 
         return $id;
     }
-
 
     private function generarIdTransportable(): string
     {
@@ -44,9 +40,7 @@ class Traslado
 
             $id = 'TRAN' . strtoupper(bin2hex(random_bytes(4)));
 
-            $sql = "SELECT COUNT(*)
-                    FROM transportable
-                    WHERE id_transportable = :id";
+            $sql = "SELECT COUNT(*) FROM transportable WHERE id_transportable = :id";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $id);
@@ -58,7 +52,6 @@ class Traslado
 
         return $id;
     }
-
 
     // ======================================================
     // NORMALIZAR ESTADO
@@ -91,7 +84,6 @@ class Traslado
         return 'en proceso';
     }
 
-
     // ======================================================
     // COMPROBAR SI EL CHOFER PUEDE UTILIZAR EL VEHÍCULO
     // ======================================================
@@ -101,10 +93,7 @@ class Traslado
         string $matricula
     ): bool {
 
-        $sql = "SELECT COUNT(*)
-                FROM conduce
-                WHERE ci_chofer = :ci
-                AND matricula = :matricula";
+        $sql = "SELECT COUNT(*) FROM conduce WHERE ci_chofer = :ci AND matricula = :matricula";
 
         $sentencia = $this->conexion->prepare($sql);
 
@@ -115,7 +104,6 @@ class Traslado
 
         return $sentencia->fetchColumn() > 0;
     }
-
 
     // ======================================================
     // OBTENER TODOS LOS TRASLADOS
@@ -131,84 +119,9 @@ class Traslado
          * qué información debe mostrar en cada tarjeta.
          */
 
-        $sql = "SELECT
-                    t.id_traslado,
-                    t.matricula,
-                    t.fecha_traslado,
-                    t.hora_salida,
-                    t.hora_llegada,
-                    t.lugar_origen,
-                    t.observaciones,
-                    t.estado_traslado,
-                    t.estado_solicitud,
-                    t.ci_solicitante,
-                    t.id_destino,
-                    t.ci_chofer,
-
-                    d.nombre_destino,
-
-                    CONCAT(
-                        ch.nombre_chofer,
-                        ' ',
-                        ch.apellido_chofer
-                    ) AS chofer,
-
-                    CONCAT(
-                        enf.nombre_enfermero,
-                        ' ',
-                        enf.apellido_enfermero
-                    ) AS enfermero,
-
-                    enf.ci_enfermero,
-
-                    tr.id_transportable,
-
-                    CASE
-                        WHEN p.id_transportable IS NOT NULL
-                            THEN 'paciente'
-                        WHEN el.id_transportable IS NOT NULL
-                            THEN 'organo'
-                        ELSE 'desconocido'
-                    END AS tipo_transportable,
-
-                    p.nombre_paciente,
-                    p.ci_paciente,
-                    p.oxigeno,
-
-                    el.nombre_elemento,
-                    el.descripcion_elemento,
-                    el.tipo_elemento
-
-                FROM traslado t
-
-                LEFT JOIN destino d
-                    ON t.id_destino = d.id_destino
-
-                LEFT JOIN chofer ch
-                    ON t.ci_chofer = ch.ci_chofer
-
-                LEFT JOIN transporta tr
-                    ON t.id_traslado = tr.id_traslado
-
-                LEFT JOIN transportable tr_able
-                    ON tr.id_transportable = tr_able.id_transportable
-
-                LEFT JOIN enfermero enf
-                    ON tr_able.ci_enfermero = enf.ci_enfermero
-
-                LEFT JOIN paciente p
-                    ON tr_able.id_transportable = p.id_transportable
-
-                LEFT JOIN elemento el
-                    ON tr_able.id_transportable = el.id_transportable
-
-                " . ($ciSolicitante !== null
+        $sql = "SELECT t.id_traslado, t.matricula, t.fecha_traslado, t.hora_salida, t.hora_llegada, t.lugar_origen, t.observaciones, t.estado_traslado, t.estado_solicitud, t.ci_solicitante, t.id_destino, t.ci_chofer, d.nombre_destino, CONCAT( ch.nombre_chofer, ' ', ch.apellido_chofer ) AS chofer, CONCAT( enf.nombre_enfermero, ' ', enf.apellido_enfermero ) AS enfermero, enf.ci_enfermero, tr.id_transportable, CASE WHEN p.id_transportable IS NOT NULL THEN 'paciente' WHEN el.id_transportable IS NOT NULL THEN 'organo' ELSE 'desconocido' END AS tipo_transportable, p.nombre_paciente, p.ci_paciente, p.oxigeno, el.nombre_elemento, el.descripcion_elemento, el.tipo_elemento FROM traslado t LEFT JOIN destino d ON t.id_destino = d.id_destino LEFT JOIN chofer ch ON t.ci_chofer = ch.ci_chofer LEFT JOIN transporta tr ON t.id_traslado = tr.id_traslado LEFT JOIN transportable tr_able ON tr.id_transportable = tr_able.id_transportable LEFT JOIN enfermero enf ON tr_able.ci_enfermero = enf.ci_enfermero LEFT JOIN paciente p ON tr_able.id_transportable = p.id_transportable LEFT JOIN elemento el ON tr_able.id_transportable = el.id_transportable " . ($ciSolicitante !== null
                     ? "WHERE t.ci_solicitante = :ci_solicitante"
-                    : "") . "
-
-                ORDER BY
-                    t.fecha_traslado DESC,
-                    t.hora_salida DESC";
+                    : "") . " ORDER BY t.fecha_traslado DESC, t.hora_salida DESC";
 
         $sentencia = $this->conexion->prepare($sql);
 
@@ -221,68 +134,46 @@ class Traslado
         return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
     // ======================================================
     // OBTENER OPCIONES PARA EL FORMULARIO
     // ======================================================
 
             public function obtenerListasAuxiliares(): array{
             // Obtener vehículos disponibles.
-            $sql = "SELECT matricula, modelo
-                    FROM vehiculo";
+            $sql = "SELECT matricula, modelo FROM vehiculo";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->execute();
             $vehiculos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
-
             // Obtener conductores registrados.
-            $sql = "SELECT
-                        ci_chofer,
-                        nombre_chofer,
-                        apellido_chofer
-                    FROM chofer";
+            $sql = "SELECT ci_chofer, nombre_chofer, apellido_chofer FROM chofer";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->execute();
             $choferes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
-
             // Obtener enfermeros registrados.
-            $sql = "SELECT
-                        ci_enfermero,
-                        nombre_enfermero,
-                        apellido_enfermero
-                    FROM enfermero";
+            $sql = "SELECT ci_enfermero, nombre_enfermero, apellido_enfermero FROM enfermero";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->execute();
             $enfermeros = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
-
             // Obtener destinos disponibles.
-            $sql = "SELECT
-                        id_destino,
-                        nombre_destino
-                    FROM destino";
+            $sql = "SELECT id_destino, nombre_destino FROM destino";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->execute();
             $destinos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
-
             // Obtener pacientes registrados.
             // DISTINCT evita repetir una misma combinación de CI y nombre.
-            $sql = "SELECT DISTINCT
-                        ci_paciente,
-                        nombre_paciente
-                    FROM paciente
-                    ORDER BY nombre_paciente";
+            $sql = "SELECT DISTINCT ci_paciente, nombre_paciente FROM paciente ORDER BY nombre_paciente";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->execute();
             $pacientes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
-
 
             // Devolver todas las listas que utiliza el formulario.
             return [
@@ -293,7 +184,6 @@ class Traslado
                 'pacientes' => $pacientes ?: []
             ];
         }
-
 
     // ======================================================
     // CREAR UN TRASLADO
@@ -330,10 +220,7 @@ class Traslado
                 }
 
                 // Comprobar que la combinación CI-nombre exista en la base.
-                $sqlValidarPaciente = "SELECT COUNT(*)
-                                    FROM paciente
-                                    WHERE ci_paciente = :ci
-                                    AND nombre_paciente = :nombre";
+                $sqlValidarPaciente = "SELECT COUNT(*) FROM paciente WHERE ci_paciente = :ci AND nombre_paciente = :nombre";
 
                 $sentenciaValidar = $this->conexion->prepare($sqlValidarPaciente);
 
@@ -362,7 +249,6 @@ class Traslado
                 return false;
             }
 
-
             $this->conexion->beginTransaction();
 
             $idTraslado = $this->generarIdTraslado();
@@ -374,37 +260,11 @@ class Traslado
 
             $estadoTraslado = $esAdmin ? 'aprobado' : 'pendiente';
 
-
             // ----------------------------------------------
             // INSERTAR TRASLADO
             // ----------------------------------------------
 
-            $sqlTraslado = "INSERT INTO traslado (
-                                id_traslado,
-                                ci_chofer,
-                                matricula,
-                                id_destino,
-                                fecha_traslado,
-                                hora_salida,
-                                lugar_origen,
-                                estado_traslado,
-                                ci_solicitante,
-                                estado_solicitud,
-                                observaciones
-                            )
-                            VALUES (
-                                :id,
-                                :ci_chofer,
-                                :matricula,
-                                :id_destino,
-                                :fecha,
-                                :hora,
-                                :origen,
-                                :estado,
-                                :ci_solicitante,
-                                :estado_solicitud,
-                                :observaciones
-                            )";
+            $sqlTraslado = "INSERT INTO traslado ( id_traslado, ci_chofer, matricula, id_destino, fecha_traslado, hora_salida, lugar_origen, estado_traslado, ci_solicitante, estado_solicitud, observaciones ) VALUES ( :id, :ci_chofer, :matricula, :id_destino, :fecha, :hora, :origen, :estado, :ci_solicitante, :estado_solicitud, :observaciones )";
 
             $sentencia = $this->conexion->prepare($sqlTraslado);
 
@@ -437,7 +297,6 @@ class Traslado
 
             $sentencia->execute();
 
-
             // ----------------------------------------------
             // INSERTAR TRANSPORTABLE
             // ----------------------------------------------
@@ -448,18 +307,7 @@ class Traslado
              * con el transportable en ambos casos.
              */
 
-            $sqlTransportable = "INSERT INTO transportable (
-                                    id_transportable,
-                                    ci_enfermero,
-                                    habitacion_retiro,
-                                    piso_retiro
-                                 )
-                                 VALUES (
-                                    :id,
-                                    :ci_enfermero,
-                                    '101',
-                                    '1'
-                                 )";
+            $sqlTransportable = "INSERT INTO transportable ( id_transportable, ci_enfermero, habitacion_retiro, piso_retiro ) VALUES ( :id, :ci_enfermero, '101', '1' )";
 
             $sentencia = $this->conexion->prepare($sqlTransportable);
 
@@ -467,7 +315,6 @@ class Traslado
             $sentencia->bindValue(':ci_enfermero', $datos['ci_enfermero']);
 
             $sentencia->execute();
-
 
             // ----------------------------------------------
             // INSERTAR PACIENTE U ÓRGANO
@@ -477,22 +324,7 @@ class Traslado
 
                 // Guardar los datos en la tabla paciente.
 
-                $sqlPaciente = "INSERT INTO paciente (
-                                    id_transportable,
-                                    ci_paciente,
-                                    nombre_paciente,
-                                    accesorio,
-                                    oxigeno,
-                                    aislamiento
-                                )
-                                VALUES (
-                                    :id,
-                                    :ci_paciente,
-                                    :nombre,
-                                    'silla',
-                                    :oxigeno,
-                                    FALSE
-                                )";
+                $sqlPaciente = "INSERT INTO paciente ( id_transportable, ci_paciente, nombre_paciente, accesorio, oxigeno, aislamiento ) VALUES ( :id, :ci_paciente, :nombre, 'silla', :oxigeno, FALSE )";
 
                 $sentencia = $this->conexion->prepare($sqlPaciente);
 
@@ -524,18 +356,7 @@ class Traslado
                 // Guardar los datos en la tabla elemento.
                 // El tipo se establece como 'organo' según el MER.
 
-                $sqlElemento = "INSERT INTO elemento (
-                                    id_transportable,
-                                    nombre_elemento,
-                                    descripcion_elemento,
-                                    tipo_elemento
-                                )
-                                VALUES (
-                                    :id,
-                                    :nombre,
-                                    :descripcion,
-                                    'organo'
-                                )";
+                $sqlElemento = "INSERT INTO elemento ( id_transportable, nombre_elemento, descripcion_elemento, tipo_elemento ) VALUES ( :id, :nombre, :descripcion, 'organo' )";
 
                 $sentencia = $this->conexion->prepare($sqlElemento);
 
@@ -555,25 +376,11 @@ class Traslado
 
             }
 
-
             // ----------------------------------------------
             // RELACIONAR TRASLADO Y TRANSPORTABLE
             // ----------------------------------------------
 
-            $sqlTransporta = "INSERT INTO transporta (
-                                id_transportable,
-                                id_traslado,
-                                ci_chofer,
-                                matricula,
-                                id_destino
-                              )
-                              VALUES (
-                                :id_transportable,
-                                :id_traslado,
-                                :ci_chofer,
-                                :matricula,
-                                :id_destino
-                              )";
+            $sqlTransporta = "INSERT INTO transporta ( id_transportable, id_traslado, ci_chofer, matricula, id_destino ) VALUES ( :id_transportable, :id_traslado, :ci_chofer, :matricula, :id_destino )";
 
             $sentencia = $this->conexion->prepare($sqlTransporta);
 
@@ -584,7 +391,6 @@ class Traslado
             $sentencia->bindValue(':id_destino', $datos['id_destino']);
 
             $sentencia->execute();
-
 
             // ----------------------------------------------
             // NOTIFICAR A LOS ADMINISTRADORES
@@ -632,7 +438,6 @@ class Traslado
         }
     }
 
-
     // ======================================================
     // APROBAR O RECHAZAR UNA SOLICITUD
     // ======================================================
@@ -649,15 +454,7 @@ class Traslado
 
         // Se pueden resolver solicitudes pendientes y volver a aprobar
         // aquellas que anteriormente fueron rechazadas.
-        $sql = "SELECT
-                    ci_solicitante,
-                    ci_chofer,
-                    matricula,
-                    id_destino
-                FROM traslado
-                WHERE id_traslado = :id
-                AND estado_solicitud IN ('pendiente', 'rechazado')
-                FOR UPDATE";
+        $sql = "SELECT ci_solicitante, ci_chofer, matricula, id_destino FROM traslado WHERE id_traslado = :id AND estado_solicitud IN ('pendiente', 'rechazado') FOR UPDATE";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $idTraslado);
@@ -676,12 +473,8 @@ class Traslado
                 $estadoSolicitud === 'aprobado'
             ) ? 'aprobado' : 'denegado';
 
-
             // Actualizar los dos estados.
-            $sql = "UPDATE traslado
-                    SET estado_solicitud = :estado_solicitud,
-                        estado_traslado = :estado_traslado
-                    WHERE id_traslado = :id";
+            $sql = "UPDATE traslado SET estado_solicitud = :estado_solicitud, estado_traslado = :estado_traslado WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sql);
 
@@ -690,7 +483,6 @@ class Traslado
             $sentencia->bindValue(':id', $idTraslado);
 
             $sentencia->execute();
-
 
             // ----------------------------------------------
             // NOTIFICAR AL EMPLEADO SOLICITANTE
@@ -744,7 +536,6 @@ class Traslado
         }
     }
 
-
     // ======================================================
     // ACTUALIZAR UN TRASLADO
     // ======================================================
@@ -773,10 +564,7 @@ class Traslado
             }
 
             // La combinación debe existir antes de actualizar el traslado.
-            $sqlValidarPaciente = "SELECT COUNT(*)
-                                FROM paciente
-                                WHERE ci_paciente = :ci
-                                AND nombre_paciente = :nombre";
+            $sqlValidarPaciente = "SELECT COUNT(*) FROM paciente WHERE ci_paciente = :ci AND nombre_paciente = :nombre";
 
             $sentenciaValidar = $this->conexion->prepare($sqlValidarPaciente);
 
@@ -804,27 +592,17 @@ class Traslado
                 return false;
             }
 
-
             $this->conexion->beginTransaction();
 
             $estadoTraslado = $this->normalizarEstado(
                 $datos['estado'] ?? ''
             );
 
-
             // ----------------------------------------------
             // ACTUALIZAR TRASLADO
             // ----------------------------------------------
 
-            $sqlTraslado = "UPDATE traslado
-                            SET ci_chofer = :ci_chofer,
-                                matricula = :matricula,
-                                id_destino = :id_destino,
-                                fecha_traslado = :fecha,
-                                hora_salida = :hora,
-                                observaciones = :observaciones,
-                                estado_traslado = :estado
-                            WHERE id_traslado = :id";
+            $sqlTraslado = "UPDATE traslado SET ci_chofer = :ci_chofer, matricula = :matricula, id_destino = :id_destino, fecha_traslado = :fecha, hora_salida = :hora, observaciones = :observaciones, estado_traslado = :estado WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sqlTraslado);
 
@@ -851,17 +629,11 @@ class Traslado
 
             $sentencia->execute();
 
-
             // ----------------------------------------------
             // ACTUALIZAR RELACIÓN TRANSPORTA
             // ----------------------------------------------
 
-            $sqlTransporta = "UPDATE transporta
-                              SET ci_chofer = :ci_chofer,
-                                  matricula = :matricula,
-                                  id_destino = :id_destino
-                              WHERE id_traslado = :id_traslado
-                              AND id_transportable = :id_transportable";
+            $sqlTransporta = "UPDATE transporta SET ci_chofer = :ci_chofer, matricula = :matricula, id_destino = :id_destino WHERE id_traslado = :id_traslado AND id_transportable = :id_transportable";
 
             $sentencia = $this->conexion->prepare($sqlTransporta);
 
@@ -876,16 +648,11 @@ class Traslado
 
             $sentencia->execute();
 
-
             // ----------------------------------------------
             // ACTUALIZAR NOTIFICACIONES
             // ----------------------------------------------
 
-            $sqlNotificaciones = "UPDATE notifica
-                                  SET ci_chofer = :ci_chofer,
-                                      matricula = :matricula,
-                                      id_destino = :id_destino
-                                  WHERE id_traslado = :id";
+            $sqlNotificaciones = "UPDATE notifica SET ci_chofer = :ci_chofer, matricula = :matricula, id_destino = :id_destino WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sqlNotificaciones);
 
@@ -896,14 +663,11 @@ class Traslado
 
             $sentencia->execute();
 
-
             // ----------------------------------------------
             // ACTUALIZAR ENFERMERO
             // ----------------------------------------------
 
-            $sqlEnfermero = "UPDATE transportable
-                             SET ci_enfermero = :ci_enfermero
-                             WHERE id_transportable = :id";
+            $sqlEnfermero = "UPDATE transportable SET ci_enfermero = :ci_enfermero WHERE id_transportable = :id";
 
             $sentencia = $this->conexion->prepare($sqlEnfermero);
 
@@ -911,7 +675,6 @@ class Traslado
             $sentencia->bindValue(':id', $datos['id_transportable']);
 
             $sentencia->execute();
-
 
             // ----------------------------------------------
             // ACTUALIZAR PACIENTE U ÓRGANO
@@ -926,40 +689,21 @@ class Traslado
              * un órgano, o viceversa.
              */
 
-            $sqlEliminarPaciente = "DELETE FROM paciente
-                                    WHERE id_transportable = :id";
+            $sqlEliminarPaciente = "DELETE FROM paciente WHERE id_transportable = :id";
 
             $sentencia = $this->conexion->prepare($sqlEliminarPaciente);
             $sentencia->bindValue(':id', $datos['id_transportable']);
             $sentencia->execute();
 
-
-            $sqlEliminarElemento = "DELETE FROM elemento
-                                    WHERE id_transportable = :id";
+            $sqlEliminarElemento = "DELETE FROM elemento WHERE id_transportable = :id";
 
             $sentencia = $this->conexion->prepare($sqlEliminarElemento);
             $sentencia->bindValue(':id', $datos['id_transportable']);
             $sentencia->execute();
 
-
             if ($tipoTransportable === 'paciente') {
 
-                $sqlPaciente = "INSERT INTO paciente (
-                                    id_transportable,
-                                    ci_paciente,
-                                    nombre_paciente,
-                                    accesorio,
-                                    oxigeno,
-                                    aislamiento
-                                )
-                                VALUES (
-                                    :id,
-                                    :ci_paciente,
-                                    :nombre,
-                                    'silla',
-                                    :oxigeno,
-                                    FALSE
-                                )";
+                $sqlPaciente = "INSERT INTO paciente ( id_transportable, ci_paciente, nombre_paciente, accesorio, oxigeno, aislamiento ) VALUES ( :id, :ci_paciente, :nombre, 'silla', :oxigeno, FALSE )";
 
                 $sentencia = $this->conexion->prepare($sqlPaciente);
 
@@ -992,18 +736,7 @@ class Traslado
 
             } else {
 
-                $sqlElemento = "INSERT INTO elemento (
-                                    id_transportable,
-                                    nombre_elemento,
-                                    descripcion_elemento,
-                                    tipo_elemento
-                                )
-                                VALUES (
-                                    :id,
-                                    :nombre,
-                                    :descripcion,
-                                    'organo'
-                                )";
+                $sqlElemento = "INSERT INTO elemento ( id_transportable, nombre_elemento, descripcion_elemento, tipo_elemento ) VALUES ( :id, :nombre, :descripcion, 'organo' )";
 
                 $sentencia = $this->conexion->prepare($sqlElemento);
 
@@ -1026,7 +759,6 @@ class Traslado
 
             }
 
-
             $this->conexion->commit();
 
             return true;
@@ -1043,7 +775,6 @@ class Traslado
         }
     }
 
-
     // ======================================================
     // ELIMINAR UN TRASLADO
     // ======================================================
@@ -1055,9 +786,7 @@ class Traslado
             $this->conexion->beginTransaction();
 
             // Recuperar los transportables relacionados.
-            $sql = "SELECT id_transportable
-                    FROM transporta
-                    WHERE id_traslado = :id";
+            $sql = "SELECT id_transportable FROM transporta WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $idTraslado);
@@ -1065,41 +794,32 @@ class Traslado
 
             $transportables = $sentencia->fetchAll(PDO::FETCH_COLUMN);
 
-
             // Eliminar notificaciones relacionadas.
-            $sql = "DELETE FROM notifica
-                    WHERE id_traslado = :id";
+            $sql = "DELETE FROM notifica WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $idTraslado);
             $sentencia->execute();
-
 
             // Eliminar relaciones.
-            $sql = "DELETE FROM transporta
-                    WHERE id_traslado = :id";
+            $sql = "DELETE FROM transporta WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $idTraslado);
             $sentencia->execute();
-
 
             // Eliminar traslado.
-            $sql = "DELETE FROM traslado
-                    WHERE id_traslado = :id";
+            $sql = "DELETE FROM traslado WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $idTraslado);
             $sentencia->execute();
-
 
             // Eliminar transportables que ya no estén asociados
             // a ningún otro traslado.
             foreach ($transportables as $idTransportable) {
 
-                $sql = "SELECT COUNT(*)
-                        FROM transporta
-                        WHERE id_transportable = :id";
+                $sql = "SELECT COUNT(*) FROM transporta WHERE id_transportable = :id";
 
                 $sentencia = $this->conexion->prepare($sql);
                 $sentencia->bindValue(':id', $idTransportable);
@@ -1110,26 +830,21 @@ class Traslado
                 if (!$sigueUtilizado) {
 
                     // Eliminar paciente si existe.
-                    $sql = "DELETE FROM paciente
-                            WHERE id_transportable = :id";
+                    $sql = "DELETE FROM paciente WHERE id_transportable = :id";
 
                     $sentencia = $this->conexion->prepare($sql);
                     $sentencia->bindValue(':id', $idTransportable);
                     $sentencia->execute();
-
 
                     // Eliminar elemento si existe.
-                    $sql = "DELETE FROM elemento
-                            WHERE id_transportable = :id";
+                    $sql = "DELETE FROM elemento WHERE id_transportable = :id";
 
                     $sentencia = $this->conexion->prepare($sql);
                     $sentencia->bindValue(':id', $idTransportable);
                     $sentencia->execute();
 
-
                     // Eliminar transportable.
-                    $sql = "DELETE FROM transportable
-                            WHERE id_transportable = :id";
+                    $sql = "DELETE FROM transportable WHERE id_transportable = :id";
 
                     $sentencia = $this->conexion->prepare($sql);
                     $sentencia->bindValue(':id', $idTransportable);
