@@ -1,3 +1,4 @@
+
 <?php
 
 require_once __DIR__ . '/../config/database.php';
@@ -55,7 +56,6 @@ class Enfermero
 
         // Si no hubo cambios, comprobamos que el enfermero exista.
         if ($consulta->rowCount() === 0) {
-
             $sql = "SELECT COUNT(*)
                     FROM enfermero
                     WHERE ci_enfermero = :ci";
@@ -81,4 +81,25 @@ class Enfermero
                 WHERE ci_enfermero = :ci";
 
         $consulta = $this->conexion->prepare($sql);
-        $consulta
+        $consulta->execute([
+            ':ci' => $ci
+        ]);
+
+        // Si existen registros asociados, no permitimos eliminarlo.
+        if ((int) $consulta->fetchColumn() > 0) {
+            throw new RuntimeException(
+                'No se puede eliminar el enfermero porque tiene pacientes o elementos asociados.'
+            );
+        }
+
+        $sql = "DELETE FROM enfermero
+                WHERE ci_enfermero = :ci";
+
+        $consulta = $this->conexion->prepare($sql);
+        $consulta->execute([
+            ':ci' => $ci
+        ]);
+
+        return $consulta->rowCount() > 0;
+    }
+}
