@@ -597,3 +597,73 @@ main {
     }
 }
 
+
+
+/* ==========================================
+   MODAL DE CREACIÓN DE ENTIDADES
+========================================== */
+
+#camposEntidad {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+#camposEntidad label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #344256;
+    margin-top: 5px;
+}
+
+#camposEntidad input,
+#camposEntidad select {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid #d5dce5;
+    border-radius: 8px;
+    background: var(--capa-2);
+    color: #344256;
+    font-size: 14px;
+    outline: none;
+}
+
+#camposEntidad input:focus,
+#camposEntidad select:focus {
+    border-color: #159ed0;
+}
+
+#camposEntidad input::placeholder {
+    color: #9aa6b2;
+}
+
+.mensaje-entidad {
+    min-height: 20px;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.mensaje-entidad.exito {
+    color: #168447;
+}
+
+.mensaje-entidad.error {
+    color: #c0392b;
+}
+
+#btnGuardarEntidad:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+
+    #modalNuevaEntidad .modal-traslado-contenido {
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+}

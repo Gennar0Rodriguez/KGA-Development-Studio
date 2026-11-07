@@ -36,6 +36,10 @@
                 <button type="button" class="btn-agregar" id="btnAbrirModalAmbulancia">
                     <i class="fa-solid fa-ambulance"></i> Añadir una ambulancia
                 </button>
+                
+                <button type="button" class="btn-agregar" id="btnAbrirModalEntidad">
+                    <i class="fa-solid fa-users"></i> Añadir entidad
+                </button>
 
                 <input
                     type="text"
@@ -376,6 +380,72 @@
 
         </div>
 
+        <!-- ==========================================
+     MODAL ÚNICO PARA CREAR ENTIDADES
+=========================================== -->
+
+<div id="modalNuevaEntidad" class="modal-traslado">
+
+    <div class="modal-traslado-contenido">
+
+        <div class="modal-traslado-header">
+
+            <h2>Añadir entidad</h2>
+
+            <button
+                type="button"
+                id="btnCerrarModalEntidad"
+                class="btn-cerrar-traslado">
+                &times;
+            </button>
+
+        </div>
+
+        <form id="formNuevaEntidad">
+
+            <!-- Primero se selecciona qué entidad se quiere crear -->
+
+            <label for="tipoEntidad">¿Qué desea añadir?</label>
+
+            <select id="tipoEntidad" name="tipoEntidad" required>
+
+                <option value="">Seleccione una entidad</option>
+                <option value="chofer">Chofer</option>
+                <option value="paciente">Paciente</option>
+                <option value="destino">Destino</option>
+                <option value="enfermero">Enfermero</option>
+
+            </select>
+
+            <!-- Los campos se generan dinámicamente desde JavaScript -->
+
+            <div id="camposEntidad"></div>
+
+            <p id="mensajeEntidad" class="mensaje-entidad" role="status"></p>
+
+            <div class="acciones-formulario">
+
+                <button
+                    type="button"
+                    id="btnCancelarModalEntidad"
+                    class="btn-cancelar">
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    id="btnGuardarEntidad"
+                    class="btn-guardar"
+                    disabled>
+                    Guardar entidad
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
     </div>
 
 
@@ -384,6 +454,7 @@
     <script src="../js/sidebarEmpleado.js"></script>
     <script src="../js/notificaciones.js"></script>
     <script src="../js/gestionAmbulancias.js"></script>
+    <script src="../js/modalNuevaEntidad.js"></script>
 
 </body>
 </html>
