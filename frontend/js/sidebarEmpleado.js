@@ -70,7 +70,7 @@ function cargarSidebar(usuario, cargo) {
 
                 if (navDoc) navDoc.style.setProperty('display', 'none', 'important');
                 if (navUsu) navUsu.style.setProperty('display', 'none', 'important');
-                if (navEnc) navEnc.style.setProperty('display', 'none', 'important');
+                if (navEnc) navEnc.style.setProperty('display', 'none', 'important');git 
             }
 
             // Evento para avisar que la sidebar y la campanita se cargaron

@@ -740,7 +740,6 @@ function seleccionarFiltro(idCategoria, botonSeleccionado) {
 function aplicarFiltros() {
 
     const inputAdmin = document.getElementById('inputBuscarAdmin');
-
     const inputPublico = document.getElementById('inputBuscarPublico');
 
     const inputBuscar = inputAdmin || inputPublico;
@@ -749,6 +748,7 @@ function aplicarFiltros() {
         .toLowerCase()
         .trim();
 
+    // Filtrar por título, descripción y categoría.
     const documentosFiltrados = todosLosDocumentos.filter(doc => {
 
         const titulo = String(doc.titulo_docs || '').toLowerCase();
@@ -757,29 +757,36 @@ function aplicarFiltros() {
             doc.descripcion_docs || ''
         ).toLowerCase();
 
+        const categoria = String(
+            doc.nombre_cat || ''
+        ).toLowerCase();
+
         const coincideBusqueda =
             titulo.includes(busqueda) ||
-            descripcion.includes(busqueda);
+            descripcion.includes(busqueda) ||
+            categoria.includes(busqueda);
 
         const coincideCategoria =
             categoriaSeleccionada === 'todas' ||
-            doc.id_categoria === categoriaSeleccionada;
+            String(doc.id_categoria) === String(categoriaSeleccionada);
 
         return coincideBusqueda && coincideCategoria;
 
     });
 
-    const esAdmin = Boolean(document.getElementById('inputBuscarAdmin'));
+    // Detectar si estamos en la página del administrador.
+    const esAdmin = Boolean(inputAdmin);
+
+    // Los documentos deshabilitados solamente se muestran al administrador.
     const documentosVisibles = esAdmin
         ? documentosFiltrados
-        : documentosFiltrados.filter(doc => doc.estado_cat === 'activa');
+        : documentosFiltrados.filter(
+            doc => doc.estado_cat === 'activa'
+        );
 
+    // Renderizar cada vista una sola vez.
     renderizarVistaAdmin(documentosVisibles);
     renderizarVistaPublica(documentosVisibles);
-
-    renderizarVistaAdmin(documentosFiltrados);
-
-    renderizarVistaPublica(documentosFiltrados);
 
 }
 
@@ -787,7 +794,6 @@ function aplicarFiltros() {
 // ======================================================
 // TABLA DEL ADMINISTRADOR
 // ======================================================
-
 function renderizarVistaAdmin(lista) {
 
     const tbody = document.querySelector('.tabla-documentos tbody');
@@ -814,33 +820,65 @@ function renderizarVistaAdmin(lista) {
     }
 
     lista.forEach(doc => {
-    const celdaAcciones = document.createElement('td');
 
-            const botonVer = document.createElement('button');
-            botonVer.type = 'button';
-            botonVer.textContent = 'Ver';
-            botonVer.className = 'btn-ver-doc';
-            botonVer.addEventListener('click', () => {
-                verPDF(doc.id_documentos);
-            });
+        // Crear una fila nueva para cada documento.
+        const fila = document.createElement('tr');
 
-            const botonEliminar = document.createElement('button');
-            botonEliminar.type = 'button';
-            botonEliminar.textContent = 'Eliminar';
-            botonEliminar.className = 'btn-eliminar-doc';
-            botonEliminar.addEventListener('click', () => {
-                eliminarDocumento(doc.id_documentos);
-            });
+        // Columna: Documento.
+        const celdaTitulo = document.createElement('td');
 
-            celdaAcciones.appendChild(botonVer);
-            celdaAcciones.appendChild(botonEliminar);
+        celdaTitulo.textContent = doc.titulo_docs || 'Sin título';
 
+        // Columna: Categoría.
+        const celdaCategoria = document.createElement('td');
 
+        celdaCategoria.textContent = doc.nombre_cat || 'Sin categoría';
+
+        // Columna: Fecha.
+        const celdaFecha = document.createElement('td');
+
+        celdaFecha.textContent = formatearFecha(doc.fecha);
+
+        // Columna: Acciones.
+        const celdaAcciones = document.createElement('td');
+
+        // Botón para visualizar el PDF.
+        const botonVer = document.createElement('button');
+
+        botonVer.type = 'button';
+        botonVer.textContent = 'Ver';
+        botonVer.className = 'btn-ver-doc';
+
+        botonVer.addEventListener('click', () => {
+
+            verPDF(doc.id_documentos);
+
+        });
+
+        // Botón para eliminar el documento.
+        const botonEliminar = document.createElement('button');
+
+        botonEliminar.type = 'button';
+        botonEliminar.textContent = 'Eliminar';
+        botonEliminar.className = 'btn-eliminar-doc';
+
+        botonEliminar.addEventListener('click', () => {
+
+            eliminarDocumento(doc.id_documentos);
+
+        });
+
+        // Agregar los botones a la columna de acciones.
+        celdaAcciones.appendChild(botonVer);
+        celdaAcciones.appendChild(botonEliminar);
+
+        // Agregar las cuatro columnas a la fila.
         fila.appendChild(celdaTitulo);
         fila.appendChild(celdaCategoria);
         fila.appendChild(celdaFecha);
         fila.appendChild(celdaAcciones);
 
+        // Agregar la fila a la tabla.
         tbody.appendChild(fila);
 
     });
