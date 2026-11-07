@@ -43,6 +43,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 verificarAdministrador();
 
+// GET: devuelve todos los pacientes registrados.
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+
+    try {
+
+        $paciente = new Paciente();
+
+        responderJson($paciente->obtenerTodos());
+
+    } catch (Throwable $error) {
+
+        error_log($error->getMessage());
+
+        responderJson([
+            'mensaje' => 'Ocurrió un error al consultar los pacientes.'
+        ], 500);
+
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     responderJson(['mensaje' => 'Método no permitido.'], 405);
 }

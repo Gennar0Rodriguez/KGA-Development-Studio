@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Administrar Entidades | SIGSM</title>
+
+    <link rel="icon" href="../logo/hospital de clinicaslogo.png">
+
+    <!-- Reutilizamos el diseño de Administrar Usuarios. -->
+    <link rel="stylesheet" href="../css/stylesadministrarUsuarios.css">
+
+    <!-- Estilos propios de esta página. -->
+    <link rel="stylesheet" href="../css/stylesadministrarEntidades.css">
+
+    <link rel="stylesheet" href="../css/stylesnotificaciones.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&family=Lexend:wght@100..900&display=swap"
+          rel="stylesheet">
+</head>
+
+<body>
+
+    <header>
+        <img src="../logo/hospital de clinicaslogo.png" alt="Logo">
+        <h1>Administración de Entidades</h1>
+        <div></div>
+    </header>
+
+    <hr>
+
+    <div class="layout">
+
+        <!-- El sidebar se carga desde sidebarAdmin.js. -->
+        <div id="sidebar"></div>
+
+        <main>
+
+            <!-- Buscador y selector de entidad. -->
+            <div class="topbar">
+
+                <input
+                    type="text"
+                    id="inputBuscar"
+                    placeholder="Buscar en los registros..."
+                    autocomplete="off"
+                >
+
+                <select id="selectEntidad">
+                    <option value="enfermero">Enfermeros</option>
+                    <option value="chofer">Choferes</option>
+                    <option value="elemento">Elementos</option>
+                    <option value="paciente">Pacientes</option>
+                    <option value="destino">Destinos</option>
+                    <option value="vehiculo">Vehículos / Ambulancias</option>
+                </select>
+
+            </div>
+
+            <div class="contenido">
+
+                <section class="usuarios">
+
+                    <div class="encabezado-entidades">
+
+                        <div>
+                            <h2 id="tituloEntidad">Enfermeros registrados</h2>
+                            <p id="descripcionEntidad">
+                                Listado de enfermeros registrados en el sistema.
+                            </p>
+                        </div>
+
+                        <!-- Cantidad total de registros de la entidad seleccionada. -->
+                        <div class="contador-entidades">
+                            <i class="fa-solid fa-database"></i>
+
+                            <div>
+                                <span id="cantidadEntidades">0</span>
+                                <small>Registros</small>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- La tabla cambia sus columnas según la entidad. -->
+                    <div class="tabla-responsive">
+
+                        <table class="tabla-usuarios">
+
+                            <thead id="tablaEntidadesHead">
+                            </thead>
+
+                            <tbody id="tablaEntidadesBody">
+                                <tr>
+                                    <td class="mensaje-tabla">
+                                        Cargando registros...
+                                    </td>
+                                </tr>
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <!-- Información y paginación. -->
+                    <div class="pie-tabla">
+
+                        <p id="informacionResultados">
+                            Cargando registros...
+                        </p>
+
+                        <div id="contenedorPaginacion"></div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <script src="../js/administrarEntidades.js"></script>
+    <script src="../js/sidebarAdmin.js"></script>
+    <script src="../js/logout.js"></script>
+    <script src="../js/notificaciones.js"></script>
+
+</body>
+</html>

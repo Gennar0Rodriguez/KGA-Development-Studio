@@ -50,6 +50,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 verificarAdministrador();
 
+
+// GET: devuelve todos los elementos registrados.
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+
+    try {
+
+        $elemento = new Elemento();
+
+        responderJson($elemento->obtenerTodos());
+
+    } catch (Throwable $error) {
+
+        error_log($error->getMessage());
+
+        responderJson([
+            'mensaje' => 'Ocurrió un error al consultar los elementos.'
+        ], 500);
+
+    }
+}
+
+
 // Este controlador recibe únicamente solicitudes POST.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 

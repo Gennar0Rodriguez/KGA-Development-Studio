@@ -46,9 +46,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 verificarAdministrador();
 
+
+verificarAdministrador();
+
+// GET: devuelve todos los choferes registrados.
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+
+    try {
+
+        $chofer = new Chofer();
+
+        responderJson($chofer->obtenerTodos());
+
+    } catch (Throwable $error) {
+
+        error_log($error->getMessage());
+
+        responderJson([
+            'mensaje' => 'Ocurrió un error al consultar los choferes.'
+        ], 500);
+
+    }
+}
+
+// POST: conserva la lógica actual de registro.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     responderJson(['mensaje' => 'Método no permitido.'], 405);
 }
+
 
 $datos = json_decode(file_get_contents('php://input'), true);
 

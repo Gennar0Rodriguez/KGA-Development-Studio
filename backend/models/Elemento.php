@@ -36,6 +36,34 @@ class Elemento
         return $id;
     }
 
+    
+    // Devuelve todos los elementos con sus datos de retiro
+    // y el enfermero que tienen asignado.
+    public function obtenerTodos(): array
+    {
+        $sql = "SELECT
+                    el.id_transportable,
+                    el.nombre_elemento,
+                    el.descripcion_elemento,
+                    el.tipo_elemento,
+                    CONCAT(e.nombre_enfermero, ' ', e.apellido_enfermero)
+                        AS nombre_enfermero,
+                    t.habitacion_retiro,
+                    t.piso_retiro
+                FROM elemento el
+                INNER JOIN transportable t
+                    ON el.id_transportable = t.id_transportable
+                INNER JOIN enfermero e
+                    ON t.ci_enfermero = e.ci_enfermero
+                ORDER BY el.nombre_elemento";
+
+        $consulta = $this->conexion->prepare($sql);
+        $consulta->execute();
+
+        return $consulta->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    
     // Registra el transportable y el elemento en una sola transacción.
     public function crear(array $datos): string
     {

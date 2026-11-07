@@ -41,11 +41,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+
 verificarAdministrador();
 
+// GET: devuelve todos los destinos registrados.
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+
+    try {
+
+        $destino = new Destino();
+
+        responderJson($destino->obtenerTodos());
+
+    } catch (Throwable $error) {
+
+        error_log($error->getMessage());
+
+        responderJson([
+            'mensaje' => 'Ocurrió un error al consultar los destinos.'
+        ], 500);
+
+    }
+}
+
+// POST: conserva la lógica actual de registro.
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     responderJson(['mensaje' => 'Método no permitido.'], 405);
 }
+
 
 $datos = json_decode(file_get_contents('php://input'), true);
 

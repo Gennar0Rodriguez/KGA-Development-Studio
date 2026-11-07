@@ -31,6 +31,36 @@ class Paciente
         return $id;
     }
 
+    
+    // Devuelve todos los pacientes con sus datos de traslado
+    // y el enfermero que tienen asignado.
+    public function obtenerTodos(): array
+    {
+        $sql = "SELECT
+                    p.id_transportable,
+                    p.ci_paciente,
+                    p.nombre_paciente,
+                    p.accesorio,
+                    p.oxigeno,
+                    p.aislamiento,
+                    CONCAT(e.nombre_enfermero, ' ', e.apellido_enfermero)
+                        AS nombre_enfermero,
+                    t.habitacion_retiro,
+                    t.piso_retiro
+                FROM paciente p
+                INNER JOIN transportable t
+                    ON p.id_transportable = t.id_transportable
+                INNER JOIN enfermero e
+                    ON t.ci_enfermero = e.ci_enfermero
+                ORDER BY p.nombre_paciente";
+
+        $consulta = $this->conexion->prepare($sql);
+        $consulta->execute();
+
+        return $consulta->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
     // Crea el transportable y el paciente dentro de una transacción.
     public function crear(array $datos): string
     {
