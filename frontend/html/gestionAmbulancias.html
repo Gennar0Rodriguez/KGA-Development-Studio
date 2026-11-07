@@ -119,29 +119,54 @@
                     </select>
 
 
-                    <!-- Datos correspondientes a un paciente -->
+                                <!-- Datos correspondientes a un paciente -->
 
-                    <div id="camposPaciente">
+            <div id="camposPaciente">
 
-                        <label for="paciente">Nombre del paciente</label>
+                <!-- La búsqueda se realiza mediante la cédula. -->
+                <label for="ciPaciente">Cédula del paciente</label>
 
-                        <input
-                            type="text"
-                            id="paciente"
-                            maxlength="50"
-                            placeholder="Nombre del paciente"
-                        >
+                <div class="campo-busqueda-ambulancia">
 
-                        <label for="oxigeno">¿Necesita oxígeno?</label>
+                    <input
+                        type="text"
+                        id="ciPaciente"
+                        maxlength="8"
+                        inputmode="numeric"
+                        placeholder="Escriba la CI del paciente..."
+                        autocomplete="off"
+                        required
+                    >
 
-                        <select id="oxigeno">
-
-                            <option value="No">No</option>
-                            <option value="Si">Sí</option>
-
-                        </select>
-
+                    <div
+                        id="sugerenciasPaciente"
+                        class="sugerencias-ambulancia">
                     </div>
+
+                </div>
+
+                <!-- El nombre se completa al seleccionar una CI. -->
+                <label for="paciente">Nombre del paciente</label>
+
+                <input
+                    type="text"
+                    id="paciente"
+                    maxlength="50"
+                    placeholder="Se completará al seleccionar la CI"
+                    readonly
+                    required
+                >
+
+                <label for="oxigeno">¿Necesita oxígeno?</label>
+
+                <select id="oxigeno">
+
+                    <option value="No">No</option>
+                    <option value="Si">Sí</option>
+
+                </select>
+
+            </div>
 
 
                     <!-- Datos correspondientes a un órgano -->
@@ -207,13 +232,27 @@
 
                     <!-- Destino -->
 
-                    <label for="destino">Destino</label>
+                <label for="buscadorDestino">Destino</label>
 
-                    <select id="destino" required>
+                <div class="campo-busqueda-ambulancia">
 
-                        <option value="">Seleccione un destino</option>
+                    <input
+                        type="text"
+                        id="buscadorDestino"
+                        placeholder="Escriba el nombre del destino..."
+                        autocomplete="off"
+                        required
+                    >
 
-                    </select>
+                    <div
+                        id="sugerenciasDestino"
+                        class="sugerencias-ambulancia">
+                    </div>
+
+                    <!-- Se guarda el identificador del destino seleccionado. -->
+                    <input type="hidden" id="destino">
+
+                </div>
 
 
                     <!-- Fecha y hora -->

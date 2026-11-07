@@ -172,6 +172,7 @@ class Traslado
                     END AS tipo_transportable,
 
                     p.nombre_paciente,
+                    p.ci_paciente,
                     p.oxigeno,
 
                     el.nombre_elemento,
@@ -264,20 +265,22 @@ class Traslado
 
 
         // Obtener destinos.
-        $sql = "SELECT id_destino, nombre_destino
-                FROM destino";
+        $sql = "SELECT DISTINCT
+                    ci_paciente,
+                    nombre_paciente
+                FROM paciente
+                ORDER BY nombre_paciente";
 
         $sentencia = $this->conexion->prepare($sql);
         $sentencia->execute();
 
-        $destinos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
-
-
+        $pacientes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
         return [
             'vehiculos' => $vehiculos ?: [],
             'choferes' => $choferes ?: [],
             'enfermeros' => $enfermeros ?: [],
-            'destinos' => $destinos ?: []
+            'destinos' => $destinos ?: [],
+            'pacientes' => $pacientes ?: []
         ];
     }
 
@@ -304,9 +307,36 @@ class Traslado
             // Comprobar los datos específicos del tipo seleccionado.
             if ($tipoTransportable === 'paciente') {
 
-                if (empty(trim($datos['paciente'] ?? ''))) {
+                $ciPaciente = trim($datos['ci_paciente'] ?? '');
+                $nombrePaciente = trim($datos['paciente'] ?? '');
+
+                // La CI debe tener exactamente ocho dígitos.
+                if (!preg_match('/^[0-9]{8}$/', $ciPaciente)) {
                     return false;
                 }
+
+                if ($nombrePaciente === '') {
+                    return false;
+                }
+
+                // Comprobar que la combinación CI-nombre exista en la base.
+                $sqlValidarPaciente = "SELECT COUNT(*)
+                                    FROM paciente
+                                    WHERE ci_paciente = :ci
+                                    AND nombre_paciente = :nombre";
+
+                $sentenciaValidar = $this->conexion->prepare($sqlValidarPaciente);
+
+                $sentenciaValidar->bindValue(':ci', $ciPaciente);
+                $sentenciaValidar->bindValue(':nombre', $nombrePaciente);
+
+                $sentenciaValidar->execute();
+
+                if ($sentenciaValidar->fetchColumn() < 1) {
+                    return false;
+                }
+
+            }
 
             } else {
 
@@ -458,8 +488,8 @@ class Traslado
 
                 $sentencia = $this->conexion->prepare($sqlPaciente);
 
-                // La CI se mantiene generada como en la implementación anterior.
-                $ciPaciente = (string) rand(10000000, 99999999);
+                // Se utiliza la CI real del paciente seleccionado.
+                $ciPaciente = trim($datos['ci_paciente']);
 
                 $oxigeno = (
                     ($datos['oxigeno'] ?? '') === 'Si' ||
@@ -720,11 +750,37 @@ class Traslado
                 return false;
             }
 
-            if ($tipoTransportable === 'paciente') {
+        if ($tipoTransportable === 'paciente') {
 
-                if (empty(trim($datos['paciente'] ?? ''))) {
-                    return false;
-                }
+            $ciPaciente = trim($datos['ci_paciente'] ?? '');
+            $nombrePaciente = trim($datos['paciente'] ?? '');
+
+            if (!preg_match('/^[0-9]{8}$/', $ciPaciente)) {
+                return false;
+            }
+
+            if ($nombrePaciente === '') {
+                return false;
+            }
+
+            // La combinación debe existir antes de actualizar el traslado.
+            $sqlValidarPaciente = "SELECT COUNT(*)
+                                FROM paciente
+                                WHERE ci_paciente = :ci
+                                AND nombre_paciente = :nombre";
+
+            $sentenciaValidar = $this->conexion->prepare($sqlValidarPaciente);
+
+            $sentenciaValidar->bindValue(':ci', $ciPaciente);
+            $sentenciaValidar->bindValue(':nombre', $nombrePaciente);
+
+            $sentenciaValidar->execute();
+
+            if ($sentenciaValidar->fetchColumn() < 1) {
+                return false;
+            }
+
+        }
 
             } else {
 
@@ -900,17 +956,7 @@ class Traslado
 
                 $sentencia = $this->conexion->prepare($sqlPaciente);
 
-                // Si ya existía un paciente, conservamos su CI.
-                // Si el traslado antes era un órgano, generamos una nueva.
-                $sqlCI = "SELECT ci_paciente
-                          FROM paciente
-                          WHERE id_transportable = :id";
-
-                /*
-                 * La fila anterior ya fue eliminada, por lo que
-                 * en este caso se genera una CI nueva.
-                 */
-                $ciPaciente = (string) rand(10000000, 99999999);
+                $ciPaciente = trim($datos['ci_paciente']);
 
                 $oxigeno = (
                     ($datos['oxigeno'] ?? '') === 'Si' ||

@@ -4,6 +4,9 @@ let trasladoEditando = null;
 
 let choferesDisponibles = [];
 let vehiculosDisponibles = [];
+let enfermerosDisponibles = [];
+let destinosDisponibles = [];
+let pacientesDisponibles = [];
 
 let esAdministrador = false;
 let filtroSolicitud = 'pendiente';
@@ -114,6 +117,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     buscarAmbulancias();
     buscarChoferes();
+    buscarEnfermeros();
+    buscarDestinos();
+    buscarPacientes();
 
     await cargarTraslados();
 
@@ -203,6 +209,7 @@ function actualizarCamposTransportable() {
     const camposPaciente = document.getElementById('camposPaciente');
     const camposOrgano = document.getElementById('camposOrgano');
 
+    const ciPaciente = document.getElementById('ciPaciente');
     const paciente = document.getElementById('paciente');
     const oxigeno = document.getElementById('oxigeno');
 
@@ -222,8 +229,13 @@ function actualizarCamposTransportable() {
     }
 
     // Los campos ocultos no deben ser obligatorios.
+    if (ciPaciente) {
+        ciPaciente.required = esPaciente;
+    }
+
     if (paciente) {
         paciente.required = esPaciente;
+        paciente.readOnly = true;
     }
 
     if (oxigeno) {
@@ -251,38 +263,75 @@ async function guardarTraslado(cerrarModal) {
         'ambulancia'
     ).value.trim();
 
+    // Comprobar que el vehículo provenga de las sugerencias.
     const vehiculoValido = vehiculosDisponibles.some(vehiculo =>
         String(vehiculo.matricula).toLowerCase() ===
         matriculaSeleccionada.toLowerCase()
     );
 
     if (!vehiculoValido) {
-
         alert('Debe seleccionar un vehículo de la lista de sugerencias.');
-
         return;
-
     }
 
     const ciChoferSeleccionado = document.getElementById(
         'conductor'
     ).value;
 
+    // Comprobar que se haya seleccionado un chofer registrado.
     const choferValido = choferesDisponibles.some(chofer =>
         String(chofer.ci_chofer) === String(ciChoferSeleccionado)
     );
 
     if (!choferValido) {
-
         alert('Debe seleccionar un conductor de la lista de sugerencias.');
-
         return;
+    }
 
+    const ciEnfermero = document.getElementById('enfermero').value;
+    const idDestino = document.getElementById('destino').value;
+
+    // Validar que el enfermero seleccionado exista.
+    const enfermeroValido = enfermerosDisponibles.some(enfermero =>
+        String(enfermero.ci_enfermero) === String(ciEnfermero)
+    );
+
+    if (!enfermeroValido) {
+        alert('Debe seleccionar un enfermero de la lista de sugerencias.');
+        return;
+    }
+
+    // Validar que el destino seleccionado exista.
+    const destinoValido = destinosDisponibles.some(destino =>
+        String(destino.id_destino) === String(idDestino)
+    );
+
+    if (!destinoValido) {
+        alert('Debe seleccionar un destino de la lista de sugerencias.');
+        return;
     }
 
     const tipoTransportable = document.getElementById(
         'tipoTransportable'
     ).value;
+
+    const ciPaciente = document.getElementById('ciPaciente')?.value.trim();
+    const nombrePaciente = document.getElementById('paciente')?.value.trim();
+
+    // Validar la relación entre la CI y el nombre del paciente.
+    if (tipoTransportable === 'paciente') {
+
+        const pacienteValido = pacientesDisponibles.some(paciente =>
+            String(paciente.ci_paciente) === String(ciPaciente) &&
+            String(paciente.nombre_paciente) === String(nombrePaciente)
+        );
+
+        if (!pacienteValido) {
+            alert('Debe seleccionar un paciente registrado mediante su CI.');
+            return;
+        }
+
+    }
 
     const payload = {
 
@@ -291,9 +340,9 @@ async function guardarTraslado(cerrarModal) {
 
         ci_chofer: ciChoferSeleccionado,
 
-        ci_enfermero: document.getElementById('enfermero').value,
+        ci_enfermero: ciEnfermero,
 
-        id_destino: document.getElementById('destino').value,
+        id_destino: idDestino,
 
         fecha: document.getElementById('fecha').value,
 
@@ -307,8 +356,12 @@ async function guardarTraslado(cerrarModal) {
         tipo_transportable: tipoTransportable,
 
         // Datos del paciente.
+        ci_paciente: tipoTransportable === 'paciente'
+            ? ciPaciente
+            : '',
+
         paciente: tipoTransportable === 'paciente'
-            ? document.getElementById('paciente').value.trim()
+            ? nombrePaciente
             : '',
 
         oxigeno: tipoTransportable === 'paciente'
@@ -325,22 +378,6 @@ async function guardarTraslado(cerrarModal) {
             : ''
 
     };
-
-    if (!payload.ci_enfermero) {
-
-        alert('Debe seleccionar un enfermero.');
-
-        return;
-
-    }
-
-    if (!payload.id_destino) {
-
-        alert('Debe seleccionar un destino.');
-
-        return;
-
-    }
 
     if (modoEdicion && trasladoEditando) {
 
@@ -485,72 +522,31 @@ async function cargarOpcionesFormulario() {
         );
 
         if (!response.ok) {
-
-            console.error('No se pudieron cargar las opciones del formulario.');
-
-            return;
-
+            throw new Error('No se pudieron cargar las opciones del formulario.');
         }
 
         const listas = await response.json();
 
+        // Guardamos los registros para utilizarlos en los autocompletados.
         choferesDisponibles = listas.choferes || [];
         vehiculosDisponibles = listas.vehiculos || [];
-
-        // Enfermeros.
-        const selectEnfermero = document.getElementById('enfermero');
-
-        if (selectEnfermero) {
-
-            selectEnfermero.innerHTML =
-                '<option value="">Seleccione un enfermero</option>';
-
-            (listas.enfermeros || []).forEach(enfermero => {
-
-                const opcion = document.createElement('option');
-
-                opcion.value = enfermero.ci_enfermero;
-
-                opcion.textContent =
-                    enfermero.nombre_enfermero + ' ' +
-                    enfermero.apellido_enfermero;
-
-                selectEnfermero.appendChild(opcion);
-
-            });
-
-        }
-
-        // Destinos.
-        const selectDestino = document.getElementById('destino');
-
-        if (selectDestino) {
-
-            selectDestino.innerHTML =
-                '<option value="">Seleccione un destino</option>';
-
-            (listas.destinos || []).forEach(destino => {
-
-                const opcion = document.createElement('option');
-
-                opcion.value = destino.id_destino;
-
-                opcion.textContent = destino.nombre_destino;
-
-                selectDestino.appendChild(opcion);
-
-            });
-
-        }
+        enfermerosDisponibles = listas.enfermeros || [];
+        destinosDisponibles = listas.destinos || [];
+        pacientesDisponibles = listas.pacientes || [];
 
         console.log('Opciones cargadas correctamente:', {
             choferes: choferesDisponibles.length,
-            vehiculos: vehiculosDisponibles.length
+            vehiculos: vehiculosDisponibles.length,
+            enfermeros: enfermerosDisponibles.length,
+            destinos: destinosDisponibles.length,
+            pacientes: pacientesDisponibles.length
         });
 
     } catch (error) {
 
         console.error('Error al cargar opciones:', error);
+
+        alert('No se pudieron cargar los datos para el formulario.');
 
     }
 
@@ -737,6 +733,257 @@ function buscarChoferes() {
 
 }
 
+// ======================================================
+// BUSCADOR DE ENFERMEROS
+// ======================================================
+
+function buscarEnfermeros() {
+
+    const input = document.getElementById('buscadorEnfermero');
+    const campoCI = document.getElementById('enfermero');
+    const sugerencias = document.getElementById('sugerenciasEnfermero');
+
+    if (!input || !campoCI || !sugerencias) return;
+
+    input.addEventListener('input', () => {
+
+        const texto = input.value.toLowerCase().trim();
+
+        // Al modificar el texto, invalidamos la selección anterior.
+        campoCI.value = '';
+
+        sugerencias.innerHTML = '';
+
+        if (!texto) return;
+
+        const resultados = enfermerosDisponibles.filter(enfermero => {
+
+            const nombreCompleto = (
+                enfermero.nombre_enfermero + ' ' +
+                enfermero.apellido_enfermero
+            ).toLowerCase();
+
+            const ci = String(enfermero.ci_enfermero);
+
+            return nombreCompleto.includes(texto) || ci.includes(texto);
+
+        });
+
+        resultados.forEach(enfermero => {
+
+            const opcion = document.createElement('button');
+
+            opcion.type = 'button';
+            opcion.className = 'opcion-ambulancia';
+
+            opcion.textContent =
+                `${enfermero.nombre_enfermero} ${enfermero.apellido_enfermero} - CI: ${enfermero.ci_enfermero}`;
+
+            opcion.addEventListener('click', () => {
+
+                input.value =
+                    `${enfermero.nombre_enfermero} ${enfermero.apellido_enfermero}`;
+
+                campoCI.value = enfermero.ci_enfermero;
+
+                sugerencias.innerHTML = '';
+
+            });
+
+            sugerencias.appendChild(opcion);
+
+        });
+
+        if (resultados.length === 0) {
+
+            sugerencias.innerHTML =
+                '<p class="sin-resultados-ambulancia">No se encontraron enfermeros.</p>';
+
+        }
+
+    });
+
+    document.addEventListener('click', evento => {
+
+        if (
+            !input.contains(evento.target) &&
+            !sugerencias.contains(evento.target)
+        ) {
+            sugerencias.innerHTML = '';
+        }
+
+    });
+
+}
+
+
+// ======================================================
+// BUSCADOR DE DESTINOS
+// ======================================================
+
+function buscarDestinos() {
+
+    const input = document.getElementById('buscadorDestino');
+    const campoId = document.getElementById('destino');
+    const sugerencias = document.getElementById('sugerenciasDestino');
+
+    if (!input || !campoId || !sugerencias) return;
+
+    input.addEventListener('input', () => {
+
+        const texto = input.value.toLowerCase().trim();
+
+        // Evitamos enviar un destino anterior si cambia el texto.
+        campoId.value = '';
+
+        sugerencias.innerHTML = '';
+
+        if (!texto) return;
+
+        const resultados = destinosDisponibles.filter(destino =>
+            String(destino.nombre_destino).toLowerCase().includes(texto)
+        );
+
+        resultados.forEach(destino => {
+
+            const opcion = document.createElement('button');
+
+            opcion.type = 'button';
+            opcion.className = 'opcion-ambulancia';
+            opcion.textContent = destino.nombre_destino;
+
+            opcion.addEventListener('click', () => {
+
+                input.value = destino.nombre_destino;
+
+                campoId.value = destino.id_destino;
+
+                sugerencias.innerHTML = '';
+
+            });
+
+            sugerencias.appendChild(opcion);
+
+        });
+
+        if (resultados.length === 0) {
+
+            sugerencias.innerHTML =
+                '<p class="sin-resultados-ambulancia">No se encontraron destinos.</p>';
+
+        }
+
+    });
+
+    document.addEventListener('click', evento => {
+
+        if (
+            !input.contains(evento.target) &&
+            !sugerencias.contains(evento.target)
+        ) {
+            sugerencias.innerHTML = '';
+        }
+
+    });
+
+}
+
+
+// ======================================================
+// BUSCADOR DE PACIENTES POR CÉDULA
+// ======================================================
+
+function buscarPacientes() {
+
+    const inputCI = document.getElementById('ciPaciente');
+    const inputNombre = document.getElementById('paciente');
+    const sugerencias = document.getElementById('sugerenciasPaciente');
+
+    if (!inputCI || !inputNombre || !sugerencias) return;
+
+    // El nombre nunca puede modificarse manualmente.
+    inputNombre.readOnly = true;
+
+    inputCI.addEventListener('input', () => {
+
+        const texto = inputCI.value.trim();
+
+        // Si cambia la CI, se elimina el nombre anterior.
+        inputNombre.value = '';
+
+        sugerencias.innerHTML = '';
+
+        if (!texto) return;
+
+        // Solamente buscamos coincidencias de CI.
+        const resultados = pacientesDisponibles.filter(paciente =>
+            String(paciente.ci_paciente).includes(texto)
+        );
+
+        // Evitamos mostrar dos veces la misma CI.
+        const pacientesUnicos = [];
+
+        const cedulasMostradas = new Set();
+
+        resultados.forEach(paciente => {
+
+            const ci = String(paciente.ci_paciente);
+
+            if (!cedulasMostradas.has(ci)) {
+
+                cedulasMostradas.add(ci);
+
+                pacientesUnicos.push(paciente);
+
+            }
+
+        });
+
+        pacientesUnicos.forEach(paciente => {
+
+            const opcion = document.createElement('button');
+
+            opcion.type = 'button';
+            opcion.className = 'opcion-ambulancia';
+
+            opcion.textContent =
+                `${paciente.ci_paciente} - ${paciente.nombre_paciente}`;
+
+            opcion.addEventListener('click', () => {
+
+                inputCI.value = paciente.ci_paciente;
+
+                inputNombre.value = paciente.nombre_paciente;
+
+                sugerencias.innerHTML = '';
+
+            });
+
+            sugerencias.appendChild(opcion);
+
+        });
+
+        if (pacientesUnicos.length === 0) {
+
+            sugerencias.innerHTML =
+                '<p class="sin-resultados-ambulancia">No se encontró ningún paciente con esa CI.</p>';
+
+        }
+
+    });
+
+    document.addEventListener('click', evento => {
+
+        if (
+            !inputCI.contains(evento.target) &&
+            !sugerencias.contains(evento.target)
+        ) {
+            sugerencias.innerHTML = '';
+        }
+
+    });
+
+}
 
 // ======================================================
 // CARGAR TRASLADOS DESDE LA BASE DE DATOS
@@ -1013,8 +1260,14 @@ async function editarTraslado(idTraslado, idTransportable) {
     document.getElementById('ambulancia').value =
         traslado.matricula || '';
 
+    // Recuperar la CI y el nombre del paciente.
+    document.getElementById('ciPaciente').value =
+        traslado.ci_paciente || '';
+
     document.getElementById('paciente').value =
         traslado.nombre_paciente || '';
+
+    document.getElementById('paciente').readOnly = true;
 
     document.getElementById('oxigeno').value =
         Number(traslado.oxigeno) === 1 ? 'Si' : 'No';
@@ -1036,12 +1289,30 @@ async function editarTraslado(idTraslado, idTransportable) {
         ? `${chofer.nombre_chofer} ${chofer.apellido_chofer} - CI: ${chofer.ci_chofer}`
         : '';
 
-    document.getElementById('enfermero').value =
-        traslado.ci_enfermero || '';
+        // Recuperar el enfermero seleccionado.
+        const enfermero = enfermerosDisponibles.find(item =>
+            String(item.ci_enfermero) === String(traslado.ci_enfermero)
+        );
 
-    document.getElementById('destino').value =
-        traslado.id_destino || '';
+        document.getElementById('enfermero').value =
+            traslado.ci_enfermero || '';
 
+        document.getElementById('buscadorEnfermero').value = enfermero
+            ? `${enfermero.nombre_enfermero} ${enfermero.apellido_enfermero}`
+            : '';
+
+
+        // Recuperar el destino seleccionado.
+        const destino = destinosDisponibles.find(item =>
+            String(item.id_destino) === String(traslado.id_destino)
+        );
+
+        document.getElementById('destino').value =
+            traslado.id_destino || '';
+
+        document.getElementById('buscadorDestino').value = destino
+            ? destino.nombre_destino
+            : '';
     document.getElementById('fecha').value =
         traslado.fecha_traslado || '';
 
@@ -1060,9 +1331,17 @@ async function editarTraslado(idTraslado, idTransportable) {
                 ? 'En curso'
                 : 'Programado';
 
-    document.getElementById('sugerenciasAmbulancia').innerHTML = '';
-
-    document.getElementById('sugerenciasConductor').innerHTML = '';
+        // Limpiar todas las sugerencias al cerrar el formulario.
+        document.getElementById('sugerenciasAmbulancia').innerHTML = '';
+        document.getElementById('sugerenciasConductor').innerHTML = '';
+        document.getElementById('sugerenciasPaciente').innerHTML = '';
+        document.getElementById('sugerenciasEnfermero').innerHTML = '';
+        document.getElementById('sugerenciasDestino').innerHTML = '';
+        document.getElementById('sugerenciasAmbulancia').innerHTML = '';
+        document.getElementById('sugerenciasConductor').innerHTML = '';
+        document.getElementById('sugerenciasPaciente').innerHTML = '';
+        document.getElementById('sugerenciasEnfermero').innerHTML = '';
+        document.getElementById('sugerenciasDestino').innerHTML = '';
 
     const titulo = document.querySelector(
         '.modal-traslado-header h2'
