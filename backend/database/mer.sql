@@ -27,8 +27,7 @@ CREATE TABLE documentos (
     nombre_archivo VARCHAR(255) NOT NULL,
     ruta_archivo VARCHAR(255) NOT NULL,
     FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria),
-    FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin)
-        ON DELETE SET NULL
+    FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin) ON DELETE SET NULL
 );
 
 CREATE TABLE encuesta (
