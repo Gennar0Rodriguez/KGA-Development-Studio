@@ -1,4 +1,3 @@
-
 <?php
 
 require_once __DIR__ . '/../config/database.php';
@@ -12,7 +11,6 @@ class Chofer
         $this->conexion = Database::getInstancia()->getConexion();
     }
 
-    // Devuelve los choferes registrados.
     public function obtenerTodos(): array
     {
         $sql = "SELECT ci_chofer, nombre_chofer, apellido_chofer, telefono
@@ -25,13 +23,11 @@ class Chofer
         return $consulta->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Registra un nuevo chofer.
     public function crear(array $datos): void
     {
         $sql = "INSERT INTO chofer
                 (ci_chofer, nombre_chofer, apellido_chofer, telefono)
-                VALUES
-                (:ci, :nombre, :apellido, :telefono)";
+                VALUES (:ci, :nombre, :apellido, :telefono)";
 
         $consulta = $this->conexion->prepare($sql);
 
@@ -41,5 +37,35 @@ class Chofer
             ':apellido' => $datos['apellido_chofer'],
             ':telefono' => $datos['telefono']
         ]);
+    }
+
+    public function actualizar(array $datos): bool
+    {
+        $sql = "UPDATE chofer
+                SET nombre_chofer = :nombre,
+                    apellido_chofer = :apellido,
+                    telefono = :telefono
+                WHERE ci_chofer = :ci";
+
+        $consulta = $this->conexion->prepare($sql);
+
+        $consulta->execute([
+            ':ci' => $datos['ci_chofer'],
+            ':nombre' => $datos['nombre_chofer'],
+            ':apellido' => $datos['apellido_chofer'],
+            ':telefono' => $datos['telefono']
+        ]);
+
+        return $consulta->rowCount() > 0;
+    }
+
+    public function eliminar(string $ci): bool
+    {
+        $sql = "DELETE FROM chofer WHERE ci_chofer = :ci";
+
+        $consulta = $this->conexion->prepare($sql);
+        $consulta->execute([':ci' => $ci]);
+
+        return $consulta->rowCount() > 0;
     }
 }

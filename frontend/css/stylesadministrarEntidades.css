@@ -1,10 +1,7 @@
-
 /* ==========================================
    ADMINISTRAR ENTIDADES
    Complementa stylesadministrarUsuarios.css
 ========================================== */
-
-/* Buscador y selector. */
 
 .topbar {
     align-items: center;
@@ -27,13 +24,9 @@
     border-color: #159ed0;
 }
 
-/* El contenido utiliza todo el ancho disponible. */
-
 .contenido {
     display: block;
 }
-
-/* Encabezado de la sección. */
 
 .encabezado-entidades {
     display: flex;
@@ -52,8 +45,6 @@
     color: #718096;
     font-size: 13px;
 }
-
-/* Contador de registros. */
 
 .contador-entidades {
     display: flex;
@@ -88,7 +79,11 @@
     font-size: 11px;
 }
 
-/* Tabla. */
+.acciones-entidades {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 18px;
+}
 
 .tabla-responsive {
     width: 100%;
@@ -97,14 +92,12 @@
 
 .tabla-usuarios {
     width: 100%;
-    min-width: 650px;
+    min-width: 700px;
 }
 
 .tabla-usuarios td {
     vertical-align: middle;
 }
-
-/* Mensajes dentro de la tabla. */
 
 .mensaje-tabla {
     text-align: center;
@@ -112,7 +105,40 @@
     color: #718096 !important;
 }
 
-/* Información inferior y paginación. */
+.acciones-fila {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-editar,
+.btn-eliminar {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-editar {
+    background: #e1f3fc;
+    color: #087eaf;
+}
+
+.btn-editar:hover {
+    background: #c5e8f8;
+}
+
+.btn-eliminar {
+    background: #fee8e7;
+    color: #dc4444;
+}
+
+.btn-eliminar:hover {
+    background: #fbd0ce;
+}
 
 .pie-tabla {
     display: flex;
@@ -161,7 +187,131 @@
     color: white;
 }
 
-/* Adaptación para pantallas pequeñas. */
+/* ==========================================
+   MODAL DE ENTIDADES
+========================================== */
+
+#modalNuevaEntidad {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.55);
+    overflow-y: auto;
+}
+
+#modalNuevaEntidad .modal-traslado-contenido {
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+}
+
+#modalNuevaEntidad .modal-traslado-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+#modalNuevaEntidad .modal-traslado-header h2 {
+    font-size: 20px;
+    color: #263445;
+}
+
+#modalNuevaEntidad form {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+#modalNuevaEntidad label {
+    color: #344256;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#modalNuevaEntidad input,
+#modalNuevaEntidad select,
+#modalNuevaEntidad textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #d5dce5;
+    border-radius: 8px;
+    background: white;
+    color: #344256;
+    font-size: 13px;
+    outline: none;
+}
+
+#modalNuevaEntidad input:focus,
+#modalNuevaEntidad select:focus,
+#modalNuevaEntidad textarea:focus {
+    border-color: #159ed0;
+}
+
+#modalNuevaEntidad input:disabled {
+    background: #edf1f5;
+    color: #718096;
+    cursor: not-allowed;
+}
+
+#modalNuevaEntidad .acciones-formulario {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+#modalNuevaEntidad .btn-cancelar,
+#modalNuevaEntidad .btn-guardar {
+    border: none;
+    border-radius: 8px;
+    padding: 11px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#modalNuevaEntidad .btn-cancelar {
+    background: #e9edf2;
+    color: #344256;
+}
+
+#modalNuevaEntidad .btn-guardar {
+    background: #159ed0;
+    color: white;
+}
+
+#modalNuevaEntidad .btn-guardar:hover {
+    background: #087eaf;
+}
+
+#modalNuevaEntidad .btn-guardar:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.mensaje-entidad {
+    min-height: 18px;
+    font-size: 12px;
+}
+
+.mensaje-entidad.error {
+    color: #dc4444;
+}
+
+.mensaje-entidad.exito {
+    color: #16804a;
+}
 
 @media (max-width: 700px) {
 
@@ -182,5 +332,9 @@
     .pie-tabla {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    #modalNuevaEntidad .modal-traslado-contenido {
+        padding: 18px;
     }
 }

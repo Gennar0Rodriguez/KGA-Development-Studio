@@ -1,91 +1,141 @@
+// ==========================================
+// MODAL PARA CREAR Y EDITAR ENTIDADES
+// ==========================================
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
 
-    // ==========================================
-    // ELEMENTOS DEL DOM
-    // ==========================================
+    const modal = document.getElementById('modalNuevaEntidad');
+    const btnAbrir = document.getElementById('btnAbrirModalEntidad');
+    const btnCerrar = document.getElementById('btnCerrarModalEntidad');
+    const btnCancelar = document.getElementById('btnCancelarModalEntidad');
 
-    const modal = document.getElementById("modalNuevaEntidad");
-    const btnAbrir = document.getElementById("btnAbrirModalEntidad");
-    const btnCerrar = document.getElementById("btnCerrarModalEntidad");
-    const btnCancelar = document.getElementById("btnCancelarModalEntidad");
+    const formulario = document.getElementById('formNuevaEntidad');
+    const selector = document.getElementById('tipoEntidad');
+    const contenedorTipo = document.getElementById('contenedorTipoEntidad');
+    const contenedorCampos = document.getElementById('camposEntidad');
 
-    const formulario = document.getElementById("formNuevaEntidad");
-    const selector = document.getElementById("tipoEntidad");
-    const contenedorCampos = document.getElementById("camposEntidad");
-    const mensaje = document.getElementById("mensajeEntidad");
-    const btnGuardar = document.getElementById("btnGuardarEntidad");
+    const mensaje = document.getElementById('mensajeEntidad');
+    const btnGuardar = document.getElementById('btnGuardarEntidad');
+    const tituloModal = document.getElementById('tituloModalEntidad');
 
-    // Rutas de los controladores PHP.
+    const RUTA_API = '/kgade/KGA-Development-Studio/API';
+
     const RUTAS_API = {
-        chofer: "/kgade/KGA-Development-Studio/API/choferes/choferes.php",
-        paciente: "/kgade/KGA-Development-Studio/API/pacientes/paciente.php",
-        destino: "/kgade/KGA-Development-Studio/API/destinos/destinos.php",
-        enfermero: "/kgade/KGA-Development-Studio/API/enfermeros/enfermeros.php",
-        elemento: "/kgade/KGA-Development-Studio/API/elementos/elementos.php"
+        chofer: `${RUTA_API}/choferes/choferes.php`,
+        paciente: `${RUTA_API}/pacientes/paciente.php`,
+        destino: `${RUTA_API}/destinos/destinos.php`,
+        enfermero: `${RUTA_API}/enfermeros/enfermeros.php`,
+        elemento: `${RUTA_API}/elementos/elementos.php`,
+        vehiculo: `${RUTA_API}/ambulancias/ambulancias.php`
     };
 
+    // Estado del modal.
+    let modoModal = 'crear';
+    let entidadEditada = null;
+    let registroEditado = null;
+
+
     // ==========================================
-    // ABRIR Y CERRAR EL MODAL
+    // ABRIR Y CERRAR
     // ==========================================
 
     function abrirModal() {
-        modal.style.display = "flex";
+
+        modoModal = 'crear';
+        entidadEditada = null;
+        registroEditado = null;
+
         formulario.reset();
-        contenedorCampos.innerHTML = "";
-        limpiarMensaje();
+
+        selector.disabled = false;
+        selector.value = '';
+
+        contenedorTipo.style.display = 'block';
+        contenedorCampos.innerHTML = '';
+
+        tituloModal.textContent = 'Añadir entidad';
+
+        btnGuardar.textContent = 'Guardar entidad';
         btnGuardar.disabled = true;
+
+        limpiarMensaje();
+
+        modal.style.display = 'flex';
+
     }
 
     function cerrarModal() {
-        modal.style.display = "none";
+
+        modal.style.display = 'none';
+
         formulario.reset();
-        contenedorCampos.innerHTML = "";
-        limpiarMensaje();
+
+        selector.disabled = false;
+        selector.value = '';
+
+        contenedorTipo.style.display = 'block';
+        contenedorCampos.innerHTML = '';
+
+        modoModal = 'crear';
+        entidadEditada = null;
+        registroEditado = null;
+
         btnGuardar.disabled = true;
+
+        limpiarMensaje();
+
     }
 
-    btnAbrir.addEventListener("click", abrirModal);
-    btnCerrar.addEventListener("click", cerrarModal);
-    btnCancelar.addEventListener("click", cerrarModal);
+    btnAbrir.addEventListener('click', abrirModal);
+    btnCerrar.addEventListener('click', cerrarModal);
+    btnCancelar.addEventListener('click', cerrarModal);
 
-    // Cerrar al hacer clic fuera del contenido.
-    modal.addEventListener("click", (evento) => {
+    modal.addEventListener('click', evento => {
+
         if (evento.target === modal) {
             cerrarModal();
         }
+
     });
+
 
     // ==========================================
     // MENSAJES
     // ==========================================
 
     function mostrarMensaje(texto, tipo) {
+
         mensaje.textContent = texto;
         mensaje.className = `mensaje-entidad ${tipo}`;
+
     }
 
     function limpiarMensaje() {
-        mensaje.textContent = "";
-        mensaje.className = "mensaje-entidad";
+
+        mensaje.textContent = '';
+        mensaje.className = 'mensaje-entidad';
+
     }
 
+
     // ==========================================
-    // CREACIÓN DE CAMPOS
+    // CREAR CAMPOS
     // ==========================================
 
-    function crearCampo(etiqueta, nombre, tipo = "text", opciones = {}) {
+    function crearCampo(etiqueta, nombre, tipo = 'text', opciones = {}) {
 
-        const label = document.createElement("label");
+        const label = document.createElement('label');
+
         label.htmlFor = `entidad_${nombre}`;
         label.textContent = etiqueta;
 
-        const input = document.createElement("input");
+        const input = document.createElement('input');
 
         input.type = tipo;
         input.id = `entidad_${nombre}`;
         input.name = nombre;
-        input.required = true;
+
+        input.required = opciones.required !== false;
 
         if (opciones.maxlength) {
             input.maxLength = opciones.maxlength;
@@ -106,212 +156,222 @@ document.addEventListener("DOMContentLoaded", () => {
         contenedorCampos.append(label, input);
 
         return input;
+
     }
+
 
     function crearSelect(etiqueta, nombre, opciones) {
 
-        const label = document.createElement("label");
+        const label = document.createElement('label');
+
         label.htmlFor = `entidad_${nombre}`;
         label.textContent = etiqueta;
 
-        const select = document.createElement("select");
+        const select = document.createElement('select');
 
         select.id = `entidad_${nombre}`;
         select.name = nombre;
         select.required = true;
 
-        opciones.forEach((opcion) => {
+        opciones.forEach(opcion => {
 
-            const elemento = document.createElement("option");
+            const option = document.createElement('option');
 
-            elemento.value = opcion.value;
-            elemento.textContent = opcion.texto;
+            option.value = opcion.value;
+            option.textContent = opcion.texto;
 
-            select.appendChild(elemento);
+            select.appendChild(option);
 
         });
 
         contenedorCampos.append(label, select);
 
         return select;
+
     }
 
+
     // ==========================================
-    // CAMPOS DE CADA ENTIDAD
+    // CAMPOS DE ENFERMERO
+    // ==========================================
+
+    function mostrarCamposEnfermero() {
+
+        crearCampo('Cédula de identidad', 'ci_enfermero', 'text', {
+            maxlength: 8,
+            pattern: '[0-9]{8}',
+            placeholder: 'Ej: 12345678'
+        });
+
+        crearCampo('Nombre', 'nombre_enfermero', 'text', {
+            maxlength: 50
+        });
+
+        crearCampo('Apellido', 'apellido_enfermero', 'text', {
+            maxlength: 50
+        });
+
+    }
+
+
+    // ==========================================
+    // CAMPOS DE CHOFER
     // ==========================================
 
     function mostrarCamposChofer() {
 
-        crearCampo("Cédula de identidad", "ci_chofer", "text", {
+        crearCampo('Cédula de identidad', 'ci_chofer', 'text', {
             maxlength: 8,
-            pattern: "[0-9]{8}",
-            placeholder: "Ej: 12345678"
+            pattern: '[0-9]{8}',
+            placeholder: 'Ej: 12345678'
         });
 
-        crearCampo("Nombre", "nombre_chofer", "text", {
-            maxlength: 50,
-            placeholder: "Nombre del chofer"
+        crearCampo('Nombre', 'nombre_chofer', 'text', {
+            maxlength: 50
         });
 
-        crearCampo("Apellido", "apellido_chofer", "text", {
-            maxlength: 50,
-            placeholder: "Apellido del chofer"
+        crearCampo('Apellido', 'apellido_chofer', 'text', {
+            maxlength: 50
         });
 
-        crearCampo("Teléfono", "telefono", "tel", {
-            maxlength: 50,
-            placeholder: "Teléfono de contacto"
+        crearCampo('Teléfono', 'telefono', 'tel', {
+            maxlength: 50
         });
+
     }
 
-    function mostrarCamposEnfermero() {
 
-        crearCampo("Cédula de identidad", "ci_enfermero", "text", {
-            maxlength: 8,
-            pattern: "[0-9]{8}",
-            placeholder: "Ej: 12345678"
-        });
-
-        crearCampo("Nombre", "nombre_enfermero", "text", {
-            maxlength: 50,
-            placeholder: "Nombre del enfermero"
-        });
-
-        crearCampo("Apellido", "apellido_enfermero", "text", {
-            maxlength: 50,
-            placeholder: "Apellido del enfermero"
-        });
-    }
+    // ==========================================
+    // CAMPOS DE DESTINO
+    // ==========================================
 
     function mostrarCamposDestino() {
 
-        crearCampo("Nombre del destino", "nombre_destino", "text", {
-            maxlength: 50,
-            placeholder: "Ej: Hospital de Clínicas"
+        crearCampo('Nombre del destino', 'nombre_destino', 'text', {
+            maxlength: 50
         });
 
-        crearCampo("Dirección", "direccion", "text", {
-            maxlength: 50,
-            placeholder: "Dirección del destino"
+        crearCampo('Dirección', 'direccion', 'text', {
+            maxlength: 50
         });
 
-        crearCampo("Ruta", "ruta", "text", {
-            maxlength: 50,
-            placeholder: "Ruta o referencia"
+        crearCampo('Ruta', 'ruta', 'text', {
+            maxlength: 50
         });
+
     }
 
-    async function mostrarCamposPaciente() {
 
-        crearCampo("Cédula de identidad", "ci_paciente", "text", {
-            maxlength: 8,
-            pattern: "[0-9]{8}",
-            placeholder: "Ej: 12345678"
-        });
+    // ==========================================
+    // CARGAR ENFERMEROS
+    // ==========================================
 
-        crearCampo("Nombre completo", "nombre_paciente", "text", {
-            maxlength: 50,
-            placeholder: "Nombre y apellido"
-        });
+    async function crearSelectorEnfermeros() {
 
-        crearSelect("Accesorio necesario", "accesorio", [
-            { value: "", texto: "Seleccione una opción" },
-            { value: "baston", texto: "Bastón" },
-            { value: "silla", texto: "Silla de ruedas" },
-            { value: "otro", texto: "Otro" }
+        const select = crearSelect('Enfermero responsable', 'ci_enfermero', [
+            { value: '', texto: 'Cargando enfermeros...' }
         ]);
-
-        crearSelect("¿Necesita oxígeno?", "oxigeno", [
-            { value: "", texto: "Seleccione una opción" },
-            { value: "1", texto: "Sí" },
-            { value: "0", texto: "No" }
-        ]);
-
-        crearSelect("¿Requiere aislamiento?", "aislamiento", [
-            { value: "", texto: "Seleccione una opción" },
-            { value: "1", texto: "Sí" },
-            { value: "0", texto: "No" }
-        ]);
-
-        crearCampo("Habitación de retiro", "habitacion_retiro", "text", {
-            maxlength: 50,
-            placeholder: "Número de habitación"
-        });
-
-        crearCampo("Piso de retiro", "piso_retiro", "text", {
-            maxlength: 50,
-            placeholder: "Número de piso"
-        });
-
-        const selectEnfermero = document.createElement("select");
-        selectEnfermero.id = "entidad_ci_enfermero";
-        selectEnfermero.name = "ci_enfermero";
-        selectEnfermero.required = true;
-
-        const labelEnfermero = document.createElement("label");
-        labelEnfermero.htmlFor = "entidad_ci_enfermero";
-        labelEnfermero.textContent = "Enfermero responsable";
-
-        const opcionInicial = document.createElement("option");
-        opcionInicial.value = "";
-        opcionInicial.textContent = "Cargando enfermeros...";
-        selectEnfermero.appendChild(opcionInicial);
-
-        contenedorCampos.append(labelEnfermero, selectEnfermero);
 
         try {
 
             const respuesta = await fetch(RUTAS_API.enfermero, {
-                method: "GET",
-                credentials: "same-origin"
+                method: 'GET',
+                credentials: 'same-origin'
             });
 
             const datos = await respuesta.json();
 
-            if (!respuesta.ok) {
-                throw new Error(datos.mensaje || "No se pudieron cargar los enfermeros.");
+            if (!respuesta.ok || !Array.isArray(datos)) {
+                throw new Error('No se pudieron cargar los enfermeros.');
             }
 
-            selectEnfermero.innerHTML = "";
+            select.innerHTML = '';
 
-            const opcionSeleccione = document.createElement("option");
-            opcionSeleccione.value = "";
-            opcionSeleccione.textContent = "Seleccione un enfermero";
-            selectEnfermero.appendChild(opcionSeleccione);
+            const opcionInicial = document.createElement('option');
 
-            datos.forEach((enfermero) => {
+            opcionInicial.value = '';
+            opcionInicial.textContent = 'Seleccione un enfermero';
 
-                const opcion = document.createElement("option");
+            select.appendChild(opcionInicial);
+
+            datos.forEach(enfermero => {
+
+                const opcion = document.createElement('option');
 
                 opcion.value = enfermero.ci_enfermero;
+
                 opcion.textContent =
                     `${enfermero.nombre_enfermero} ${enfermero.apellido_enfermero} - ${enfermero.ci_enfermero}`;
 
-                selectEnfermero.appendChild(opcion);
+                select.appendChild(opcion);
 
             });
 
             if (datos.length === 0) {
-                selectEnfermero.innerHTML = "";
-
-                const opcion = document.createElement("option");
-                opcion.value = "";
-                opcion.textContent = "Primero debe registrar un enfermero";
-                selectEnfermero.appendChild(opcion);
+                throw new Error('Primero debe registrar un enfermero.');
             }
+
+            return select;
 
         } catch (error) {
 
-            selectEnfermero.innerHTML = "";
+            mostrarMensaje(error.message, 'error');
 
-            const opcion = document.createElement("option");
-            opcion.value = "";
-            opcion.textContent = "Error al cargar enfermeros";
-            selectEnfermero.appendChild(opcion);
+            select.disabled = true;
 
-            mostrarMensaje(error.message, "error");
+            throw error;
+
         }
+
     }
+
+
+    // ==========================================
+    // CAMPOS DE PACIENTE
+    // ==========================================
+
+    async function mostrarCamposPaciente() {
+
+        crearCampo('Cédula de identidad', 'ci_paciente', 'text', {
+            maxlength: 8,
+            pattern: '[0-9]{8}'
+        });
+
+        crearCampo('Nombre completo', 'nombre_paciente', 'text', {
+            maxlength: 50
+        });
+
+        crearSelect('Accesorio necesario', 'accesorio', [
+            { value: '', texto: 'Seleccione una opción' },
+            { value: 'baston', texto: 'Bastón' },
+            { value: 'silla', texto: 'Silla de ruedas' },
+            { value: 'otro', texto: 'Otro' }
+        ]);
+
+        crearSelect('¿Necesita oxígeno?', 'oxigeno', [
+            { value: '', texto: 'Seleccione una opción' },
+            { value: '1', texto: 'Sí' },
+            { value: '0', texto: 'No' }
+        ]);
+
+        crearSelect('¿Requiere aislamiento?', 'aislamiento', [
+            { value: '', texto: 'Seleccione una opción' },
+            { value: '1', texto: 'Sí' },
+            { value: '0', texto: 'No' }
+        ]);
+
+        crearCampo('Habitación de retiro', 'habitacion_retiro', 'text', {
+            maxlength: 50
+        });
+
+        crearCampo('Piso de retiro', 'piso_retiro', 'text', {
+            maxlength: 50
+        });
+
+        return await crearSelectorEnfermeros();
+
+    }
+
 
     // ==========================================
     // CAMPOS DE ELEMENTO
@@ -319,164 +379,303 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function mostrarCamposElemento() {
 
-        // Atributos propios de la entidad Elemento.
-        crearCampo("Nombre del elemento", "nombre_elemento", "text", {
-            maxlength: 50,
-            placeholder: "Ej: Riñón"
+        crearCampo('Nombre del elemento', 'nombre_elemento', 'text', {
+            maxlength: 50
         });
 
-        crearCampo("Descripción del elemento", "descripcion_elemento", "text", {
-            maxlength: 50,
-            placeholder: "Descripción del elemento"
+        crearCampo('Descripción', 'descripcion_elemento', 'text', {
+            maxlength: 50
         });
 
-        // Los valores coinciden con el ENUM definido en el MER.
-        crearSelect("Tipo de elemento", "tipo_elemento", [
-            { value: "", texto: "Seleccione un tipo" },
-            { value: "organo", texto: "Órgano" },
-            { value: "documentacion", texto: "Documentación" },
-            { value: "otro", texto: "Otro" }
+        crearSelect('Tipo de elemento', 'tipo_elemento', [
+            { value: '', texto: 'Seleccione un tipo' },
+            { value: 'organo', texto: 'Órgano' },
+            { value: 'documentacion', texto: 'Documentación' },
+            { value: 'otro', texto: 'Otro' }
         ]);
 
-        // Datos de la tabla transportable.
-        crearCampo("Habitación de retiro", "habitacion_retiro", "text", {
-            maxlength: 50,
-            placeholder: "Número de habitación"
+        crearCampo('Habitación de retiro', 'habitacion_retiro', 'text', {
+            maxlength: 50
         });
 
-        crearCampo("Piso de retiro", "piso_retiro", "text", {
-            maxlength: 50,
-            placeholder: "Número de piso"
+        crearCampo('Piso de retiro', 'piso_retiro', 'text', {
+            maxlength: 50
         });
 
-        // El enfermero se selecciona entre los ya registrados.
-        const selectEnfermero = document.createElement("select");
-        selectEnfermero.id = "entidad_ci_enfermero";
-        selectEnfermero.name = "ci_enfermero";
-        selectEnfermero.required = true;
+        return await crearSelectorEnfermeros();
 
-        const labelEnfermero = document.createElement("label");
-        labelEnfermero.htmlFor = "entidad_ci_enfermero";
-        labelEnfermero.textContent = "Enfermero responsable";
-
-        const opcionInicial = document.createElement("option");
-        opcionInicial.value = "";
-        opcionInicial.textContent = "Cargando enfermeros...";
-        selectEnfermero.appendChild(opcionInicial);
-
-        contenedorCampos.append(labelEnfermero, selectEnfermero);
-
-        try {
-
-            const respuesta = await fetch(RUTAS_API.enfermero, {
-                method: "GET",
-                credentials: "same-origin"
-            });
-
-            const datos = await respuesta.json();
-
-            if (!respuesta.ok) {
-                throw new Error(datos.mensaje || "No se pudieron cargar los enfermeros.");
-            }
-
-            if (!Array.isArray(datos) || datos.length === 0) {
-                throw new Error("Primero debe registrar un enfermero.");
-            }
-
-            selectEnfermero.innerHTML = "";
-
-            const opcionSeleccione = document.createElement("option");
-            opcionSeleccione.value = "";
-            opcionSeleccione.textContent = "Seleccione un enfermero";
-            selectEnfermero.appendChild(opcionSeleccione);
-
-            datos.forEach((enfermero) => {
-
-                const opcion = document.createElement("option");
-
-                opcion.value = enfermero.ci_enfermero;
-                opcion.textContent =
-                    `${enfermero.nombre_enfermero} ${enfermero.apellido_enfermero} - ${enfermero.ci_enfermero}`;
-
-                selectEnfermero.appendChild(opcion);
-
-            });
-
-            return true;
-
-        } catch (error) {
-
-            selectEnfermero.innerHTML = "";
-
-            const opcion = document.createElement("option");
-            opcion.value = "";
-            opcion.textContent = "No se pudieron cargar los enfermeros";
-            selectEnfermero.appendChild(opcion);
-
-            mostrarMensaje(error.message, "error");
-
-            return false;
-        }
     }
 
+
     // ==========================================
-    // CAMBIAR LOS CAMPOS SEGÚN LA ENTIDAD
+    // CAMPOS DE VEHÍCULO
     // ==========================================
 
-    selector.addEventListener("change", async () => {
+    function mostrarCamposVehiculo() {
 
-        contenedorCampos.innerHTML = "";
+        crearCampo('Matrícula', 'matricula', 'text', {
+            maxlength: 15,
+            placeholder: 'Ej: SCA1234'
+        });
+
+        crearCampo('Modelo', 'modelo', 'text', {
+            maxlength: 50,
+            placeholder: 'Ej: Mercedes Sprinter'
+        });
+
+        crearCampo('Capacidad', 'capacidad', 'number', {
+            min: 1
+        });
+
+        crearSelect('Tipo de vehículo', 'tipo_vehiculo', [
+            { value: '', texto: 'Seleccione un tipo' },
+            { value: 'ambulancia', texto: 'Ambulancia' },
+            { value: 'auto', texto: 'Auto' },
+            { value: 'otro', texto: 'Otro' }
+        ]);
+
+        crearSelect('¿Dispone de camilla?', 'camilla', [
+            { value: '', texto: 'Seleccione una opción' },
+            { value: '1', texto: 'Sí' },
+            { value: '0', texto: 'No' }
+        ]);
+
+    }
+
+
+    // ==========================================
+    // GENERAR CAMPOS SEGÚN LA ENTIDAD
+    // ==========================================
+
+    async function generarCampos(tipo) {
+
+        contenedorCampos.innerHTML = '';
         limpiarMensaje();
-
-        const tipo = selector.value;
 
         btnGuardar.disabled = true;
 
-        // Permite controlar si los campos necesarios se cargaron.
-        let camposListos = true;
+        try {
 
-        switch (tipo) {
+            switch (tipo) {
 
-            case "chofer":
-                mostrarCamposChofer();
-                break;
+                case 'enfermero':
+                    mostrarCamposEnfermero();
+                    break;
 
-            case "enfermero":
-                mostrarCamposEnfermero();
-                break;
+                case 'chofer':
+                    mostrarCamposChofer();
+                    break;
 
-            case "destino":
-                mostrarCamposDestino();
-                break;
+                case 'destino':
+                    mostrarCamposDestino();
+                    break;
 
-            case "paciente":
-                await mostrarCamposPaciente();
-                break;
+                case 'paciente':
+                    await mostrarCamposPaciente();
+                    break;
 
-            case "elemento":
-                camposListos = await mostrarCamposElemento();
-                break;
+                case 'elemento':
+                    await mostrarCamposElemento();
+                    break;
 
-            default:
-                return;
+                case 'vehiculo':
+                    mostrarCamposVehiculo();
+                    break;
+
+                default:
+                    return;
+
+            }
+
+            btnGuardar.disabled = false;
+
+        } catch (error) {
+
+            console.error(error);
+            btnGuardar.disabled = true;
+
         }
 
-        btnGuardar.disabled = !camposListos;
+    }
+
+
+    selector.addEventListener('change', () => {
+
+        generarCampos(selector.value);
+
     });
 
+
     // ==========================================
-    // ENVIAR LOS DATOS AL SERVIDOR
+    // CARGAR DATOS EN LOS CAMPOS
     // ==========================================
 
-    formulario.addEventListener("submit", async (evento) => {
+    function cargarDatosEnFormulario(registro) {
+
+        Object.entries(registro).forEach(([campo, valor]) => {
+
+            const input = formulario.elements.namedItem(campo);
+
+            if (!input) {
+                return;
+            }
+
+            if (valor !== null && valor !== undefined) {
+                input.value = String(valor);
+            }
+
+        });
+
+        // Los valores de la base pueden venir como 0/1 o booleanos.
+        ['oxigeno', 'aislamiento', 'camilla'].forEach(campo => {
+
+            const input = formulario.elements.namedItem(campo);
+
+            if (input && registro[campo] !== null && registro[campo] !== undefined) {
+                input.value = Number(registro[campo]) === 1 ? '1' : '0';
+            }
+
+        });
+
+        // Las claves principales no se pueden modificar.
+        const identificadores = {
+            enfermero: 'ci_enfermero',
+            chofer: 'ci_chofer',
+            paciente: 'ci_paciente',
+            elemento: 'id_transportable',
+            destino: 'id_destino',
+            vehiculo: 'matricula'
+        };
+
+        const identificador = identificadores[entidadEditada];
+
+        const campoIdentificador = formulario.elements.namedItem(identificador);
+
+        if (campoIdentificador) {
+            campoIdentificador.disabled = true;
+        }
+
+    }
+
+
+    // ==========================================
+    // ABRIR MODAL EN MODO EDICIÓN
+    // ==========================================
+
+    document.addEventListener('editar-entidad', async evento => {
+
+        const { tipo, registro } = evento.detail;
+
+        modoModal = 'editar';
+        entidadEditada = tipo;
+        registroEditado = registro;
+
+        formulario.reset();
+
+        selector.value = tipo;
+        selector.disabled = true;
+
+        contenedorTipo.style.display = 'none';
+
+        tituloModal.textContent = 'Editar entidad';
+
+        btnGuardar.textContent = 'Guardar cambios';
+        btnGuardar.disabled = true;
+
+        limpiarMensaje();
+
+        modal.style.display = 'flex';
+
+        try {
+
+            await generarCampos(tipo);
+
+            cargarDatosEnFormulario(registro);
+
+            // Paciente y elemento necesitan el CI del enfermero.
+            // El GET debe incluir ci_enfermero en esos registros.
+            if (
+                ['paciente', 'elemento'].includes(tipo) &&
+                registro.ci_enfermero
+            ) {
+                const selectEnfermero =
+                    formulario.elements.namedItem('ci_enfermero');
+
+                if (selectEnfermero) {
+                    selectEnfermero.value = registro.ci_enfermero;
+                }
+            }
+
+            btnGuardar.disabled = false;
+
+        } catch (error) {
+
+            mostrarMensaje(
+                'No se pudieron cargar los datos para editar.',
+                'error'
+            );
+
+        }
+
+    });
+
+
+    // ==========================================
+    // OBTENER DATOS DEL FORMULARIO
+    // ==========================================
+
+    function obtenerDatosFormulario() {
+
+        const datosFormulario = new FormData(formulario);
+        const datos = {};
+
+        datosFormulario.forEach((valor, clave) => {
+
+            if (clave !== 'tipoEntidad') {
+                datos[clave] = valor.trim();
+            }
+
+        });
+
+        // Los identificadores deshabilitados no aparecen en FormData.
+        // Los recuperamos del registro original.
+        if (modoModal === 'editar') {
+
+            const identificadores = {
+                enfermero: 'ci_enfermero',
+                chofer: 'ci_chofer',
+                paciente: 'id_transportable',
+                elemento: 'id_transportable',
+                destino: 'id_destino',
+                vehiculo: 'matricula'
+            };
+
+            const identificador = identificadores[entidadEditada];
+
+            datos[identificador] = registroEditado[identificador];
+
+        }
+
+        return datos;
+
+    }
+
+
+    // ==========================================
+    // GUARDAR O ACTUALIZAR
+    // ==========================================
+
+    formulario.addEventListener('submit', async evento => {
 
         evento.preventDefault();
         limpiarMensaje();
 
-        const tipo = selector.value;
+        const tipo = modoModal === 'crear'
+            ? selector.value
+            : entidadEditada;
 
         if (!RUTAS_API[tipo]) {
-            mostrarMensaje("Seleccione una entidad válida.", "error");
+            mostrarMensaje('Seleccione una entidad válida.', 'error');
             return;
         }
 
@@ -484,25 +683,21 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const datosFormulario = new FormData(formulario);
-        const datos = {};
+        const datos = obtenerDatosFormulario();
 
-        datosFormulario.forEach((valor, clave) => {
-            if (clave !== "tipoEntidad") {
-                datos[clave] = valor.trim();
-            }
-        });
+        const metodo = modoModal === 'crear' ? 'POST' : 'PUT';
 
         btnGuardar.disabled = true;
-        btnGuardar.textContent = "Guardando...";
+        btnGuardar.textContent =
+            modoModal === 'crear' ? 'Guardando...' : 'Actualizando...';
 
         try {
 
             const respuesta = await fetch(RUTAS_API[tipo], {
-                method: "POST",
-                credentials: "same-origin",
+                method: metodo,
+                credentials: 'same-origin',
                 headers: {
-                    "Content-Type": "application/json"
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(datos)
             });
@@ -510,26 +705,39 @@ document.addEventListener("DOMContentLoaded", () => {
             const resultado = await respuesta.json();
 
             if (!respuesta.ok) {
-                throw new Error(resultado.mensaje || "No se pudo guardar la entidad.");
+                throw new Error(
+                    resultado.mensaje ||
+                    resultado.error ||
+                    'No se pudo guardar la entidad.'
+                );
             }
 
             mostrarMensaje(
-                resultado.mensaje || "La entidad se registró correctamente.",
-                "exito"
+                resultado.mensaje ||
+                'Operación realizada correctamente.',
+                'exito'
             );
 
-            formulario.reset();
-            contenedorCampos.innerHTML = "";
+            // Actualizamos la tabla cuando el servidor confirma el cambio.
+            document.dispatchEvent(new CustomEvent('entidad-guardada'));
+
+            setTimeout(cerrarModal, 900);
 
         } catch (error) {
 
-            mostrarMensaje(error.message, "error");
+            mostrarMensaje(error.message, 'error');
 
         } finally {
 
             btnGuardar.disabled = false;
-            btnGuardar.textContent = "Guardar entidad";
+
+            btnGuardar.textContent =
+                modoModal === 'crear'
+                    ? 'Guardar entidad'
+                    : 'Guardar cambios';
+
         }
+
     });
 
 });

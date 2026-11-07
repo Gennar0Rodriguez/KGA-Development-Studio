@@ -1,16 +1,12 @@
-
 // ==========================================
 // ADMINISTRAR ENTIDADES
 // ==========================================
 
-// Cantidad de registros que se muestran por página.
 const REGISTROS_POR_PAGINA = 10;
 
-// Ruta base utilizada por el resto del proyecto.
 const RUTA_API = '/kgade/KGA-Development-Studio/API';
 
-// Cada entidad consulta su propio controlador.
-// No existe un controlador general de entidades.
+// Cada entidad utiliza su propio controlador.
 const endpointsEntidades = {
     enfermero: `${RUTA_API}/enfermeros/enfermeros.php`,
     chofer: `${RUTA_API}/choferes/choferes.php`,
@@ -20,8 +16,7 @@ const endpointsEntidades = {
     vehiculo: `${RUTA_API}/ambulancias/ambulancias.php`
 };
 
-// Configuración de títulos y columnas.
-// Los nombres de los campos coinciden con los SELECT de los modelos.
+// Configuración de las columnas de cada tabla.
 const configuracionEntidades = {
 
     enfermero: {
@@ -31,7 +26,8 @@ const configuracionEntidades = {
             { campo: 'ci_enfermero', titulo: 'CI' },
             { campo: 'nombre_enfermero', titulo: 'Nombre' },
             { campo: 'apellido_enfermero', titulo: 'Apellido' }
-        ]
+        ],
+        identificador: 'ci_enfermero'
     },
 
     chofer: {
@@ -42,7 +38,8 @@ const configuracionEntidades = {
             { campo: 'nombre_chofer', titulo: 'Nombre' },
             { campo: 'apellido_chofer', titulo: 'Apellido' },
             { campo: 'telefono', titulo: 'Teléfono' }
-        ]
+        ],
+        identificador: 'ci_chofer'
     },
 
     elemento: {
@@ -56,7 +53,8 @@ const configuracionEntidades = {
             { campo: 'nombre_enfermero', titulo: 'Enfermero' },
             { campo: 'habitacion_retiro', titulo: 'Habitación' },
             { campo: 'piso_retiro', titulo: 'Piso' }
-        ]
+        ],
+        identificador: 'id_transportable'
     },
 
     paciente: {
@@ -72,7 +70,8 @@ const configuracionEntidades = {
             { campo: 'nombre_enfermero', titulo: 'Enfermero' },
             { campo: 'habitacion_retiro', titulo: 'Habitación' },
             { campo: 'piso_retiro', titulo: 'Piso' }
-        ]
+        ],
+        identificador: 'id_transportable'
     },
 
     destino: {
@@ -83,7 +82,8 @@ const configuracionEntidades = {
             { campo: 'nombre_destino', titulo: 'Nombre' },
             { campo: 'direccion', titulo: 'Dirección' },
             { campo: 'ruta', titulo: 'Ruta' }
-        ]
+        ],
+        identificador: 'id_destino'
     },
 
     vehiculo: {
@@ -95,19 +95,15 @@ const configuracionEntidades = {
             { campo: 'capacidad', titulo: 'Capacidad' },
             { campo: 'tipo_vehiculo', titulo: 'Tipo' },
             { campo: 'camilla', titulo: 'Camilla' }
-        ]
+        ],
+        identificador: 'matricula'
     }
 
 };
 
-
-// Registros recibidos desde el servidor.
 let todasLasEntidades = [];
-
-// Página actual de la tabla.
+let registrosFiltrados = [];
 let paginaActual = 1;
-
-// Entidad seleccionada.
 let entidadActual = 'enfermero';
 
 
@@ -120,12 +116,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const selector = document.getElementById('selectEntidad');
     const buscador = document.getElementById('inputBuscar');
 
-    // Al cambiar de entidad, consultamos su endpoint.
+    
+
     selector.addEventListener('change', () => {
 
         entidadActual = selector.value;
 
-        // Reiniciamos la búsqueda y la paginación.
         buscador.value = '';
         paginaActual = 1;
 
@@ -133,16 +129,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     });
 
-    // La búsqueda se realiza mientras se escribe.
     buscador.addEventListener('input', () => {
 
         paginaActual = 1;
-
         filtrarEntidades();
 
     });
 
-    // Cargamos inicialmente los enfermeros.
+    document.addEventListener('entidad-guardada', () => {
+    cargarEntidades();
+});
+
     cargarEntidades();
 
 });
@@ -158,9 +155,7 @@ async function cargarEntidades() {
 
     tbody.innerHTML = `
         <tr>
-            <td class="mensaje-tabla">
-                Cargando registros...
-            </td>
+            <td class="mensaje-tabla">Cargando registros...</td>
         </tr>
     `;
 
@@ -168,9 +163,7 @@ async function cargarEntidades() {
 
     try {
 
-        const endpoint = endpointsEntidades[entidadActual];
-
-        const respuesta = await fetch(endpoint, {
+        const respuesta = await fetch(endpointsEntidades[entidadActual], {
             method: 'GET',
             credentials: 'same-origin'
         });
@@ -178,13 +171,11 @@ async function cargarEntidades() {
         const datos = await respuesta.json();
 
         if (!respuesta.ok) {
-
             throw new Error(
                 datos.mensaje ||
                 datos.error ||
                 'No se pudieron obtener los registros.'
             );
-
         }
 
         if (!Array.isArray(datos)) {
@@ -193,11 +184,8 @@ async function cargarEntidades() {
 
         todasLasEntidades = datos;
 
-        // Actualizamos el contador con el total sin filtrar.
         document.getElementById('cantidadEntidades').textContent =
             todasLasEntidades.length;
-
-        paginaActual = 1;
 
         filtrarEntidades();
 
@@ -206,18 +194,21 @@ async function cargarEntidades() {
         console.error('Error al cargar entidades:', error);
 
         todasLasEntidades = [];
+        registrosFiltrados = [];
 
         document.getElementById('cantidadEntidades').textContent = '0';
-
         document.getElementById('tablaEntidadesHead').innerHTML = '';
 
-        tbody.innerHTML = `
-            <tr>
-                <td class="mensaje-tabla">
-                    ${escaparHTML(error.message)}
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = '';
+
+        const fila = document.createElement('tr');
+        const celda = document.createElement('td');
+
+        celda.className = 'mensaje-tabla';
+        celda.textContent = error.message;
+
+        fila.appendChild(celda);
+        tbody.appendChild(fila);
 
         document.getElementById('informacionResultados').textContent =
             'No se pudieron cargar los registros.';
@@ -257,8 +248,7 @@ function filtrarEntidades() {
         .toLowerCase()
         .trim();
 
-    // Buscamos el texto en todos los campos de cada registro.
-    const registrosFiltrados = todasLasEntidades.filter(registro => {
+    registrosFiltrados = todasLasEntidades.filter(registro => {
 
         return Object.values(registro).some(valor => {
 
@@ -270,11 +260,9 @@ function filtrarEntidades() {
 
     });
 
-    // Guardamos el resultado para que la paginación trabaje
-    // sobre los registros filtrados y no sobre todos los originales.
     paginaActual = 1;
 
-    renderizarTabla(registrosFiltrados);
+    renderizarTabla();
 
 }
 
@@ -283,7 +271,7 @@ function filtrarEntidades() {
 // RENDERIZAR TABLA
 // ==========================================
 
-function renderizarTabla(lista) {
+function renderizarTabla() {
 
     const encabezado = document.getElementById('tablaEntidadesHead');
     const tbody = document.getElementById('tablaEntidadesBody');
@@ -293,28 +281,30 @@ function renderizarTabla(lista) {
     encabezado.innerHTML = '';
     tbody.innerHTML = '';
 
-    // Creamos los encabezados según la entidad seleccionada.
+    // Encabezados de las columnas.
     const filaEncabezado = document.createElement('tr');
 
     configuracion.columnas.forEach(columna => {
 
         const th = document.createElement('th');
-
         th.textContent = columna.titulo;
 
         filaEncabezado.appendChild(th);
 
     });
 
+    const thAcciones = document.createElement('th');
+    thAcciones.textContent = 'Acciones';
+    filaEncabezado.appendChild(thAcciones);
+
     encabezado.appendChild(filaEncabezado);
 
-    // Si no hay resultados, mostramos un mensaje.
-    if (lista.length === 0) {
+    if (registrosFiltrados.length === 0) {
 
         const fila = document.createElement('tr');
         const celda = document.createElement('td');
 
-        celda.colSpan = configuracion.columnas.length;
+        celda.colSpan = configuracion.columnas.length + 1;
         celda.className = 'mensaje-tabla';
         celda.textContent = 'No se encontraron registros.';
 
@@ -330,11 +320,10 @@ function renderizarTabla(lista) {
 
     }
 
-    // Calculamos los registros que corresponden a la página actual.
     const inicio = (paginaActual - 1) * REGISTROS_POR_PAGINA;
     const fin = inicio + REGISTROS_POR_PAGINA;
 
-    const registrosPagina = lista.slice(inicio, fin);
+    const registrosPagina = registrosFiltrados.slice(inicio, fin);
 
     registrosPagina.forEach(registro => {
 
@@ -346,18 +335,10 @@ function renderizarTabla(lista) {
 
             let valor = registro[columna.campo];
 
-            // Los campos booleanos se muestran como Sí o No.
-            if (
-                ['camilla', 'oxigeno', 'aislamiento'].includes(columna.campo)
-            ) {
-
-                if (valor !== null && valor !== undefined) {
-                    valor = Number(valor) === 1 ? 'Sí' : 'No';
-                }
-
+            if (['camilla', 'oxigeno', 'aislamiento'].includes(columna.campo)) {
+                valor = Number(valor) === 1 ? 'Sí' : 'No';
             }
 
-            // Evitamos mostrar null o undefined.
             celda.textContent =
                 valor !== null && valor !== undefined && valor !== ''
                     ? valor
@@ -367,14 +348,52 @@ function renderizarTabla(lista) {
 
         });
 
+        // Botones de acciones para cada registro.
+        const celdaAcciones = document.createElement('td');
+        const acciones = document.createElement('div');
+
+        acciones.className = 'acciones-fila';
+
+        const btnEditar = document.createElement('button');
+        btnEditar.type = 'button';
+        btnEditar.className = 'btn-editar';
+        btnEditar.title = 'Editar entidad';
+        btnEditar.innerHTML = '<i class="fa-solid fa-pen"></i>';
+
+        btnEditar.addEventListener('click', () => {
+
+            // Enviamos el registro seleccionado al modal.
+            document.dispatchEvent(new CustomEvent('editar-entidad', {
+                detail: {
+                    tipo: entidadActual,
+                    registro: registro
+                }
+            }));
+
+        });
+
+        const btnEliminar = document.createElement('button');
+        btnEliminar.type = 'button';
+        btnEliminar.className = 'btn-eliminar';
+        btnEliminar.title = 'Eliminar entidad';
+        btnEliminar.innerHTML = '<i class="fa-solid fa-trash"></i>';
+
+        btnEliminar.addEventListener('click', () => {
+            eliminarEntidad(registro);
+        });
+
+        acciones.append(btnEditar, btnEliminar);
+        celdaAcciones.appendChild(acciones);
+        fila.appendChild(celdaAcciones);
+
         tbody.appendChild(fila);
 
     });
 
     document.getElementById('informacionResultados').textContent =
-        `Mostrando ${inicio + 1} - ${Math.min(fin, lista.length)} de ${lista.length} registros`;
+        `Mostrando ${inicio + 1} - ${Math.min(fin, registrosFiltrados.length)} de ${registrosFiltrados.length} registros`;
 
-    renderizarPaginacion(lista);
+    renderizarPaginacion();
 
 }
 
@@ -383,14 +402,14 @@ function renderizarTabla(lista) {
 // PAGINACIÓN
 // ==========================================
 
-function renderizarPaginacion(lista) {
+function renderizarPaginacion() {
 
     const contenedor = document.getElementById('contenedorPaginacion');
 
     contenedor.innerHTML = '';
 
     const totalPaginas = Math.ceil(
-        lista.length / REGISTROS_POR_PAGINA
+        registrosFiltrados.length / REGISTROS_POR_PAGINA
     );
 
     if (totalPaginas <= 1) {
@@ -411,8 +430,7 @@ function renderizarPaginacion(lista) {
         boton.addEventListener('click', () => {
 
             paginaActual = numero;
-
-            renderizarTabla(lista);
+            renderizarTabla();
 
         });
 
@@ -424,17 +442,58 @@ function renderizarPaginacion(lista) {
 
 
 // ==========================================
-// ESCAPAR TEXTO
+// ELIMINAR ENTIDAD
 // ==========================================
 
-// Se utiliza para mostrar mensajes de error sin insertar
-// contenido HTML proveniente del servidor.
-function escaparHTML(texto) {
+async function eliminarEntidad(registro) {
 
-    const elemento = document.createElement('div');
+    const configuracion = configuracionEntidades[entidadActual];
+    const identificador = configuracion.identificador;
+    const valorId = registro[identificador];
 
-    elemento.textContent = texto;
+    const confirmar = confirm(
+        `¿Está seguro de que desea eliminar este registro?\n\n${identificador}: ${valorId}`
+    );
 
-    return elemento.innerHTML;
+    if (!confirmar) {
+        return;
+    }
+
+    // Los controladores recibirán el identificador por query string.
+    const parametros = new URLSearchParams({
+        [identificador]: valorId
+    });
+
+    try {
+
+        const respuesta = await fetch(
+            `${endpointsEntidades[entidadActual]}?${parametros.toString()}`,
+            {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            }
+        );
+
+        const resultado = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(
+                resultado.mensaje ||
+                resultado.error ||
+                'No se pudo eliminar el registro.'
+            );
+        }
+
+        alert(resultado.mensaje || 'Registro eliminado correctamente.');
+
+        await cargarEntidades();
+
+    } catch (error) {
+
+        console.error('Error al eliminar entidad:', error);
+
+        alert(error.message);
+
+    }
 
 }

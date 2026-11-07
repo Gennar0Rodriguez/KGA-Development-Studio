@@ -1,4 +1,3 @@
-
 <?php
 
 require_once __DIR__ . '/../config/database.php';
@@ -12,8 +11,6 @@ class Enfermero
         $this->conexion = Database::getInstancia()->getConexion();
     }
 
-    // Devuelve los enfermeros registrados.
-    // Se utiliza también para el selector del formulario de pacientes.
     public function obtenerTodos(): array
     {
         $sql = "SELECT ci_enfermero, nombre_enfermero, apellido_enfermero
@@ -26,13 +23,11 @@ class Enfermero
         return $consulta->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Registra un nuevo enfermero.
     public function crear(array $datos): void
     {
         $sql = "INSERT INTO enfermero
                 (ci_enfermero, nombre_enfermero, apellido_enfermero)
-                VALUES
-                (:ci, :nombre, :apellido)";
+                VALUES (:ci, :nombre, :apellido)";
 
         $consulta = $this->conexion->prepare($sql);
 
@@ -41,5 +36,48 @@ class Enfermero
             ':nombre' => $datos['nombre_enfermero'],
             ':apellido' => $datos['apellido_enfermero']
         ]);
+    }
+
+    public function actualizar(array $datos): bool
+    {
+        $sql = "UPDATE enfermero
+                SET nombre_enfermero = :nombre,
+                    apellido_enfermero = :apellido
+                WHERE ci_enfermero = :ci";
+
+        $consulta = $this->conexion->prepare($sql);
+
+        $consulta->execute([
+            ':ci' => $datos['ci_enfermero'],
+            ':nombre' => $datos['nombre_enfermero'],
+            ':apellido' => $datos['apellido_enfermero']
+        ]);
+
+        return $consulta->rowCount() > 0;
+    }
+
+    public function eliminar(string $ci): bool
+    {
+        // Evitamos que la eliminación del enfermero borre transportables
+        // y pacientes o elementos asociados mediante ON DELETE CASCADE.
+        $sql = "SELECT COUNT(*)
+                FROM transportable
+                WHERE ci_enfermero = :ci";
+
+        $consulta = $this->conexion->prepare($sql);
+        $consulta->execute([':ci' => $ci]);
+
+        if ((int) $consulta->fetchColumn() > 0) {
+            throw new RuntimeException(
+                'No se puede eliminar el enfermero porque tiene pacientes o elementos asignados.'
+            );
+        }
+
+        $sql = "DELETE FROM enfermero WHERE ci_enfermero = :ci";
+
+        $consulta = $this->conexion->prepare($sql);
+        $consulta->execute([':ci' => $ci]);
+
+        return $consulta->rowCount() > 0;
     }
 }

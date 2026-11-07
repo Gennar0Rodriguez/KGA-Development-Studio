@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -9,13 +8,8 @@
     <title>Administrar Entidades | SIGSM</title>
 
     <link rel="icon" href="../logo/hospital de clinicaslogo.png">
-
-    <!-- Reutilizamos el diseño de Administrar Usuarios. -->
     <link rel="stylesheet" href="../css/stylesadministrarUsuarios.css">
-
-    <!-- Estilos propios de esta página. -->
     <link rel="stylesheet" href="../css/stylesadministrarEntidades.css">
-
     <link rel="stylesheet" href="../css/stylesnotificaciones.css">
 
     <link rel="stylesheet"
@@ -40,12 +34,10 @@
 
     <div class="layout">
 
-        <!-- El sidebar se carga desde sidebarAdmin.js. -->
         <div id="sidebar"></div>
 
         <main>
 
-            <!-- Buscador y selector de entidad. -->
             <div class="topbar">
 
                 <input
@@ -79,7 +71,6 @@
                             </p>
                         </div>
 
-                        <!-- Cantidad total de registros de la entidad seleccionada. -->
                         <div class="contador-entidades">
                             <i class="fa-solid fa-database"></i>
 
@@ -91,13 +82,18 @@
 
                     </div>
 
-                    <!-- La tabla cambia sus columnas según la entidad. -->
+                    <div class="acciones-entidades">
+                        <button type="button" id="btnAbrirModalEntidad" class="btn-agregar">
+                            <i class="fa-solid fa-plus"></i>
+                            Añadir entidad
+                        </button>
+                    </div>
+
                     <div class="tabla-responsive">
 
                         <table class="tabla-usuarios">
 
-                            <thead id="tablaEntidadesHead">
-                            </thead>
+                            <thead id="tablaEntidadesHead"></thead>
 
                             <tbody id="tablaEntidadesBody">
                                 <tr>
@@ -111,7 +107,6 @@
 
                     </div>
 
-                    <!-- Información y paginación. -->
                     <div class="pie-tabla">
 
                         <p id="informacionResultados">
@@ -130,7 +125,78 @@
 
     </div>
 
+
+    <!-- ==========================================
+         MODAL ÚNICO PARA CREAR Y EDITAR ENTIDADES
+    =========================================== -->
+
+    <div id="modalNuevaEntidad" class="modal-traslado">
+
+        <div class="modal-traslado-contenido">
+
+            <div class="modal-traslado-header">
+
+                <h2 id="tituloModalEntidad">Añadir entidad</h2>
+
+                <button
+                    type="button"
+                    id="btnCerrarModalEntidad"
+                    class="btn-cerrar-traslado">
+                    &times;
+                </button>
+
+            </div>
+
+            <form id="formNuevaEntidad">
+
+                <div id="contenedorTipoEntidad">
+
+                    <label for="tipoEntidad">¿Qué desea añadir?</label>
+
+                    <select id="tipoEntidad" name="tipoEntidad" required>
+                        <option value="">Seleccione una entidad</option>
+                        <option value="chofer">Chofer</option>
+                        <option value="paciente">Paciente</option>
+                        <option value="destino">Destino</option>
+                        <option value="enfermero">Enfermero</option>
+                        <option value="elemento">Elemento</option>
+                        <option value="vehiculo">Vehículo / Ambulancia</option>
+                    </select>
+
+                </div>
+
+                <div id="camposEntidad"></div>
+
+                <p id="mensajeEntidad" class="mensaje-entidad" role="status"></p>
+
+                <div class="acciones-formulario">
+
+                    <button
+                        type="button"
+                        id="btnCancelarModalEntidad"
+                        class="btn-cancelar">
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        id="btnGuardarEntidad"
+                        class="btn-guardar"
+                        disabled>
+                        Guardar entidad
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
     <script src="../js/administrarEntidades.js"></script>
+    <script src="../js/modalNuevaEntidad.js"></script>
     <script src="../js/sidebarAdmin.js"></script>
     <script src="../js/logout.js"></script>
     <script src="../js/notificaciones.js"></script>

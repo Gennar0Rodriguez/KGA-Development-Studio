@@ -1,4 +1,3 @@
-
 <?php
 
 require_once __DIR__ . '/../config/database.php';
@@ -12,7 +11,6 @@ class Destino
         $this->conexion = Database::getInstancia()->getConexion();
     }
 
-    // Devuelve los destinos registrados.
     public function obtenerTodos(): array
     {
         $sql = "SELECT id_destino, nombre_destino, direccion, ruta
@@ -25,13 +23,13 @@ class Destino
         return $consulta->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Genera un identificador único para el destino.
     private function generarId(): string
     {
         do {
             $id = 'DES' . strtoupper(bin2hex(random_bytes(4)));
 
             $sql = "SELECT COUNT(*) FROM destino WHERE id_destino = :id";
+
             $consulta = $this->conexion->prepare($sql);
             $consulta->execute([':id' => $id]);
 
@@ -42,15 +40,13 @@ class Destino
         return $id;
     }
 
-    // Registra un nuevo destino.
     public function crear(array $datos): string
     {
         $id = $this->generarId();
 
         $sql = "INSERT INTO destino
                 (id_destino, nombre_destino, direccion, ruta)
-                VALUES
-                (:id, :nombre, :direccion, :ruta)";
+                VALUES (:id, :nombre, :direccion, :ruta)";
 
         $consulta = $this->conexion->prepare($sql);
 
@@ -62,5 +58,35 @@ class Destino
         ]);
 
         return $id;
+    }
+
+    public function actualizar(array $datos): bool
+    {
+        $sql = "UPDATE destino
+                SET nombre_destino = :nombre,
+                    direccion = :direccion,
+                    ruta = :ruta
+                WHERE id_destino = :id";
+
+        $consulta = $this->conexion->prepare($sql);
+
+        $consulta->execute([
+            ':id' => $datos['id_destino'],
+            ':nombre' => $datos['nombre_destino'],
+            ':direccion' => $datos['direccion'],
+            ':ruta' => $datos['ruta']
+        ]);
+
+        return $consulta->rowCount() > 0;
+    }
+
+    public function eliminar(string $id): bool
+    {
+        $sql = "DELETE FROM destino WHERE id_destino = :id";
+
+        $consulta = $this->conexion->prepare($sql);
+        $consulta->execute([':id' => $id]);
+
+        return $consulta->rowCount() > 0;
     }
 }

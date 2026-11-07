@@ -1,4 +1,3 @@
-
 <?php
 
 require_once __DIR__ . '/../config/database.php';
@@ -12,13 +11,13 @@ class Paciente
         $this->conexion = Database::getInstancia()->getConexion();
     }
 
-    // Genera un identificador único para transportable.
     private function generarIdTransportable(): string
     {
         do {
             $id = 'TRP' . strtoupper(bin2hex(random_bytes(4)));
 
-            $sql = "SELECT COUNT(*) FROM transportable
+            $sql = "SELECT COUNT(*)
+                    FROM transportable
                     WHERE id_transportable = :id";
 
             $consulta = $this->conexion->prepare($sql);
@@ -31,9 +30,6 @@ class Paciente
         return $id;
     }
 
-    
-    // Devuelve todos los pacientes con sus datos de traslado
-    // y el enfermero que tienen asignado.
     public function obtenerTodos(): array
     {
         $sql = "SELECT
@@ -43,6 +39,7 @@ class Paciente
                     p.accesorio,
                     p.oxigeno,
                     p.aislamiento,
+                    t.ci_enfermero,
                     CONCAT(e.nombre_enfermero, ' ', e.apellido_enfermero)
                         AS nombre_enfermero,
                     t.habitacion_retiro,
@@ -60,21 +57,16 @@ class Paciente
         return $consulta->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
-    // Crea el transportable y el paciente dentro de una transacción.
     public function crear(array $datos): string
     {
         try {
-
             $this->conexion->beginTransaction();
 
-            // Comprobamos que el enfermero seleccionado exista.
             $sqlEnfermero = "SELECT COUNT(*)
                              FROM enfermero
                              WHERE ci_enfermero = :ci";
 
             $consultaEnfermero = $this->conexion->prepare($sqlEnfermero);
-
             $consultaEnfermero->execute([
                 ':ci' => $datos['ci_enfermero']
             ]);
@@ -87,11 +79,9 @@ class Paciente
 
             $idTransportable = $this->generarIdTransportable();
 
-            // Primero se registra el transportable.
             $sqlTransportable = "INSERT INTO transportable
                 (id_transportable, ci_enfermero, habitacion_retiro, piso_retiro)
-                VALUES
-                (:id, :enfermero, :habitacion, :piso)";
+                VALUES (:id, :enfermero, :habitacion, :piso)";
 
             $consultaTransportable = $this->conexion->prepare($sqlTransportable);
 
@@ -102,12 +92,10 @@ class Paciente
                 ':piso' => $datos['piso_retiro']
             ]);
 
-            // Después se registra el paciente asociado al transportable.
             $sqlPaciente = "INSERT INTO paciente
                 (id_transportable, ci_paciente, nombre_paciente,
                  accesorio, oxigeno, aislamiento)
-                VALUES
-                (:id, :ci, :nombre, :accesorio, :oxigeno, :aislamiento)";
+                VALUES (:id, :ci, :nombre, :accesorio, :oxigeno, :aislamiento)";
 
             $consultaPaciente = $this->conexion->prepare($sqlPaciente);
 
@@ -125,12 +113,90 @@ class Paciente
             return $idTransportable;
 
         } catch (Throwable $error) {
-
             if ($this->conexion->inTransaction()) {
                 $this->conexion->rollBack();
             }
 
             throw $error;
         }
+    }
+
+    public function actualizar(array $datos): bool
+    {
+        try {
+            $this->conexion->beginTransaction();
+
+            $sqlEnfermero = "SELECT COUNT(*)
+                             FROM enfermero
+                             WHERE ci_enfermero = :ci";
+
+            $consultaEnfermero = $this->conexion->prepare($sqlEnfermero);
+            $consultaEnfermero->execute([
+                ':ci' => $datos['ci_enfermero']
+            ]);
+
+            if ((int) $consultaEnfermero->fetchColumn() === 0) {
+                throw new InvalidArgumentException(
+                    'El enfermero seleccionado no existe.'
+                );
+            }
+
+            $sqlTransportable = "UPDATE transportable
+                SET ci_enfermero = :enfermero,
+                    habitacion_retiro = :habitacion,
+                    piso_retiro = :piso
+                WHERE id_transportable = :id";
+
+            $consultaTransportable = $this->conexion->prepare($sqlTransportable);
+
+            $consultaTransportable->execute([
+                ':id' => $datos['id_transportable'],
+                ':enfermero' => $datos['ci_enfermero'],
+                ':habitacion' => $datos['habitacion_retiro'],
+                ':piso' => $datos['piso_retiro']
+            ]);
+
+            $sqlPaciente = "UPDATE paciente
+                SET ci_paciente = :ci,
+                    nombre_paciente = :nombre,
+                    accesorio = :accesorio,
+                    oxigeno = :oxigeno,
+                    aislamiento = :aislamiento
+                WHERE id_transportable = :id";
+
+            $consultaPaciente = $this->conexion->prepare($sqlPaciente);
+
+            $consultaPaciente->execute([
+                ':id' => $datos['id_transportable'],
+                ':ci' => $datos['ci_paciente'],
+                ':nombre' => $datos['nombre_paciente'],
+                ':accesorio' => $datos['accesorio'],
+                ':oxigeno' => $datos['oxigeno'],
+                ':aislamiento' => $datos['aislamiento']
+            ]);
+
+            $this->conexion->commit();
+
+            return true;
+
+        } catch (Throwable $error) {
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+
+            throw $error;
+        }
+    }
+
+    public function eliminar(string $id): bool
+    {
+        // La eliminación del transportable elimina su paciente asociado
+        // mediante ON DELETE CASCADE, pero no borra el historial de traslados.
+        $sql = "DELETE FROM transportable WHERE id_transportable = :id";
+
+        $consulta = $this->conexion->prepare($sql);
+        $consulta->execute([':id' => $id]);
+
+        return $consulta->rowCount() > 0;
     }
 }
