@@ -50,6 +50,33 @@ try {
         responderJson($paciente->obtenerTodos());
     }
 
+    // DELETE: elimina un paciente.
+if ($metodo === 'DELETE') {
+
+    $id = trim($_GET['id_transportable'] ?? '');
+
+    if ($id === '') {
+        responderJson(['mensaje' => 'El identificador del paciente es obligatorio.'], 400);
+    }
+
+    try {
+
+        if (!$paciente->eliminar($id)) {
+            responderJson(['mensaje' => 'No se encontró el paciente indicado.'], 404);
+        }
+
+        responderJson(['mensaje' => 'Paciente eliminado correctamente.']);
+
+    } catch (PDOException $error) {
+
+        if ($error->getCode() === '23000') {
+            responderJson(['mensaje' => 'No se puede eliminar el paciente porque forma parte de traslados relacionados.'], 409);
+        }
+
+        throw $error;
+    }
+}
+
     if (!in_array($metodo, ['POST', 'PUT'], true)) {
         responderJson(['mensaje' => 'Método no permitido.'], 405);
     }

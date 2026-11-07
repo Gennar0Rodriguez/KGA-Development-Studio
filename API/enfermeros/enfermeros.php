@@ -82,6 +82,37 @@ try {
         responderJson($enfermero->obtenerTodos());
     }
 
+    // DELETE: elimina un enfermero.
+if ($metodo === 'DELETE') {
+
+    $ci = trim($_GET['ci_enfermero'] ?? '');
+
+    if ($ci === '') {
+        responderJson(['mensaje' => 'La cédula del enfermero es obligatoria.'], 400);
+    }
+
+    try {
+
+        if (!$enfermero->eliminar($ci)) {
+            responderJson(['mensaje' => 'No se encontró el enfermero indicado.'], 404);
+        }
+
+        responderJson(['mensaje' => 'Enfermero eliminado correctamente.']);
+
+    } catch (RuntimeException $error) {
+
+        responderJson(['mensaje' => $error->getMessage()], 409);
+
+    } catch (PDOException $error) {
+
+        if ($error->getCode() === '23000') {
+            responderJson(['mensaje' => 'No se puede eliminar el enfermero porque tiene registros relacionados.'], 409);
+        }
+
+        throw $error;
+    }
+}
+
     // Solo aceptamos POST y PUT para modificar los datos.
     if (!in_array($metodo, ['POST', 'PUT'], true)) {
         responderJson([

@@ -50,6 +50,33 @@ try {
         responderJson($chofer->obtenerTodos());
     }
 
+    // DELETE: elimina un chofer.
+if ($metodo === 'DELETE') {
+
+    $ci = trim($_GET['ci_chofer'] ?? '');
+
+    if ($ci === '') {
+        responderJson(['mensaje' => 'La cédula del chofer es obligatoria.'], 400);
+    }
+
+    try {
+
+        if (!$chofer->eliminar($ci)) {
+            responderJson(['mensaje' => 'No se encontró el chofer indicado.'], 404);
+        }
+
+        responderJson(['mensaje' => 'Chofer eliminado correctamente.']);
+
+    } catch (PDOException $error) {
+
+        if ($error->getCode() === '23000') {
+            responderJson(['mensaje' => 'No se puede eliminar el chofer porque tiene registros relacionados.'], 409);
+        }
+
+        throw $error;
+    }
+}
+
     if (!in_array($metodo, ['POST', 'PUT'], true)) {
         responderJson(['mensaje' => 'Método no permitido.'], 405);
     }

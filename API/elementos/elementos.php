@@ -50,6 +50,33 @@ try {
         responderJson($elemento->obtenerTodos());
     }
 
+    // DELETE: elimina un elemento.
+if ($metodo === 'DELETE') {
+
+    $id = trim($_GET['id_transportable'] ?? '');
+
+    if ($id === '') {
+        responderJson(['mensaje' => 'El identificador del elemento es obligatorio.'], 400);
+    }
+
+    try {
+
+        if (!$elemento->eliminar($id)) {
+            responderJson(['mensaje' => 'No se encontró el elemento indicado.'], 404);
+        }
+
+        responderJson(['mensaje' => 'Elemento eliminado correctamente.']);
+
+    } catch (PDOException $error) {
+
+        if ($error->getCode() === '23000') {
+            responderJson(['mensaje' => 'No se puede eliminar el elemento porque forma parte de registros relacionados.'], 409);
+        }
+
+        throw $error;
+    }
+}
+
     if (!in_array($metodo, ['POST', 'PUT'], true)) {
         responderJson(['mensaje' => 'Método no permitido.'], 405);
     }

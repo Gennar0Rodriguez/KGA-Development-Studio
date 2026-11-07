@@ -50,6 +50,33 @@ try {
         responderJson($destino->obtenerTodos());
     }
 
+    // DELETE: elimina un destino.
+if ($metodo === 'DELETE') {
+
+    $id = trim($_GET['id_destino'] ?? '');
+
+    if ($id === '') {
+        responderJson(['mensaje' => 'El identificador del destino es obligatorio.'], 400);
+    }
+
+    try {
+
+        if (!$destino->eliminar($id)) {
+            responderJson(['mensaje' => 'No se encontró el destino indicado.'], 404);
+        }
+
+        responderJson(['mensaje' => 'Destino eliminado correctamente.']);
+
+    } catch (PDOException $error) {
+
+        if ($error->getCode() === '23000') {
+            responderJson(['mensaje' => 'No se puede eliminar el destino porque tiene traslados relacionados.'], 409);
+        }
+
+        throw $error;
+    }
+}
+
     if (!in_array($metodo, ['POST', 'PUT'], true)) {
         responderJson(['mensaje' => 'Método no permitido.'], 405);
     }
