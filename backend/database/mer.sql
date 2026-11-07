@@ -84,8 +84,8 @@ CREATE TABLE conduce (
     ci_chofer VARCHAR(8) NOT NULL,
     matricula VARCHAR(15) NOT NULL,
     PRIMARY KEY (ci_chofer, matricula),
-    FOREIGN KEY (ci_chofer) REFERENCES chofer(ci_chofer),
-    FOREIGN KEY (matricula) REFERENCES vehiculo(matricula)
+    FOREIGN KEY (ci_chofer) REFERENCES chofer(ci_chofer) ON DELETE CASCADE, 
+    FOREIGN KEY (matricula) REFERENCES vehiculo(matricula) ON DELETE CASCADE
 );
 
 CREATE TABLE destino (
@@ -131,7 +131,7 @@ CREATE TABLE notifica (
     FOREIGN KEY (ci_chofer) REFERENCES chofer(ci_chofer),
     FOREIGN KEY (matricula) REFERENCES vehiculo(matricula),
     FOREIGN KEY (id_destino) REFERENCES destino(id_destino),
-    FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin)
+    FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin) ON DELETE CASCADE
 );
 
 CREATE TABLE enfermero (
@@ -145,7 +145,7 @@ CREATE TABLE transportable (
     ci_enfermero VARCHAR(8) NOT NULL,
     habitacion_retiro VARCHAR(50) NOT NULL,
     piso_retiro VARCHAR(50) NOT NULL,
-    FOREIGN KEY (ci_enfermero) REFERENCES enfermero(ci_enfermero)
+    FOREIGN KEY (ci_enfermero) REFERENCES enfermero(ci_enfermero) ON DELETE CASCADE
 );
 
 CREATE TABLE paciente (
@@ -155,7 +155,7 @@ CREATE TABLE paciente (
     accesorio ENUM('baston', 'silla', 'otro') NOT NULL,
     oxigeno BOOLEAN NOT NULL,
     aislamiento BOOLEAN NOT NULL,
-    FOREIGN KEY (id_transportable) REFERENCES transportable(id_transportable)
+    FOREIGN KEY (id_transportable) REFERENCES transportable(id_transportable) ON DELETE CASCADE
 );
 
 CREATE TABLE elemento (
@@ -163,7 +163,7 @@ CREATE TABLE elemento (
     nombre_elemento VARCHAR(50) NOT NULL,
     descripcion_elemento VARCHAR(50) NOT NULL,
     tipo_elemento ENUM('organo', 'documentacion', 'otro') NOT NULL,
-    FOREIGN KEY (id_transportable) REFERENCES transportable(id_transportable)
+    FOREIGN KEY (id_transportable) REFERENCES transportable(id_transportable) ON DELETE CASCADE
 );
 
 CREATE TABLE transporta (
