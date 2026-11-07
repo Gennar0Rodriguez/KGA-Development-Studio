@@ -182,9 +182,9 @@ CREATE TABLE transporta (
 
 INSERT INTO administrativo (ci_admin, nombre_admin, apellido_admin, contraseña_admin, cargo) VALUES
 ('12345678', 'Ezequiel', 'Matta', 'Ari', 'administrador'),
-('87654321', 'Juan', 'Gomez', '123', 'empleado'),
+('87654321', 'Ari', 'Matta', 'Eze', 'administrador'),
 ('11223344', 'Carlos', 'Perez', '456', 'empleado'),
-('55667788', 'Marichal', 'Rodriguez', '789', 'administrador'),
+('55667788', 'Marichal', 'Rodriguez', '789', 'empleado'),
 ('99887766', 'Juan', 'Lopez', '222', 'empleado');
 
 INSERT INTO categoria (id_categoria, nombre_cat, tipo_cat, estado_cat) VALUES
