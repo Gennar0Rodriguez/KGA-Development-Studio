@@ -238,7 +238,7 @@ INSERT INTO vehiculo (matricula, modelo, capacidad, tipo_vehiculo, camilla, obse
 ('SCA1001', 'Mercedes Sprinter', '4', 'ambulancia', 1, 'Equipamiento UTI movil'),
 ('SCA1002', 'Fiat Ducato', '3', 'ambulancia', 1, 'Oxigeno disponible'),
 ('SCA1003', 'Renault Kangoo', '1', 'auto', 0, 'Traslado de personal o insumos'),
-('SCA1004', 'Peugeot Partner', '1', 'auto', 0, 'Documentacion urgente'),
+('SCA1004', 'Ford Fusion', '1', 'auto', 0, 'Documentacion urgente'),
 ('SCA1005', 'Ford Fiesta', '6', 'otro', 0, 'Vehiculo de traslado');
 
 INSERT INTO conduce (ci_chofer, matricula) VALUES
