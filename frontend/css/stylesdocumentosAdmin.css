@@ -231,3 +231,21 @@ hr {
         justify-self: start;
     }
 }
+
+/* Botón para editar documentos. */
+.btn-editar-doc {
+    margin-right: 8px;
+    background: #fff3d6;
+    color: #a66a00;
+    border: none;
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-editar-doc:hover {
+    background: #ffe5ad;
+}

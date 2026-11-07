@@ -12,6 +12,7 @@ const API_CATEGORIAS =
 let todosLosDocumentos = [];
 let categoriasActivas = [];
 let todasLasCategorias = [];
+let idDocumentoEnEdicion = null;
 
 // Categoría seleccionada en el filtro público.
 let categoriaSeleccionada = 'todas';
@@ -52,10 +53,12 @@ function inicializarModal() {
 
     const formulario = document.getElementById('formSubirDocumento');
 
-    // Abrir modal.
+    // Abrir el modal para subir un documento nuevo.
     if (btnAbrir && modal) {
 
         btnAbrir.addEventListener('click', () => {
+
+            limpiarFormularioDocumento();
 
             modal.style.display = 'flex';
 
@@ -65,25 +68,12 @@ function inicializarModal() {
 
     }
 
-    // Cerrar modal y limpiar el formulario.
+    // Cerrar el modal y limpiar los campos.
     const cerrarModal = () => {
 
-        if (modal) {
-            modal.style.display = 'none';
-        }
+        modal.style.display = 'none';
 
-        if (formulario) {
-            formulario.reset();
-        }
-
-        // Limpiar el ID de categoría seleccionado.
-        const idCategoria = document.getElementById('id_categoria');
-
-        if (idCategoria) {
-            idCategoria.value = '';
-        }
-
-        ocultarSugerencias();
+        limpiarFormularioDocumento();
 
     };
 
@@ -95,7 +85,6 @@ function inicializarModal() {
         btnCancelar.addEventListener('click', cerrarModal);
     }
 
-    // Cerrar si se hace clic fuera del contenido.
     if (modal) {
 
         modal.addEventListener('click', (e) => {
@@ -107,6 +96,116 @@ function inicializarModal() {
         });
 
     }
+
+}
+
+// ======================================================
+// PREPARAR EL MODAL PARA SUBIR O EDITAR
+// ======================================================
+
+function limpiarFormularioDocumento() {
+
+    const formulario = document.getElementById('formSubirDocumento');
+
+    if (!formulario) return;
+
+    formulario.reset();
+
+    idDocumentoEnEdicion = null;
+
+    const idCategoria = document.getElementById('id_categoria');
+
+    if (idCategoria) {
+        idCategoria.value = '';
+    }
+
+    const archivo = document.getElementById('documentFile');
+
+    if (archivo) {
+        archivo.required = true;
+    }
+
+    const encabezado = document.querySelector(
+        '#modalSubirDocumento .modal-header h2'
+    );
+
+    const subtitulo = formulario.querySelector('h3');
+
+    const botonGuardar = formulario.querySelector(
+        'button[type="submit"]'
+    );
+
+    if (encabezado) {
+        encabezado.textContent = 'Administrar documentos';
+    }
+
+    if (subtitulo) {
+        subtitulo.textContent = 'Subir nuevo documento';
+    }
+
+    if (botonGuardar) {
+        botonGuardar.innerHTML =
+            '<i class="fa-solid fa-upload"></i> Subir documento';
+    }
+
+    ocultarSugerencias();
+
+}
+
+
+// Abrir el modal con los datos de un documento existente.
+function abrirModalEdicion(doc) {
+
+    const formulario = document.getElementById('formSubirDocumento');
+
+    const modal = document.getElementById('modalSubirDocumento');
+
+    if (!formulario || !modal) return;
+
+    // Guardar el ID del documento que se está modificando.
+    idDocumentoEnEdicion = doc.id_documentos;
+
+    // Completar los campos con la información actual.
+    document.getElementById('documentTitle').value =
+        doc.titulo_docs || '';
+
+    document.getElementById('documentDescription').value =
+        doc.descripcion_docs || '';
+
+    document.getElementById('categorySearch').value =
+        doc.nombre_cat || '';
+
+    document.getElementById('id_categoria').value =
+        doc.id_categoria || '';
+
+    // El PDF es opcional al editar.
+    // Si no se selecciona uno nuevo, se conserva el existente.
+    document.getElementById('documentFile').required = false;
+
+    const encabezado = modal.querySelector('.modal-header h2');
+
+    const subtitulo = formulario.querySelector('h3');
+
+    const botonGuardar = formulario.querySelector(
+        'button[type="submit"]'
+    );
+
+    if (encabezado) {
+        encabezado.textContent = 'Editar documento';
+    }
+
+    if (subtitulo) {
+        subtitulo.textContent = 'Modificar información del documento';
+    }
+
+    if (botonGuardar) {
+        botonGuardar.innerHTML =
+            '<i class="fa-solid fa-floppy-disk"></i> Guardar cambios';
+    }
+
+    modal.style.display = 'flex';
+
+    cargarCategorias();
 
 }
 
@@ -127,8 +226,6 @@ function inicializarFormulario() {
 
         const idCategoria = document.getElementById('id_categoria')?.value;
 
-        // No alcanza con escribir el nombre:
-        // el usuario debe seleccionar una sugerencia válida.
         if (!idCategoria) {
 
             alert('Debe seleccionar una categoría existente.');
@@ -139,6 +236,20 @@ function inicializarFormulario() {
         }
 
         const formData = new FormData(formulario);
+
+        // Diferenciar una nueva subida de una edición.
+        const estaEditando = idDocumentoEnEdicion !== null;
+
+        if (estaEditando) {
+
+            formData.append('accion', 'editar');
+
+            formData.append(
+                'id_documentos',
+                idDocumentoEnEdicion
+            );
+
+        }
 
         try {
 
@@ -151,18 +262,15 @@ function inicializarFormulario() {
 
             if (!response.ok) {
 
-                alert(resultado.error || 'No se pudo subir el documento');
+                alert(
+                    resultado.error ||
+                    'No se pudo guardar el documento.'
+                );
 
                 return;
             }
 
-            alert(resultado.mensaje || 'Documento subido correctamente');
-
-            formulario.reset();
-
-            document.getElementById('id_categoria').value = '';
-
-            ocultarSugerencias();
+            alert(resultado.mensaje);
 
             const modal = document.getElementById('modalSubirDocumento');
 
@@ -170,11 +278,14 @@ function inicializarFormulario() {
                 modal.style.display = 'none';
             }
 
-            cargarDocumentos();
+            limpiarFormularioDocumento();
+
+            // Actualizar la tabla con los datos nuevos.
+            await cargarDocumentos();
 
         } catch (error) {
 
-            console.error('Error al subir documento:', error);
+            console.error('Error al guardar documento:', error);
 
             alert('No se pudo conectar con el servidor.');
 
@@ -845,13 +956,15 @@ function renderizarVistaAdmin(lista) {
         // Botón para visualizar el PDF.
         const botonVer = document.createElement('button');
 
-        botonVer.type = 'button';
-        botonVer.textContent = 'Ver';
-        botonVer.className = 'btn-ver-doc';
+        const botonEditar = document.createElement('button');
 
-        botonVer.addEventListener('click', () => {
+        botonEditar.type = 'button';
+        botonEditar.textContent = 'Editar';
+        botonEditar.className = 'btn-editar-doc';
 
-            verPDF(doc.id_documentos);
+        botonEditar.addEventListener('click', () => {
+
+            abrirModalEdicion(doc);
 
         });
 
@@ -870,6 +983,7 @@ function renderizarVistaAdmin(lista) {
 
         // Agregar los botones a la columna de acciones.
         celdaAcciones.appendChild(botonVer);
+        celdaAcciones.appendChild(botonEditar);
         celdaAcciones.appendChild(botonEliminar);
 
         // Agregar las cuatro columnas a la fila.

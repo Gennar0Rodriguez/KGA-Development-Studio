@@ -165,6 +165,220 @@ switch ($metodo) {
             ], 401);
         }
 
+        // ==================================================
+// EDITAR UN DOCUMENTO EXISTENTE
+// ==================================================
+
+if (($_POST['accion'] ?? '') === 'editar') {
+
+    $idDocumento = trim($_POST['id_documentos'] ?? '');
+
+    $titulo = trim($_POST['documentTitle'] ?? '');
+    $descripcion = trim($_POST['documentDescription'] ?? '');
+    $idCategoria = trim($_POST['id_categoria'] ?? '');
+
+    if ($idDocumento === '' || $titulo === '' || $idCategoria === '') {
+        responderJson([
+            'error' => 'Faltan datos obligatorios del documento'
+        ], 400);
+    }
+
+    if (mb_strlen($titulo, 'UTF-8') > 50 ||
+        mb_strlen($descripcion, 'UTF-8') > 50) {
+
+        responderJson([
+            'error' => 'El título y la descripción no pueden superar los 50 caracteres'
+        ], 400);
+    }
+
+    // Recuperar los datos actuales.
+    $documentoActual = $documento->buscarPorId($idDocumento);
+
+    if ($documentoActual === null) {
+        responderJson([
+            'error' => 'El documento que intenta editar no existe'
+        ], 404);
+    }
+
+    // Comprobar que la categoría exista y esté activa.
+    // Si conserva su categoría anterior, también se permite
+    // mantenerla aunque actualmente esté deshabilitada.
+    if (
+        !$categoria->existeCategoriaDocumentoActiva($idCategoria) &&
+        $idCategoria !== $documentoActual['id_categoria']
+    ) {
+        responderJson([
+            'error' => 'La categoría seleccionada no existe o está deshabilitada'
+        ], 400);
+    }
+
+    // Por defecto se conserva el PDF actual.
+    $nombreArchivo = $documentoActual['nombre_archivo'];
+    $rutaRelativa = $documentoActual['ruta_archivo'];
+
+    $rutaFisicaNueva = null;
+
+    // Comprobar si se seleccionó un PDF nuevo.
+    $archivoNuevo = isset($_FILES['documentFile'])
+        && $_FILES['documentFile']['error'] !== UPLOAD_ERR_NO_FILE;
+
+    if ($archivoNuevo) {
+
+        $archivo = $_FILES['documentFile'];
+
+        if ($archivo['error'] !== UPLOAD_ERR_OK) {
+            responderJson([
+                'error' => 'Se produjo un error al subir el nuevo PDF'
+            ], 400);
+        }
+
+        if (
+            !is_uploaded_file($archivo['tmp_name']) ||
+            $archivo['size'] <= 0 ||
+            $archivo['size'] > $tamanoMaximo
+        ) {
+            responderJson([
+                'error' => 'El nuevo archivo no es válido o supera los 10 MB'
+            ], 400);
+        }
+
+        // Validar el tipo MIME real.
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+
+        if ($finfo === false) {
+            responderJson([
+                'error' => 'No se pudo comprobar el archivo'
+            ], 500);
+        }
+
+        $tipoMime = finfo_file($finfo, $archivo['tmp_name']);
+
+        finfo_close($finfo);
+
+        // Validar la cabecera del PDF.
+        $handle = fopen($archivo['tmp_name'], 'rb');
+
+        if ($handle === false) {
+            responderJson([
+                'error' => 'No se pudo leer el nuevo archivo'
+            ], 400);
+        }
+
+        $cabecera = fread($handle, 5);
+
+        fclose($handle);
+
+        if ($tipoMime !== 'application/pdf' || $cabecera !== '%PDF-') {
+            responderJson([
+                'error' => 'El archivo debe ser un PDF válido'
+            ], 400);
+        }
+
+        // Limpiar el nombre original.
+        $nombreArchivo = basename(
+            str_replace('\\', '/', $archivo['name'])
+        );
+
+        $nombreArchivo = preg_replace(
+            '/[\x00-\x1F\x7F]/',
+            '',
+            $nombreArchivo
+        );
+
+        if ($nombreArchivo === '') {
+            $nombreArchivo = 'documento.pdf';
+        }
+
+        $nombreArchivo = mb_substr(
+            $nombreArchivo,
+            0,
+            255,
+            'UTF-8'
+        );
+
+        // Crear un nombre físico nuevo para no sobrescribir
+        // el archivo anterior antes de actualizar la base de datos.
+        $nombreServidor = 'DOC' . bin2hex(random_bytes(6)) . '.pdf';
+
+        $carpetaRelativa = 'uploads/documentos';
+
+        $carpetaFisica = $raizProyecto
+            . DIRECTORY_SEPARATOR
+            . 'uploads'
+            . DIRECTORY_SEPARATOR
+            . 'documentos';
+
+        if (!is_dir($carpetaFisica)) {
+            responderJson([
+                'error' => 'No se encontró la carpeta de documentos'
+            ], 500);
+        }
+
+        $rutaRelativa = $carpetaRelativa . '/' . $nombreServidor;
+
+        $rutaFisicaNueva = $carpetaFisica
+            . DIRECTORY_SEPARATOR
+            . $nombreServidor;
+
+        if (!move_uploaded_file(
+            $archivo['tmp_name'],
+            $rutaFisicaNueva
+        )) {
+            responderJson([
+                'error' => 'No se pudo guardar el nuevo PDF'
+            ], 500);
+        }
+
+    }
+
+    // Actualizar los datos en la base de datos.
+    $actualizado = $documento->actualizar(
+        $idDocumento,
+        $idCategoria,
+        $titulo,
+        $descripcion,
+        $nombreArchivo,
+        $rutaRelativa
+    );
+
+    if (!$actualizado) {
+
+        // Si falló la actualización, eliminar el archivo nuevo.
+        if (
+            $rutaFisicaNueva !== null &&
+            is_file($rutaFisicaNueva)
+        ) {
+            unlink($rutaFisicaNueva);
+        }
+
+        responderJson([
+            'error' => 'No se pudieron guardar los cambios'
+        ], 500);
+    }
+
+    // Una vez actualizado el registro, eliminar el PDF anterior.
+    if ($archivoNuevo) {
+
+        $rutaAnterior = resolverRutaArchivo(
+            $documentoActual['ruta_archivo'],
+            $raizProyecto
+        );
+
+        if (
+            $rutaAnterior !== null &&
+            is_file($rutaAnterior)
+        ) {
+            unlink($rutaAnterior);
+        }
+
+    }
+
+    responderJson([
+        'mensaje' => 'Documento actualizado correctamente'
+    ]);
+
+}
+
         $titulo = trim($_POST['documentTitle'] ?? '');
         $descripcion = trim($_POST['documentDescription'] ?? '');
         $idCategoria = trim($_POST['id_categoria'] ?? '');

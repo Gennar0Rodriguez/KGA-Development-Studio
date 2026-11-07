@@ -125,6 +125,53 @@ class Documento
     }
 
     // ======================================================
+// ACTUALIZAR UN DOCUMENTO
+// ======================================================
+
+public function actualizar(
+    string $idDoc,
+    string $idCat,
+    string $titulo,
+    string $descripcion,
+    string $nombreArchivo,
+    string $rutaArchivo
+): bool {
+
+    try {
+
+        $sql = "UPDATE documentos
+                SET
+                    id_categoria = :cat,
+                    titulo_docs = :titulo,
+                    descripcion_docs = :descripcion,
+                    nombre_archivo = :nombre,
+                    ruta_archivo = :ruta
+                WHERE id_documentos = :id";
+
+        $sentencia = $this->conexion->prepare($sql);
+
+        $sentencia->bindValue(':cat', $idCat);
+        $sentencia->bindValue(':titulo', $titulo);
+        $sentencia->bindValue(':descripcion', $descripcion);
+        $sentencia->bindValue(':nombre', $nombreArchivo);
+        $sentencia->bindValue(':ruta', $rutaArchivo);
+        $sentencia->bindValue(':id', $idDoc);
+
+        return $sentencia->execute();
+
+    } catch (Throwable $e) {
+
+        error_log(
+            'Error al actualizar documento: ' . $e->getMessage()
+        );
+
+        return false;
+
+    }
+
+}
+
+    // ======================================================
     // ELIMINAR UN DOCUMENTO
     // ======================================================
 
