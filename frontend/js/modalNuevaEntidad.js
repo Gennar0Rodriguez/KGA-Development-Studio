@@ -17,13 +17,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnGuardar = document.getElementById("btnGuardarEntidad");
 
     // Rutas de los controladores PHP.
-    // Se mantiene la misma ruta base utilizada por el proyecto.
-
     const RUTAS_API = {
         chofer: "/kgade/KGA-Development-Studio/API/choferes/choferes.php",
         paciente: "/kgade/KGA-Development-Studio/API/pacientes/paciente.php",
         destino: "/kgade/KGA-Development-Studio/API/destinos/destinos.php",
-        enfermero: "/kgade/KGA-Development-Studio/API/enfermeros/enfermeros.php"
+        enfermero: "/kgade/KGA-Development-Studio/API/enfermeros/enfermeros.php",
+        elemento: "/kgade/KGA-Development-Studio/API/elementos/elementos.php"
     };
 
     // ==========================================
@@ -51,7 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
     btnCancelar.addEventListener("click", cerrarModal);
 
     // Cerrar al hacer clic fuera del contenido.
-
     modal.addEventListener("click", (evento) => {
         if (evento.target === modal) {
             cerrarModal();
@@ -261,9 +259,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         contenedorCampos.append(labelEnfermero, selectEnfermero);
 
-        // Se solicitan los enfermeros al servidor para que el
-        // administrador pueda seleccionar uno ya registrado.
-
         try {
 
             const respuesta = await fetch(RUTAS_API.enfermero, {
@@ -298,6 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (datos.length === 0) {
                 selectEnfermero.innerHTML = "";
+
                 const opcion = document.createElement("option");
                 opcion.value = "";
                 opcion.textContent = "Primero debe registrar un enfermero";
@@ -318,6 +314,112 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================
+    // CAMPOS DE ELEMENTO
+    // ==========================================
+
+    async function mostrarCamposElemento() {
+
+        // Atributos propios de la entidad Elemento.
+        crearCampo("Nombre del elemento", "nombre_elemento", "text", {
+            maxlength: 50,
+            placeholder: "Ej: Riñón"
+        });
+
+        crearCampo("Descripción del elemento", "descripcion_elemento", "text", {
+            maxlength: 50,
+            placeholder: "Descripción del elemento"
+        });
+
+        // Los valores coinciden con el ENUM definido en el MER.
+        crearSelect("Tipo de elemento", "tipo_elemento", [
+            { value: "", texto: "Seleccione un tipo" },
+            { value: "organo", texto: "Órgano" },
+            { value: "documentacion", texto: "Documentación" },
+            { value: "otro", texto: "Otro" }
+        ]);
+
+        // Datos de la tabla transportable.
+        crearCampo("Habitación de retiro", "habitacion_retiro", "text", {
+            maxlength: 50,
+            placeholder: "Número de habitación"
+        });
+
+        crearCampo("Piso de retiro", "piso_retiro", "text", {
+            maxlength: 50,
+            placeholder: "Número de piso"
+        });
+
+        // El enfermero se selecciona entre los ya registrados.
+        const selectEnfermero = document.createElement("select");
+        selectEnfermero.id = "entidad_ci_enfermero";
+        selectEnfermero.name = "ci_enfermero";
+        selectEnfermero.required = true;
+
+        const labelEnfermero = document.createElement("label");
+        labelEnfermero.htmlFor = "entidad_ci_enfermero";
+        labelEnfermero.textContent = "Enfermero responsable";
+
+        const opcionInicial = document.createElement("option");
+        opcionInicial.value = "";
+        opcionInicial.textContent = "Cargando enfermeros...";
+        selectEnfermero.appendChild(opcionInicial);
+
+        contenedorCampos.append(labelEnfermero, selectEnfermero);
+
+        try {
+
+            const respuesta = await fetch(RUTAS_API.enfermero, {
+                method: "GET",
+                credentials: "same-origin"
+            });
+
+            const datos = await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(datos.mensaje || "No se pudieron cargar los enfermeros.");
+            }
+
+            if (!Array.isArray(datos) || datos.length === 0) {
+                throw new Error("Primero debe registrar un enfermero.");
+            }
+
+            selectEnfermero.innerHTML = "";
+
+            const opcionSeleccione = document.createElement("option");
+            opcionSeleccione.value = "";
+            opcionSeleccione.textContent = "Seleccione un enfermero";
+            selectEnfermero.appendChild(opcionSeleccione);
+
+            datos.forEach((enfermero) => {
+
+                const opcion = document.createElement("option");
+
+                opcion.value = enfermero.ci_enfermero;
+                opcion.textContent =
+                    `${enfermero.nombre_enfermero} ${enfermero.apellido_enfermero} - ${enfermero.ci_enfermero}`;
+
+                selectEnfermero.appendChild(opcion);
+
+            });
+
+            return true;
+
+        } catch (error) {
+
+            selectEnfermero.innerHTML = "";
+
+            const opcion = document.createElement("option");
+            opcion.value = "";
+            opcion.textContent = "No se pudieron cargar los enfermeros";
+            selectEnfermero.appendChild(opcion);
+
+            mostrarMensaje(error.message, "error");
+
+            return false;
+        }
+    }
+
+    // ==========================================
     // CAMBIAR LOS CAMPOS SEGÚN LA ENTIDAD
     // ==========================================
 
@@ -329,6 +431,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const tipo = selector.value;
 
         btnGuardar.disabled = true;
+
+        // Permite controlar si los campos necesarios se cargaron.
+        let camposListos = true;
 
         switch (tipo) {
 
@@ -348,11 +453,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 await mostrarCamposPaciente();
                 break;
 
+            case "elemento":
+                camposListos = await mostrarCamposElemento();
+                break;
+
             default:
                 return;
         }
 
-        btnGuardar.disabled = false;
+        btnGuardar.disabled = !camposListos;
     });
 
     // ==========================================
