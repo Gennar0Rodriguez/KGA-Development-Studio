@@ -1,186 +1,195 @@
-/* ======================================================
-   CONFIGURACIÓN GENERAL
-====================================================== */
+:root {
+    --capa-1: rgba(255, 255, 255, 0.72);
+    --capa-2: rgba(255, 255, 255, 0.82);
+    --capa-3: rgba(255, 255, 255, 0.91);
+    --capa-4: rgba(255, 255, 255, 0.97);
+    --capa-blur: blur(8px);
+}
 
-body {
-    font-family: 'Lexend', sans-serif;
-    background-color: #f0f4f8;
+hr {
+    height: 10px;
 }
 
 .documentos-container {
-    width: 90%;
-    max-width: 1100px;
-
-    margin: 30px auto;
-    padding: 30px;
-
-    background-color: white;
-
+    width: 100%;
+    margin: 0;
+    padding: 25px;
+    background: var(--capa-1);
     border-radius: 15px;
-
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-
-    display: flex;
-    flex-direction: column;
-
-    box-sizing: border-box;
+    min-height: calc(100vh - 150px);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-auto-rows: min-content;
+    align-items: center;
+    column-gap: 15px;
+    backdrop-filter: var(--capa-blur);
+    -webkit-backdrop-filter: var(--capa-blur);
 }
 
 .documentos-container h2 {
-    margin-bottom: 20px;
+    font-size: 23px;
+    color: #263445;
 }
 
-
-/* ======================================================
-   BOTÓN SUBIR DOCUMENTO
-====================================================== */
-
 .btn-subir {
-    background-color: #54a889;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #159ed0;
     color: white;
-
     border: none;
-    border-radius: 12px;
-
-    padding: 12px 20px;
-
-    font-size: 1rem;
-    font-weight: bold;
-
+    border-radius: 9px;
+    padding: 12px 17px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
-
-    margin-bottom: 20px;
-
     transition: 0.3s;
 }
 
 .btn-subir:hover {
-    background-color: #00a96b;
+    background: #087eaf;
 }
 
-
-/* ======================================================
-   BUSCADOR
-====================================================== */
+.documentos-container > .btn-subir {
+    margin: 0;
+    padding: 12px 17px;
+    font-size: 14px;
+}
 
 .busqueda-documentos {
+    grid-column: 1 / -1;
     display: flex;
     flex-direction: row;
-
     gap: 10px;
-
-    margin-bottom: 20px;
+    margin-top: 25px;
+    background: var(--capa-2);
+    border-radius: 15px;
+    padding: 15px 23px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
 }
 
-.buscador {
+.busqueda-documentos .buscador {
+    flex: 1;
     width: 100%;
-
-    padding: 12px;
-
-    border: 1px solid #ccc;
-    border-radius: 10px;
-
-    font-family: "Lexend", sans-serif;
-
-    box-sizing: border-box;
-}
-
-.btn-buscar {
-    background-color: #0284c7;
-    color: white;
-
-    width: 60px;
-    height: 45px;
-
-    border: none;
+    min-width: 0;
+    margin: 0;
+    padding: 11px 13px;
+    border: 1px solid #d5dce5;
     border-radius: 8px;
+    background: var(--capa-3);
+    color: #344256;
+    font-size: 14px;
+    outline: none;
+}
 
+.busqueda-documentos .buscador:focus {
+    border-color: #159ed0;
+}
+
+.busqueda-documentos .btn-buscar {
+    width: 50px;
+    height: auto;
+    padding: 0;
+    background: #159ed0;
+    color: white;
+    border: none;
+    border-radius: 9px;
     cursor: pointer;
+    transition: 0.3s;
 }
 
-.btn-buscar:hover {
-    background-color: #0369a1;
+.busqueda-documentos .btn-buscar:hover {
+    background: #087eaf;
 }
-
-
-/* ======================================================
-   TABLA DE DOCUMENTOS
-====================================================== */
 
 .tabla-responsive {
+    grid-column: 1 / -1;
     width: 100%;
+    margin-top: 25px;
+    background: var(--capa-2);
+    border-radius: 15px;
+    padding: 15px 23px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
     overflow-x: auto;
 }
 
 .tabla-documentos {
     width: 100%;
-
-    border-collapse: collapse;
-
     min-width: 550px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.tabla-documentos th,
+.tabla-documentos td {
+    padding: 13px 15px;
+    border-bottom: 1px solid #e8edf2;
+    font-size: 13px;
 }
 
 .tabla-documentos th {
-    background-color: #e0f2fe;
-
-    color: #0284c7;
-
-    text-align: left;
-
-    padding: 15px;
+    color: #718096;
+    font-weight: 600;
+    background: var(--capa-3);
 }
 
 .tabla-documentos td {
-    padding: 15px;
-
-    border-bottom: 1px solid #ddd;
+    color: #344256;
 }
 
-.tabla-documentos tr:hover {
-    background-color: #f8fafc;
+.tabla-documentos tbody tr {
+    transition: background-color 0.2s ease;
 }
 
-
-/* ======================================================
-   BOTÓN ELIMINAR
-====================================================== */
+.tabla-documentos tbody tr:hover {
+    background: rgba(21, 158, 208, 0.10);
+}
 
 .btn-eliminar-doc {
-    background-color: #ef4444;
-    color: white;
-
+    background: #fee8e7;
+    color: #c03939;
     border: none;
-    border-radius: 8px;
-
+    border-radius: 7px;
     padding: 8px 12px;
-
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
-
-    font-family: "Lexend", sans-serif;
+    transition: 0.2s;
 }
 
 .btn-eliminar-doc:hover {
-    background-color: #dc2626;
+    background: #fbd0ce;
 }
 
-
-/* ======================================================
-   RESPONSIVE
-====================================================== */
-
 @media (max-width: 768px) {
-
     .documentos-container {
-        width: 95%;
-        padding: 18px;
+        padding: 15px;
     }
 
     .busqueda-documentos {
         flex-direction: column;
+        padding: 15px;
     }
 
-    .btn-buscar {
+    .busqueda-documentos .btn-buscar {
         width: 100%;
+        padding: 12px;
     }
 
+    .tabla-responsive {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .documentos-container {
+        grid-template-columns: 1fr;
+        row-gap: 15px;
+    }
+
+    .documentos-container > .btn-subir {
+        justify-self: start;
+    }
 }
