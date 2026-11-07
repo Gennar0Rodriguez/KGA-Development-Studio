@@ -226,63 +226,73 @@ class Traslado
     // OBTENER OPCIONES PARA EL FORMULARIO
     // ======================================================
 
-    public function obtenerListasAuxiliares(): array
-    {
-        // Obtener vehículos.
-        $sql = "SELECT matricula, modelo
-                FROM vehiculo";
+            public function obtenerListasAuxiliares(): array{
+            // Obtener vehículos disponibles.
+            $sql = "SELECT matricula, modelo
+                    FROM vehiculo";
 
-        $sentencia = $this->conexion->prepare($sql);
-        $sentencia->execute();
-
-        $vehiculos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->execute();
+            $vehiculos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
 
-        // Obtener conductores.
-        $sql = "SELECT
-                    ci_chofer,
-                    nombre_chofer,
-                    apellido_chofer
-                FROM chofer";
+            // Obtener conductores registrados.
+            $sql = "SELECT
+                        ci_chofer,
+                        nombre_chofer,
+                        apellido_chofer
+                    FROM chofer";
 
-        $sentencia = $this->conexion->prepare($sql);
-        $sentencia->execute();
-
-        $choferes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
-
-
-        // Obtener enfermeros.
-        $sql = "SELECT
-                    ci_enfermero,
-                    nombre_enfermero,
-                    apellido_enfermero
-                FROM enfermero";
-
-        $sentencia = $this->conexion->prepare($sql);
-        $sentencia->execute();
-
-        $enfermeros = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->execute();
+            $choferes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
 
-        // Obtener destinos.
-        $sql = "SELECT DISTINCT
-                    ci_paciente,
-                    nombre_paciente
-                FROM paciente
-                ORDER BY nombre_paciente";
+            // Obtener enfermeros registrados.
+            $sql = "SELECT
+                        ci_enfermero,
+                        nombre_enfermero,
+                        apellido_enfermero
+                    FROM enfermero";
 
-        $sentencia = $this->conexion->prepare($sql);
-        $sentencia->execute();
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->execute();
+            $enfermeros = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
-        $pacientes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
-        return [
-            'vehiculos' => $vehiculos ?: [],
-            'choferes' => $choferes ?: [],
-            'enfermeros' => $enfermeros ?: [],
-            'destinos' => $destinos ?: [],
-            'pacientes' => $pacientes ?: []
-        ];
-    }
+
+            // Obtener destinos disponibles.
+            $sql = "SELECT
+                        id_destino,
+                        nombre_destino
+                    FROM destino";
+
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->execute();
+            $destinos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+
+
+            // Obtener pacientes registrados.
+            // DISTINCT evita repetir una misma combinación de CI y nombre.
+            $sql = "SELECT DISTINCT
+                        ci_paciente,
+                        nombre_paciente
+                    FROM paciente
+                    ORDER BY nombre_paciente";
+
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->execute();
+            $pacientes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+
+
+            // Devolver todas las listas que utiliza el formulario.
+            return [
+                'vehiculos' => $vehiculos ?: [],
+                'choferes' => $choferes ?: [],
+                'enfermeros' => $enfermeros ?: [],
+                'destinos' => $destinos ?: [],
+                'pacientes' => $pacientes ?: []
+            ];
+        }
 
 
     // ======================================================
@@ -335,8 +345,6 @@ class Traslado
                 if ($sentenciaValidar->fetchColumn() < 1) {
                     return false;
                 }
-
-            }
 
             } else {
 
@@ -780,9 +788,7 @@ class Traslado
                 return false;
             }
 
-        }
-
-            } else {
+        } else {
 
                 if (
                     empty(trim($datos['nombre_elemento'] ?? '')) ||
