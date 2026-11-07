@@ -624,6 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // OBTENER DATOS DEL FORMULARIO
     // ==========================================
 
+    
     function obtenerDatosFormulario() {
 
         const datosFormulario = new FormData(formulario);
@@ -637,8 +638,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         });
 
-        // Los identificadores deshabilitados no aparecen en FormData.
-        // Los recuperamos del registro original.
+        // Recuperamos los identificadores que no aparecen
+        // en FormData porque sus campos están deshabilitados.
         if (modoModal === 'editar') {
 
             const identificadores = {
@@ -652,13 +653,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const identificador = identificadores[entidadEditada];
 
-            datos[identificador] = registroEditado[identificador];
+            datos[identificador] = String(
+                registroEditado[identificador]
+            );
+
+            // El controlador de pacientes también necesita la CI
+            // original, aunque no se permita modificarla.
+            if (entidadEditada === 'paciente') {
+
+                datos.ci_paciente = String(
+                    registroEditado.ci_paciente
+                );
+
+            }
 
         }
 
         return datos;
 
     }
+
 
 
     // ==========================================
