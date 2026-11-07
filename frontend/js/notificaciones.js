@@ -111,7 +111,7 @@ function renderizarNotificaciones(lista) {
         main.prepend(titulo);
     }
 
-    titulo.textContent = '🔔 Notificaciones';
+    titulo.textContent = 'Notificaciones';
 
     let contenedor = main.querySelector('.lista-notificaciones');
 
