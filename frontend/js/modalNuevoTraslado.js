@@ -819,7 +819,7 @@ function renderizarTarjetasTraslado(lista) {
 
             <h3>Matrícula: ${item.matricula || 'Sin matrícula'}</h3>
 
-            <img src="../img/ambulanciaIMG.png" alt="Vehículo">
+            <img src="../img/ambulanciaIMGG.png" alt="Vehículo">
 
             <div class="info-principal">
 
