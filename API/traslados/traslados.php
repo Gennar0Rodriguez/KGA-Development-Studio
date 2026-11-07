@@ -93,7 +93,8 @@ try {
                 if ($traslado->actualizarEstadoOperativo(
                     $datos['id_traslado'],
                     $datos['estado_traslado'],
-                    $datos['hora_llegada'] ?? null
+                    $datos['hora_llegada'] ?? null,
+                    $datos['fecha_llegada'] ?? null
                 )) {
                     echo json_encode(['mensaje' => 'Estado del traslado actualizado correctamente']);
                 } else {

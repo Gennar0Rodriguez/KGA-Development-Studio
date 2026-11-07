@@ -970,6 +970,12 @@ function renderizarTarjetasTraslado(lista) {
                     ${item.hora_salida || '--:--'}
                 </p>
 
+                <p><strong>Fecha llegada:</strong>
+                    ${item.fecha_llegada
+                        ? item.fecha_llegada.split('-').reverse().join('/')
+                        : '--/--/----'}
+                </p>
+
                 <p><strong>Hora llegada:</strong>
                     ${item.hora_llegada || '--:--'}
                 </p>
@@ -1212,6 +1218,7 @@ async function resolverSolicitud(idTraslado, estadoSolicitud) {
 // ======================================================
 
 async function actualizarEstadoTraslado(idTraslado, nuevoEstado) {
+
     const traslado = todosLosTraslados.find(item =>
         String(item.id_traslado) === String(idTraslado)
     );
@@ -1222,21 +1229,42 @@ async function actualizarEstadoTraslado(idTraslado, nuevoEstado) {
     }
 
     let horaLlegada = null;
+    let fechaLlegada = null;
 
     if (nuevoEstado === 'finalizado') {
+
+        // Solicitar la fecha real de llegada.
+        const hoy = new Date();
+
+        const fechaActual =
+            hoy.getFullYear() + '-' +
+            String(hoy.getMonth() + 1).padStart(2, '0') + '-' +
+            String(hoy.getDate()).padStart(2, '0');
+
+        fechaLlegada = prompt(
+            'Ingrese la fecha de llegada (AAAA-MM-DD):',
+            fechaActual
+        );
+
+        if (!fechaLlegada) return;
+
+        // Solicitar la hora real de llegada.
         horaLlegada = await solicitarHoraTraslado('llegada');
 
         if (!horaLlegada) return;
 
     } else {
+
         const mensaje = traslado.estado_traslado === 'finalizado'
-            ? '¿Está seguro de que desea devolver este traslado a En proceso? Se eliminará su hora de llegada.'
+            ? '¿Está seguro de que desea devolver este traslado a En proceso? Se eliminarán su fecha y hora de llegada.'
             : '¿Desea iniciar este traslado?';
 
         if (!confirm(mensaje)) return;
+
     }
 
     try {
+
         const response = await fetch(
             '/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=estado',
             {
@@ -1247,7 +1275,8 @@ async function actualizarEstadoTraslado(idTraslado, nuevoEstado) {
                 body: JSON.stringify({
                     id_traslado: idTraslado,
                     estado_traslado: nuevoEstado,
-                    hora_llegada: horaLlegada
+                    hora_llegada: horaLlegada,
+                    fecha_llegada: fechaLlegada
                 })
             }
         );
@@ -1255,16 +1284,26 @@ async function actualizarEstadoTraslado(idTraslado, nuevoEstado) {
         const resultado = await response.json();
 
         if (!response.ok) {
-            alert(resultado.error || 'No se pudo actualizar el estado.');
+            alert(
+                resultado.error ||
+                'No se pudo actualizar el estado. Compruebe la fecha y las horas registradas.'
+            );
             return;
         }
 
         alert(resultado.mensaje || 'Estado actualizado correctamente.');
+
         await cargarTraslados();
 
     } catch (error) {
-        console.error('Error al actualizar el estado del traslado:', error);
+
+        console.error(
+            'Error al actualizar el estado del traslado:',
+            error
+        );
+
         alert('Ocurrió un error en la conexión.');
+
     }
 }
 
