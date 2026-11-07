@@ -1,4 +1,21 @@
 
+:root {
+    --capa-1: rgba(255, 255, 255, 0.72);
+    --capa-2: rgba(255, 255, 255, 0.82);
+    --capa-3: rgba(255, 255, 255, 0.91);
+    --capa-4: rgba(255, 255, 255, 0.97);
+    --capa-blur: blur(8px);
+}
+
+h1,
+h2 {
+    font-family: "Inconsolata", monospace;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -7,28 +24,37 @@
 }
 
 body {
-    background: #eef2f6;
+    background-color: #1f2d3a;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("../img/clinicas.jpg");
+    background-position: center 30%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     color: #263445;
 }
 
 header {
     height: 90px;
-    background: white;
-    display: flex;
+    background: var(--capa-1);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     padding: 0 35px;
+    backdrop-filter: var(--capa-blur);
+    -webkit-backdrop-filter: var(--capa-blur);
 }
 
 header img {
     width: 160px;
     height: auto;
     object-fit: contain;
+    justify-self: start;
 }
 
 header h1 {
     font-size: 24px;
     color: #263445;
+    text-align: center;
 }
 
 hr {
@@ -44,14 +70,17 @@ hr {
 
 .sidebar {
     width: 260px;
-    background: white;
+    background: var(--capa-1);
     margin: 20px 0 20px 20px;
     border-radius: 18px;
     padding: 25px 18px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
+    backdrop-filter: var(--capa-blur);
+    -webkit-backdrop-filter: var(--capa-blur);
+    flex-shrink: 0;
 }
 
 .logo {
@@ -74,6 +103,7 @@ hr {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin-bottom: auto;
 }
 
 .sidebar nav a {
@@ -109,6 +139,7 @@ hr {
     align-items: center;
     gap: 12px;
     padding: 12px 5px;
+    margin-top: 20px;
 }
 
 .usuario img {
@@ -128,6 +159,28 @@ hr {
     margin-top: 4px;
 }
 
+.btn-logout {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    background: #fee8e7;
+    color: #c03939;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.btn-logout:hover {
+    background: #fbd0ce;
+}
+
 main {
     flex: 1;
     padding: 25px 30px;
@@ -135,10 +188,12 @@ main {
 }
 
 .contenido {
-    background: #f8fafc;
+    background: var(--capa-1);
     border-radius: 15px;
     padding: 25px;
     min-height: calc(100vh - 145px);
+    backdrop-filter: var(--capa-blur);
+    -webkit-backdrop-filter: var(--capa-blur);
 }
 
 .encabezado-contenido {
@@ -180,7 +235,7 @@ main {
 ========================================== */
 
 .panel-categorias {
-    background: white;
+    background: var(--capa-2);
     border-radius: 15px;
     padding: 23px;
     margin-bottom: 25px;
@@ -236,7 +291,7 @@ main {
 .tabla-categorias th {
     color: #718096;
     font-weight: 600;
-    background: #f8fafc;
+    background: var(--capa-3);
 }
 
 .tabla-categorias td {
@@ -289,10 +344,6 @@ main {
     background: #c5e8f8;
 }
 
-/* ==========================================
-   PANEL DE PREGUNTAS Y ESTADÍSTICAS
-========================================== */
-
 .panel-principal {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -302,7 +353,7 @@ main {
 
 .panel-preguntas,
 .panel-estadisticas {
-    background: white;
+    background: var(--capa-2);
     border-radius: 15px;
     padding: 23px;
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
@@ -325,7 +376,7 @@ main {
     padding: 11px;
     border: 1px solid #d5dce5;
     border-radius: 8px;
-    background: white;
+    background: var(--capa-3);
     color: #344256;
     font-size: 14px;
     outline: none;
@@ -368,7 +419,7 @@ main {
     padding: 17px;
     border: 1px solid #e1e8ef;
     border-radius: 11px;
-    background: #fafcfe;
+    background: var(--capa-3);
 }
 
 .numero-pregunta {
@@ -534,7 +585,7 @@ main {
     display: flex;
     align-items: center;
     gap: 15px;
-    background: #f3f6f9;
+    background: var(--capa-3);
     padding: 15px;
     border-radius: 10px;
     margin-top: 22px;
@@ -554,10 +605,6 @@ main {
     font-size: 12px;
     color: #718096;
 }
-
-/* ==========================================
-   MODAL DE CATEGORÍAS
-========================================== */
 
 .modal-categoria {
     width: min(450px, calc(100% - 30px));
@@ -651,10 +698,6 @@ main {
 #guardarCategoria:hover {
     background: #087eaf;
 }
-
-/* ==========================================
-   RESPONSIVE
-========================================== */
 
 @media (max-width: 900px) {
     .panel-principal {
