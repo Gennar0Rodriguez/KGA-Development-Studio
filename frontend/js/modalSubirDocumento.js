@@ -769,6 +769,14 @@ function aplicarFiltros() {
 
     });
 
+    const esAdmin = Boolean(document.getElementById('inputBuscarAdmin'));
+    const documentosVisibles = esAdmin
+        ? documentosFiltrados
+        : documentosFiltrados.filter(doc => doc.estado_cat === 'activa');
+
+    renderizarVistaAdmin(documentosVisibles);
+    renderizarVistaPublica(documentosVisibles);
+
     renderizarVistaAdmin(documentosFiltrados);
 
     renderizarVistaPublica(documentosFiltrados);
@@ -806,36 +814,27 @@ function renderizarVistaAdmin(lista) {
     }
 
     lista.forEach(doc => {
+    const celdaAcciones = document.createElement('td');
 
-        const fila = document.createElement('tr');
+            const botonVer = document.createElement('button');
+            botonVer.type = 'button';
+            botonVer.textContent = 'Ver';
+            botonVer.className = 'btn-ver-doc';
+            botonVer.addEventListener('click', () => {
+                verPDF(doc.id_documentos);
+            });
 
-        const celdaTitulo = document.createElement('td');
+            const botonEliminar = document.createElement('button');
+            botonEliminar.type = 'button';
+            botonEliminar.textContent = 'Eliminar';
+            botonEliminar.className = 'btn-eliminar-doc';
+            botonEliminar.addEventListener('click', () => {
+                eliminarDocumento(doc.id_documentos);
+            });
 
-        celdaTitulo.textContent = doc.titulo_docs;
+            celdaAcciones.appendChild(botonVer);
+            celdaAcciones.appendChild(botonEliminar);
 
-        const celdaCategoria = document.createElement('td');
-
-        celdaCategoria.textContent = doc.nombre_cat || 'Sin categoría';
-
-        const celdaFecha = document.createElement('td');
-
-        celdaFecha.textContent = formatearFecha(doc.fecha);
-
-        const celdaAcciones = document.createElement('td');
-
-        const botonEliminar = document.createElement('button');
-
-        botonEliminar.textContent = 'Eliminar';
-
-        botonEliminar.className = 'btn-eliminar-doc';
-
-        botonEliminar.addEventListener('click', () => {
-
-            eliminarDocumento(doc.id_documentos);
-
-        });
-
-        celdaAcciones.appendChild(botonEliminar);
 
         fila.appendChild(celdaTitulo);
         fila.appendChild(celdaCategoria);
@@ -929,9 +928,7 @@ function renderizarVistaPublica(lista) {
         botonVer.innerHTML = '<i class="fa-solid fa-eye"></i>';
 
         botonVer.addEventListener('click', () => {
-
-            window.open(rutaArchivo, '_blank');
-
+            verPDF(doc.id_documentos);
         });
 
         // Botón para descargar el documento.
@@ -982,6 +979,18 @@ function renderizarVistaPublica(lista) {
 
 }
 
+function verPDF(idDocumento) {
+    const visorPDF = document.getElementById('visorPDF');
+
+    if (!visorPDF) {
+        alert('No se encontró el visor de documentos.');
+        return;
+    }
+
+    visorPDF.src = `${API_DOCUMENTOS}?id=${encodeURIComponent(idDocumento)}`;
+    visorPDF.hidden = false;
+    visorPDF.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 // ======================================================
 // FUNCIONES AUXILIARES
@@ -1072,6 +1081,12 @@ async function eliminarDocumento(idDoc) {
         }
 
         alert(resultado.mensaje);
+
+        const visorPDF = document.getElementById('visorPDF');
+        if (visorPDF && visorPDF.src.includes(encodeURIComponent(idDoc))) {
+            visorPDF.removeAttribute('src');
+            visorPDF.hidden = true;
+        }
 
         cargarDocumentos();
 
