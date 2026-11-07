@@ -1122,7 +1122,12 @@ function solicitarHoraTraslado(tipo) {
 // RESOLVER SOLICITUD
 // ======================================================
 
+// ======================================================
+// RESOLVER SOLICITUD
+// ======================================================
+
 async function resolverSolicitud(idTraslado, estadoSolicitud) {
+
     const traslado = todosLosTraslados.find(item =>
         String(item.id_traslado) === String(idTraslado)
     );
@@ -1132,29 +1137,45 @@ async function resolverSolicitud(idTraslado, estadoSolicitud) {
         return;
     }
 
+    const esReaprobacion = traslado.estado_solicitud === 'rechazado';
+
     const accion = estadoSolicitud === 'aprobado'
-        ? 'aprobar'
+        ? (esReaprobacion ? 'volver a aprobar' : 'aprobar')
         : 'rechazar';
 
     if (!confirm(`¿Desea ${accion} esta solicitud?`)) return;
 
     let horaSalida = null;
 
-    // Si no tiene hora de salida, debemos solicitarla antes de aprobar.
-    if (estadoSolicitud === 'aprobado' && !traslado.hora_salida) {
-        horaSalida = await solicitarHoraTraslado('salida');
+    if (estadoSolicitud === 'aprobado') {
 
-        if (!horaSalida) return;
+        // Al volver a aprobar una solicitud rechazada,
+        // siempre solicitamos una nueva hora de salida.
+        if (esReaprobacion || !traslado.hora_salida) {
+
+            horaSalida = await solicitarHoraTraslado('salida');
+
+            if (!horaSalida) return;
+
+        } else {
+
+            horaSalida = traslado.hora_salida;
+
+        }
+
     }
 
     try {
+
         const response = await fetch(
             '/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=resolver',
             {
                 method: 'POST',
+
                 headers: {
                     'Content-Type': 'application/json'
                 },
+
                 body: JSON.stringify({
                     id_traslado: idTraslado,
                     estado_solicitud: estadoSolicitud,
@@ -1171,12 +1192,18 @@ async function resolverSolicitud(idTraslado, estadoSolicitud) {
         }
 
         alert(resultado.mensaje || 'Solicitud actualizada.');
+
+        // Recargamos los datos para que aparezca en Programados.
         await cargarTraslados();
 
     } catch (error) {
+
         console.error('Error al resolver solicitud:', error);
+
         alert('Ocurrió un error en la conexión.');
+
     }
+
 }
 
 

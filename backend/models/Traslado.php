@@ -443,17 +443,23 @@ class Traslado
     // ======================================================
 
     
+// ======================================================
+// APROBAR O RECHAZAR UNA SOLICITUD
+// ======================================================
+
 public function resolverSolicitud(
     string $idTraslado,
     string $estadoSolicitud,
     string $ciAdmin,
-    ?string $horaSalidaIngresada = null
+    ?string $horaSalida = null
 ): bool {
+
     try {
+
         $this->conexion->beginTransaction();
 
         // Recuperar la solicitud y bloquearla durante la operación.
-        $sql = "SELECT ci_solicitante, ci_chofer, matricula, id_destino, hora_salida
+        $sql = "SELECT ci_solicitante, ci_chofer, matricula, id_destino
                 FROM traslado
                 WHERE id_traslado = :id
                 AND estado_solicitud IN ('pendiente', 'rechazado')
@@ -470,49 +476,75 @@ public function resolverSolicitud(
             return false;
         }
 
-        // Al aprobar se conserva la hora existente o se utiliza la ingresada.
+        // Determinar el estado operativo y las horas.
         if ($estadoSolicitud === 'aprobado') {
-            $horaSalida = $horaSalidaIngresada ?: $traslado['hora_salida'];
-            $horaSalida = $horaSalida ? substr($horaSalida, 0, 5) : null;
 
-            // La aprobación requiere una hora de salida válida.
+            // Para aprobar es obligatorio registrar la hora de salida.
             if (
-                !$horaSalida ||
-                !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $horaSalida)
+                empty($horaSalida) ||
+                !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/', $horaSalida)
             ) {
                 $this->conexion->rollBack();
                 return false;
             }
 
             $estadoTraslado = 'aprobado';
-        } else {
-            // Un traslado rechazado no puede conservar ninguna hora.
-            $horaSalida = null;
+
+            // Al aprobar se registra la salida y se limpia la llegada.
+            $horaLlegada = null;
+
+        } elseif ($estadoSolicitud === 'rechazado') {
+
             $estadoTraslado = 'denegado';
+
+            // Una solicitud rechazada no conserva ninguna hora.
+            $horaSalida = null;
+            $horaLlegada = null;
+
+        } else {
+
+            $this->conexion->rollBack();
+            return false;
+
         }
 
+        // Actualizar los estados y las horas del traslado.
         $sql = "UPDATE traslado
                 SET estado_solicitud = :estado_solicitud,
                     estado_traslado = :estado_traslado,
                     hora_salida = :hora_salida,
-                    hora_llegada = NULL
+                    hora_llegada = :hora_llegada
                 WHERE id_traslado = :id";
 
         $sentencia = $this->conexion->prepare($sql);
+
         $sentencia->bindValue(':estado_solicitud', $estadoSolicitud);
         $sentencia->bindValue(':estado_traslado', $estadoTraslado);
+
         $sentencia->bindValue(
             ':hora_salida',
             $horaSalida,
             $horaSalida === null ? PDO::PARAM_NULL : PDO::PARAM_STR
         );
+
+        $sentencia->bindValue(
+            ':hora_llegada',
+            $horaLlegada,
+            PDO::PARAM_NULL
+        );
+
         $sentencia->bindValue(':id', $idTraslado);
+
         $sentencia->execute();
 
-        // Notificar al empleado que realizó la solicitud.
+        // ----------------------------------------------
+        // NOTIFICAR AL EMPLEADO SOLICITANTE
+        // ----------------------------------------------
+
         require_once __DIR__ . '/Notificacion.php';
 
         $notificacion = new Notificacion();
+
         $aprobada = $estadoSolicitud === 'aprobado';
 
         $titulo = $aprobada
@@ -540,14 +572,17 @@ public function resolverSolicitud(
         }
 
         $this->conexion->commit();
+
         return true;
 
     } catch (Throwable $e) {
+
         if ($this->conexion->inTransaction()) {
             $this->conexion->rollBack();
         }
 
         error_log("Error al resolver solicitud: " . $e->getMessage());
+
         return false;
     }
 }
