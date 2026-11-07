@@ -18,7 +18,7 @@ CREATE TABLE categoria (
 
 CREATE TABLE documentos (
     id_documentos VARCHAR(50) PRIMARY KEY NOT NULL,
-    ci_admin VARCHAR(50),
+    ci_admin VARCHAR(8),
     id_categoria VARCHAR(50),
     hora_carga TIME NOT NULL,
     fecha_carga DATE NOT NULL,
@@ -119,7 +119,7 @@ CREATE TABLE notifica (
     ci_chofer VARCHAR(8) NOT NULL,
     matricula VARCHAR(15) NOT NULL,
     id_destino VARCHAR(50) NOT NULL,
-    ci_admin VARCHAR(8) NOT NULL,
+    ci_admin VARCHAR(8),
     ci_emisor VARCHAR(8) NOT NULL,
     fecha_envio DATE NOT NULL,
     leido BOOLEAN,
@@ -257,9 +257,9 @@ INSERT INTO destino (id_destino, nombre_destino, direccion, ruta) VALUES
 
 INSERT INTO traslado (id_traslado, ci_chofer, matricula, id_destino, fecha_traslado, hora_salida, hora_llegada, lugar_origen, estado_traslado, ci_solicitante, estado_solicitud, observaciones) VALUES
 ('TRS01', '45678912', 'SCA1001', 'DES01', '2026-06-01', '08:00:00', '08:45:00', 'Hospital Central', 'finalizado', '12345678', 'aprobado', 'Traslado de paciente'),
-('TRS02', '32165498', 'SCA1002', 'DES02', '2026-06-02', '09:30:00', '10:15:00', 'Hospital Central', 'aprobado', '55667788', 'aprobado', 'Derivacion medica'),
+('TRS02', '32165498', 'SCA1002', 'DES02', '2026-06-02', '09:30:00', '10:15:00', 'Hospital Central', 'aprobado', '55667364', 'aprobado', 'Derivacion medica'),
 ('TRS03', '78912345', 'SCA1003', 'DES03', '2026-06-03', '11:00:00', '11:30:00', 'Hospital Central', 'en proceso', '12345678', 'aprobado', 'Envio de documentacion'),
-('TRS04', '65498732', 'SCA1004', 'DES04', '2026-06-04', '13:00:00', '13:40:00', 'Hospital Central', 'pendiente', '55667788', 'pendiente', 'Solicitud en evaluacion'),
+('TRS04', '65498732', 'SCA1004', 'DES04', '2026-06-04', '13:00:00', '13:40:00', 'Hospital Central', 'pendiente', '55667364', 'pendiente', 'Solicitud en evaluacion'),
 ('TRS05', '14725836', 'SCA1005', 'DES05', '2026-06-05', '15:00:00', '15:50:00', 'Hospital Central', 'denegado', '12345678', 'rechazado', 'Traslado cancelado');
 
 INSERT INTO notifica (id_traslado, ci_chofer, matricula, id_destino, ci_admin, ci_emisor, fecha_envio, leido, titulo_not, descripcion_not, ci_receptor) VALUES
@@ -304,3 +304,4 @@ INSERT INTO transporta (id_transportable, id_traslado, ci_chofer, matricula, id_
 ('TRP03', 'TRS03', '78912345', 'SCA1003', 'DES03'),
 ('TRP04', 'TRS04', '65498732', 'SCA1004', 'DES04'),
 ('TRP05', 'TRS05', '14725836', 'SCA1005', 'DES05');
+
