@@ -297,17 +297,6 @@
                         placeholder="Observaciones del traslado..."
                     ></textarea>
 
-                    <label for="estado">Estado</label>
-
-                    <select id="estado" required>
-
-                        <option value="Programado">Programado</option>
-                        <option value="En curso">En curso</option>
-                        <option value="Finalizado">Finalizado</option>
-
-                    </select>
-
-
                     <!-- Botones -->
 
                     <div class="acciones-formulario">
@@ -433,6 +422,27 @@
         </div>
 
     </div>
+    
+    
+        <div id="modalHoraTraslado" class="modal-traslado">
+            <div class="modal-traslado-contenido" style="max-width: 420px;">
+                <div class="modal-traslado-header">
+                    <h2 id="tituloModalHora">Registrar hora</h2>
+                    <button type="button" id="btnCerrarModalHora" class="btn-cerrar-traslado">&times;</button>
+                </div>
+
+                <form id="formHoraTraslado">
+                    <label id="labelHoraTraslado" for="inputHoraTraslado">Hora</label>
+                    <input type="time" id="inputHoraTraslado" required>
+
+                    <div class="acciones-formulario">
+                        <button type="button" id="btnCancelarHora" class="btn-cancelar">Cancelar</button>
+                        <button type="submit" class="btn-guardar">Guardar hora</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
 
 
     <script src="../js/modalNuevoTraslado.js"></script>

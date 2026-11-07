@@ -70,6 +70,39 @@ try {
         case 'POST':
 
             // Acción exclusiva del administrador.
+
+            // Cambiar la etapa operativa de un traslado.
+            if (isset($_GET['action']) && $_GET['action'] === 'estado') {
+                if (!$esAdmin) {
+                    http_response_code(403);
+                    echo json_encode(['error' => 'No tiene permisos para realizar esta acción']);
+                    exit;
+                }
+
+                $datos = json_decode(file_get_contents('php://input'), true);
+
+                if (
+                    empty($datos['id_traslado']) ||
+                    !in_array($datos['estado_traslado'] ?? '', ['en proceso', 'finalizado'], true)
+                ) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Datos de estado inválidos']);
+                    exit;
+                }
+
+                if ($traslado->actualizarEstadoOperativo(
+                    $datos['id_traslado'],
+                    $datos['estado_traslado'],
+                    $datos['hora_llegada'] ?? null
+                )) {
+                    echo json_encode(['mensaje' => 'Estado del traslado actualizado correctamente']);
+                } else {
+                    http_response_code(409);
+                    echo json_encode(['error' => 'No se pudo realizar el cambio de estado. Compruebe la etapa actual y las horas registradas.']);
+                }
+
+                exit;
+            }
             if (isset($_GET['action']) && $_GET['action'] === 'resolver') {
 
                 if (!$esAdmin) {
@@ -88,11 +121,11 @@ try {
                     echo json_encode(['error' => 'Datos de solicitud inválidos']);
                     exit;
                 }
-
                 if ($traslado->resolverSolicitud(
                     $datos['id_traslado'],
                     $datos['estado_solicitud'],
-                    $ciUsuario
+                    $ciUsuario,
+                    $datos['hora_salida'] ?? null
                 )) {
 
                     echo json_encode(['mensaje' => 'Solicitud actualizada correctamente']);

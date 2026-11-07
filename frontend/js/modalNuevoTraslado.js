@@ -1,3 +1,4 @@
+
 let todosLosTraslados = [];
 let modoEdicion = false;
 let trasladoEditando = null;
@@ -10,6 +11,7 @@ let pacientesDisponibles = [];
 
 let esAdministrador = false;
 let filtroSolicitud = 'pendiente';
+let filtroEstadoAprobado = 'aprobado';
 let textoBusqueda = '';
 
 
@@ -18,7 +20,6 @@ let textoBusqueda = '';
 // ======================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-
     console.log('JS Traslados cargado correctamente');
 
     const datosSesion = await obtenerSesion();
@@ -40,23 +41,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnCerrar = document.getElementById('btnCerrarModalTraslado');
     const btnCancelar = document.getElementById('btnCancelarModalTraslado');
 
-    const selectorTipo = document.getElementById('tipoTransportable');
-
     configurarFiltrosSolicitudes();
     configurarTipoTransportable();
 
     // Abrir modal para crear un traslado.
-    if (btnAbrir && modal) {
-
+    if (btnAbrir && modal && formulario) {
         btnAbrir.addEventListener('click', async (e) => {
-
             e.preventDefault();
 
             modoEdicion = false;
             trasladoEditando = null;
 
             formulario.reset();
-
             actualizarCamposTransportable();
 
             const titulo = document.querySelector(
@@ -70,14 +66,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             modal.style.display = 'flex';
 
             await cargarOpcionesFormulario();
-
         });
-
     }
 
     // Cerrar y limpiar el formulario.
     const cerrarModal = () => {
-
         if (modal) {
             modal.style.display = 'none';
         }
@@ -101,7 +94,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (titulo) {
             titulo.textContent = 'Nuevo Traslado';
         }
-
     };
 
     if (btnCerrar) {
@@ -125,15 +117,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Envío del formulario.
     if (formulario) {
-
         formulario.addEventListener('submit', async (e) => {
-
             e.preventDefault();
-
             await guardarTraslado(cerrarModal);
-
         });
-
     }
 
     // Buscador general.
@@ -142,17 +129,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     );
 
     if (inputBuscador) {
-
         inputBuscador.addEventListener('input', () => {
-
             textoBusqueda = inputBuscador.value.toLowerCase().trim();
-
             filtrarTraslados();
-
         });
-
     }
-
 });
 
 
@@ -161,9 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ======================================================
 
 async function obtenerSesion() {
-
     try {
-
         const response = await fetch(
             '/kgade/KGA-Development-Studio/API/sesion.php'
         );
@@ -175,13 +154,9 @@ async function obtenerSesion() {
         return await response.json();
 
     } catch (error) {
-
         console.error('Error al obtener sesión:', error);
-
         return null;
-
     }
-
 }
 
 
@@ -190,7 +165,6 @@ async function obtenerSesion() {
 // ======================================================
 
 function configurarTipoTransportable() {
-
     const selector = document.getElementById('tipoTransportable');
 
     if (!selector) return;
@@ -198,12 +172,10 @@ function configurarTipoTransportable() {
     selector.addEventListener('change', actualizarCamposTransportable);
 
     actualizarCamposTransportable();
-
 }
 
 
 function actualizarCamposTransportable() {
-
     const tipo = document.getElementById('tipoTransportable')?.value;
 
     const camposPaciente = document.getElementById('camposPaciente');
@@ -249,7 +221,6 @@ function actualizarCamposTransportable() {
     if (descripcionElemento) {
         descripcionElemento.required = !esPaciente;
     }
-
 }
 
 
@@ -258,7 +229,6 @@ function actualizarCamposTransportable() {
 // ======================================================
 
 async function guardarTraslado(cerrarModal) {
-
     const matriculaSeleccionada = document.getElementById(
         'ambulancia'
     ).value.trim();
@@ -320,7 +290,6 @@ async function guardarTraslado(cerrarModal) {
 
     // Validar la relación entre la CI y el nombre del paciente.
     if (tipoTransportable === 'paciente') {
-
         const pacienteValido = pacientesDisponibles.some(paciente =>
             String(paciente.ci_paciente) === String(ciPaciente) &&
             String(paciente.nombre_paciente) === String(nombrePaciente)
@@ -330,27 +299,17 @@ async function guardarTraslado(cerrarModal) {
             alert('Debe seleccionar un paciente registrado mediante su CI.');
             return;
         }
-
     }
 
     const payload = {
-
         // Datos generales del traslado.
         matricula: matriculaSeleccionada,
-
         ci_chofer: ciChoferSeleccionado,
-
         ci_enfermero: ciEnfermero,
-
         id_destino: idDestino,
-
         fecha: document.getElementById('fecha').value,
-
         hora: document.getElementById('hora').value,
-
         observaciones: document.getElementById('observaciones').value,
-
-        estado: document.getElementById('estado').value,
 
         // Tipo de elemento que se transporta.
         tipo_transportable: tipoTransportable,
@@ -376,30 +335,23 @@ async function guardarTraslado(cerrarModal) {
         descripcion_elemento: tipoTransportable === 'organo'
             ? document.getElementById('descripcionElemento').value.trim()
             : ''
-
     };
 
     if (modoEdicion && trasladoEditando) {
-
         payload.id_traslado = trasladoEditando.id_traslado;
-
         payload.id_transportable = trasladoEditando.id_transportable;
-
     }
 
     const metodoHttp = modoEdicion ? 'PUT' : 'POST';
 
     try {
-
         const response = await fetch(
             '/kgade/KGA-Development-Studio/API/traslados/traslados.php',
             {
                 method: metodoHttp,
-
                 headers: {
                     'Content-Type': 'application/json'
                 },
-
                 body: JSON.stringify(payload)
             }
         );
@@ -407,27 +359,19 @@ async function guardarTraslado(cerrarModal) {
         const resultado = await response.json();
 
         if (!response.ok) {
-
             alert(resultado.error || 'No se pudo guardar el traslado.');
-
             return;
-
         }
 
         alert(resultado.mensaje || 'Traslado guardado correctamente.');
 
         cerrarModal();
-
         await cargarTraslados();
 
     } catch (error) {
-
         console.error('Error al guardar el traslado:', error);
-
         alert('Ocurrió un error en la conexión.');
-
     }
-
 }
 
 
@@ -436,27 +380,21 @@ async function guardarTraslado(cerrarModal) {
 // ======================================================
 
 function configurarFiltrosSolicitudes() {
-
     const contenedor = document.querySelector('.contenedor-ambulancias');
 
     if (!contenedor || !contenedor.parentNode) return;
-
-    // Evitamos crear los filtros más de una vez.
     if (document.querySelector('.filtros-solicitudes')) return;
 
     const filtros = document.createElement('section');
-
     filtros.className = 'filtros-solicitudes';
 
     filtros.innerHTML = `
         <button class="btn-filtro activo" data-estado="pendiente">
             Pendientes
         </button>
-
         <button class="btn-filtro" data-estado="aprobado">
-            ${esAdministrador ? 'Confirmados' : 'Aprobadas'}
+            ${esAdministrador ? 'Aprobados' : 'Aprobados'}
         </button>
-
         <button class="btn-filtro" data-estado="rechazado">
             Rechazados
         </button>
@@ -464,10 +402,26 @@ function configurarFiltrosSolicitudes() {
 
     contenedor.parentNode.insertBefore(filtros, contenedor);
 
+    const subFiltros = document.createElement('section');
+    subFiltros.className = 'filtros-solicitudes filtros-estados-traslado';
+    subFiltros.style.display = 'none';
+
+    subFiltros.innerHTML = `
+        <button class="btn-filtro activo" data-estado-traslado="aprobado">
+            Programados
+        </button>
+        <button class="btn-filtro" data-estado-traslado="en proceso">
+            En proceso
+        </button>
+        <button class="btn-filtro" data-estado-traslado="finalizado">
+            Finalizados
+        </button>
+    `;
+
+    contenedor.parentNode.insertBefore(subFiltros, contenedor);
+
     filtros.querySelectorAll('.btn-filtro').forEach(boton => {
-
         boton.addEventListener('click', () => {
-
             filtroSolicitud = boton.dataset.estado;
 
             filtros.querySelectorAll('.btn-filtro').forEach(b => {
@@ -476,12 +430,25 @@ function configurarFiltrosSolicitudes() {
 
             boton.classList.add('activo');
 
+            subFiltros.style.display =
+                filtroSolicitud === 'aprobado' ? 'flex' : 'none';
+
             filtrarTraslados();
-
         });
-
     });
 
+    subFiltros.querySelectorAll('.btn-filtro').forEach(boton => {
+        boton.addEventListener('click', () => {
+            filtroEstadoAprobado = boton.dataset.estadoTraslado;
+
+            subFiltros.querySelectorAll('.btn-filtro').forEach(b => {
+                b.classList.remove('activo');
+            });
+
+            boton.classList.add('activo');
+            filtrarTraslados();
+        });
+    });
 }
 
 
@@ -490,11 +457,17 @@ function configurarFiltrosSolicitudes() {
 // ======================================================
 
 function filtrarTraslados() {
-
     const filtrados = todosLosTraslados.filter(traslado => {
+        let coincideEstado;
 
-        const coincideEstado =
-            traslado.estado_solicitud === filtroSolicitud;
+        if (filtroSolicitud === 'aprobado') {
+            coincideEstado =
+                traslado.estado_solicitud === 'aprobado' &&
+                traslado.estado_traslado === filtroEstadoAprobado;
+        } else {
+            coincideEstado =
+                traslado.estado_solicitud === filtroSolicitud;
+        }
 
         // Buscar por matrícula o cédula del paciente.
         const matricula = String(traslado.matricula || '')
@@ -508,7 +481,6 @@ function filtrarTraslados() {
             cedula.includes(textoBusqueda);
 
         return coincideEstado && coincideBusqueda;
-
     });
 
     renderizarTarjetasTraslado(filtrados);
@@ -520,9 +492,7 @@ function filtrarTraslados() {
 // ======================================================
 
 async function cargarOpcionesFormulario() {
-
     try {
-
         const response = await fetch(
             '/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=auxiliares'
         );
@@ -549,13 +519,9 @@ async function cargarOpcionesFormulario() {
         });
 
     } catch (error) {
-
         console.error('Error al cargar opciones:', error);
-
         alert('No se pudieron cargar los datos para el formulario.');
-
     }
-
 }
 
 
@@ -564,9 +530,7 @@ async function cargarOpcionesFormulario() {
 // ======================================================
 
 function buscarAmbulancias() {
-
     const input = document.getElementById('ambulancia');
-
     const sugerencias = document.getElementById(
         'sugerenciasAmbulancia'
     );
@@ -574,7 +538,6 @@ function buscarAmbulancias() {
     if (!input || !sugerencias) return;
 
     input.addEventListener('input', () => {
-
         const texto = input.value.toLowerCase().trim();
 
         sugerencias.innerHTML = '';
@@ -582,63 +545,46 @@ function buscarAmbulancias() {
         if (texto === '') return;
 
         const resultados = vehiculosDisponibles.filter(vehiculo => {
-
             const matricula = String(vehiculo.matricula || '').toLowerCase();
-
             const modelo = String(vehiculo.modelo || '').toLowerCase();
 
             return matricula.includes(texto) || modelo.includes(texto);
-
         });
 
         resultados.forEach(vehiculo => {
-
             const opcion = document.createElement('button');
 
             opcion.type = 'button';
-
             opcion.className = 'opcion-ambulancia';
-
             opcion.textContent =
                 vehiculo.matricula + ' - ' + vehiculo.modelo;
 
             opcion.addEventListener('click', () => {
-
                 input.value = vehiculo.matricula;
-
                 sugerencias.innerHTML = '';
-
             });
 
             sugerencias.appendChild(opcion);
-
         });
 
         if (resultados.length === 0) {
-
             const mensaje = document.createElement('p');
 
             mensaje.textContent = 'No se encontraron vehículos.';
-
             mensaje.className = 'sin-resultados-ambulancia';
 
             sugerencias.appendChild(mensaje);
-
         }
-
     });
 
     document.addEventListener('click', (e) => {
-
         if (
             !input.contains(e.target) &&
             !sugerencias.contains(e.target)
         ) {
             sugerencias.innerHTML = '';
         }
-
     });
-
 }
 
 
@@ -647,11 +593,8 @@ function buscarAmbulancias() {
 // ======================================================
 
 function buscarChoferes() {
-
     const input = document.getElementById('buscadorConductor');
-
     const campoCI = document.getElementById('conductor');
-
     const sugerencias = document.getElementById(
         'sugerenciasConductor'
     );
@@ -659,18 +602,15 @@ function buscarChoferes() {
     if (!input || !campoCI || !sugerencias) return;
 
     input.addEventListener('input', () => {
-
         const texto = input.value.toLowerCase().trim();
 
         // Si cambia el texto, se invalida el chofer seleccionado.
         campoCI.value = '';
-
         sugerencias.innerHTML = '';
 
         if (texto === '') return;
 
         const resultados = choferesDisponibles.filter(chofer => {
-
             const nombreCompleto = (
                 chofer.nombre_chofer + ' ' +
                 chofer.apellido_chofer
@@ -679,15 +619,12 @@ function buscarChoferes() {
             const ci = String(chofer.ci_chofer);
 
             return nombreCompleto.includes(texto) || ci.includes(texto);
-
         });
 
         resultados.forEach(chofer => {
-
             const opcion = document.createElement('button');
 
             opcion.type = 'button';
-
             opcion.className = 'opcion-ambulancia';
 
             opcion.textContent =
@@ -696,55 +633,44 @@ function buscarChoferes() {
                 ' - CI: ' + chofer.ci_chofer;
 
             opcion.addEventListener('click', () => {
-
                 input.value =
                     chofer.nombre_chofer + ' ' +
                     chofer.apellido_chofer +
                     ' - CI: ' + chofer.ci_chofer;
 
                 campoCI.value = chofer.ci_chofer;
-
                 sugerencias.innerHTML = '';
-
             });
 
             sugerencias.appendChild(opcion);
-
         });
 
         if (resultados.length === 0) {
-
             const mensaje = document.createElement('p');
 
             mensaje.textContent = 'No se encontraron choferes.';
-
             mensaje.className = 'sin-resultados-ambulancia';
 
             sugerencias.appendChild(mensaje);
-
         }
-
     });
 
     document.addEventListener('click', (e) => {
-
         if (
             !input.contains(e.target) &&
             !sugerencias.contains(e.target)
         ) {
             sugerencias.innerHTML = '';
         }
-
     });
-
 }
+
 
 // ======================================================
 // BUSCADOR DE ENFERMEROS
 // ======================================================
 
 function buscarEnfermeros() {
-
     const input = document.getElementById('buscadorEnfermero');
     const campoCI = document.getElementById('enfermero');
     const sugerencias = document.getElementById('sugerenciasEnfermero');
@@ -752,18 +678,15 @@ function buscarEnfermeros() {
     if (!input || !campoCI || !sugerencias) return;
 
     input.addEventListener('input', () => {
-
         const texto = input.value.toLowerCase().trim();
 
         // Al modificar el texto, invalidamos la selección anterior.
         campoCI.value = '';
-
         sugerencias.innerHTML = '';
 
         if (!texto) return;
 
         const resultados = enfermerosDisponibles.filter(enfermero => {
-
             const nombreCompleto = (
                 enfermero.nombre_enfermero + ' ' +
                 enfermero.apellido_enfermero
@@ -772,11 +695,9 @@ function buscarEnfermeros() {
             const ci = String(enfermero.ci_enfermero);
 
             return nombreCompleto.includes(texto) || ci.includes(texto);
-
         });
 
         resultados.forEach(enfermero => {
-
             const opcion = document.createElement('button');
 
             opcion.type = 'button';
@@ -786,40 +707,30 @@ function buscarEnfermeros() {
                 `${enfermero.nombre_enfermero} ${enfermero.apellido_enfermero} - CI: ${enfermero.ci_enfermero}`;
 
             opcion.addEventListener('click', () => {
-
                 input.value =
                     `${enfermero.nombre_enfermero} ${enfermero.apellido_enfermero}`;
 
                 campoCI.value = enfermero.ci_enfermero;
-
                 sugerencias.innerHTML = '';
-
             });
 
             sugerencias.appendChild(opcion);
-
         });
 
         if (resultados.length === 0) {
-
             sugerencias.innerHTML =
                 '<p class="sin-resultados-ambulancia">No se encontraron enfermeros.</p>';
-
         }
-
     });
 
     document.addEventListener('click', evento => {
-
         if (
             !input.contains(evento.target) &&
             !sugerencias.contains(evento.target)
         ) {
             sugerencias.innerHTML = '';
         }
-
     });
-
 }
 
 
@@ -828,7 +739,6 @@ function buscarEnfermeros() {
 // ======================================================
 
 function buscarDestinos() {
-
     const input = document.getElementById('buscadorDestino');
     const campoId = document.getElementById('destino');
     const sugerencias = document.getElementById('sugerenciasDestino');
@@ -836,12 +746,10 @@ function buscarDestinos() {
     if (!input || !campoId || !sugerencias) return;
 
     input.addEventListener('input', () => {
-
         const texto = input.value.toLowerCase().trim();
 
         // Evitamos enviar un destino anterior si cambia el texto.
         campoId.value = '';
-
         sugerencias.innerHTML = '';
 
         if (!texto) return;
@@ -851,7 +759,6 @@ function buscarDestinos() {
         );
 
         resultados.forEach(destino => {
-
             const opcion = document.createElement('button');
 
             opcion.type = 'button';
@@ -859,39 +766,28 @@ function buscarDestinos() {
             opcion.textContent = destino.nombre_destino;
 
             opcion.addEventListener('click', () => {
-
                 input.value = destino.nombre_destino;
-
                 campoId.value = destino.id_destino;
-
                 sugerencias.innerHTML = '';
-
             });
 
             sugerencias.appendChild(opcion);
-
         });
 
         if (resultados.length === 0) {
-
             sugerencias.innerHTML =
                 '<p class="sin-resultados-ambulancia">No se encontraron destinos.</p>';
-
         }
-
     });
 
     document.addEventListener('click', evento => {
-
         if (
             !input.contains(evento.target) &&
             !sugerencias.contains(evento.target)
         ) {
             sugerencias.innerHTML = '';
         }
-
     });
-
 }
 
 
@@ -900,7 +796,6 @@ function buscarDestinos() {
 // ======================================================
 
 function buscarPacientes() {
-
     const inputCI = document.getElementById('ciPaciente');
     const inputNombre = document.getElementById('paciente');
     const sugerencias = document.getElementById('sugerenciasPaciente');
@@ -911,42 +806,32 @@ function buscarPacientes() {
     inputNombre.readOnly = true;
 
     inputCI.addEventListener('input', () => {
-
         const texto = inputCI.value.trim();
 
         // Si cambia la CI, se elimina el nombre anterior.
         inputNombre.value = '';
-
         sugerencias.innerHTML = '';
 
         if (!texto) return;
 
-        // Solamente buscamos coincidencias de CI.
         const resultados = pacientesDisponibles.filter(paciente =>
             String(paciente.ci_paciente).includes(texto)
         );
 
         // Evitamos mostrar dos veces la misma CI.
         const pacientesUnicos = [];
-
         const cedulasMostradas = new Set();
 
         resultados.forEach(paciente => {
-
             const ci = String(paciente.ci_paciente);
 
             if (!cedulasMostradas.has(ci)) {
-
                 cedulasMostradas.add(ci);
-
                 pacientesUnicos.push(paciente);
-
             }
-
         });
 
         pacientesUnicos.forEach(paciente => {
-
             const opcion = document.createElement('button');
 
             opcion.type = 'button';
@@ -956,59 +841,44 @@ function buscarPacientes() {
                 `${paciente.ci_paciente} - ${paciente.nombre_paciente}`;
 
             opcion.addEventListener('click', () => {
-
                 inputCI.value = paciente.ci_paciente;
-
                 inputNombre.value = paciente.nombre_paciente;
-
                 sugerencias.innerHTML = '';
-
             });
 
             sugerencias.appendChild(opcion);
-
         });
 
         if (pacientesUnicos.length === 0) {
-
             sugerencias.innerHTML =
                 '<p class="sin-resultados-ambulancia">No se encontró ningún paciente con esa CI.</p>';
-
         }
-
     });
 
     document.addEventListener('click', evento => {
-
         if (
             !inputCI.contains(evento.target) &&
             !sugerencias.contains(evento.target)
         ) {
             sugerencias.innerHTML = '';
         }
-
     });
-
 }
+
 
 // ======================================================
 // CARGAR TRASLADOS DESDE LA BASE DE DATOS
 // ======================================================
 
 async function cargarTraslados() {
-
     try {
-
         const response = await fetch(
             '/kgade/KGA-Development-Studio/API/traslados/traslados.php'
         );
 
         if (!response.ok) {
-
             console.error('No se pudieron cargar los traslados.');
-
             return;
-
         }
 
         todosLosTraslados = await response.json();
@@ -1016,11 +886,8 @@ async function cargarTraslados() {
         filtrarTraslados();
 
     } catch (error) {
-
         console.error('Error al cargar traslados:', error);
-
     }
-
 }
 
 
@@ -1029,7 +896,6 @@ async function cargarTraslados() {
 // ======================================================
 
 function renderizarTarjetasTraslado(lista) {
-
     const contenedor = document.querySelector('.contenedor-ambulancias');
 
     if (!contenedor) return;
@@ -1037,19 +903,15 @@ function renderizarTarjetasTraslado(lista) {
     contenedor.innerHTML = '';
 
     if (!Array.isArray(lista) || lista.length === 0) {
-
         contenedor.innerHTML = `
             <p style="text-align:center; width:100%; grid-column:1/-1;">
                 No hay solicitudes en esta sección.
             </p>
         `;
-
         return;
-
     }
 
     lista.forEach(item => {
-
         const card = document.createElement('div');
 
         card.className = 'card-ambulancia';
@@ -1066,19 +928,24 @@ function renderizarTarjetasTraslado(lista) {
                 <p><strong>Oxígeno:</strong> ${Number(item.oxigeno) === 1 ? 'Sí' : 'No'}</p>
             `;
 
-        const estado = item.estado_traslado || 'Pendiente';
+        const estado = item.estado_traslado === 'aprobado'
+            ? 'Programado'
+            : item.estado_traslado === 'en proceso'
+                ? 'En proceso'
+                : item.estado_traslado === 'finalizado'
+                    ? 'Finalizado'
+                    : item.estado_traslado || 'Pendiente';
+
         const fechaTraslado = item.fecha_traslado
-    ? item.fecha_traslado.split('-').reverse().join('/')
-    : 'Sin fecha';
+            ? item.fecha_traslado.split('-').reverse().join('/')
+            : 'Sin fecha';
 
         card.innerHTML = `
-
             <h3>Matrícula: ${item.matricula || 'Sin matrícula'}</h3>
 
             <img src="../img/ambulanciaIMGG.png" alt="Vehículo">
 
             <div class="info-principal">
-
                 <p><strong>Tipo:</strong> Traslado</p>
 
                 <p><strong>Transportable:</strong>
@@ -1100,17 +967,15 @@ function renderizarTarjetasTraslado(lista) {
                 </p>
 
                 <p><strong>Hora salida:</strong>
-                    ${item.hora_salida || 'Pendiente'}
+                    ${item.hora_salida || '--:--'}
                 </p>
 
                 <p><strong>Hora llegada:</strong>
-                    ${item.hora_llegada || 'Pendiente'}
+                    ${item.hora_llegada || '--:--'}
                 </p>
-
             </div>
 
             <div class="info-extra">
-
                 <h3>INFORMACIÓN EXTRA</h3>
 
                 <p><strong>Conductor:</strong>
@@ -1126,13 +991,10 @@ function renderizarTarjetasTraslado(lista) {
                 <p><strong>Observaciones:</strong>
                     ${item.observaciones || 'Sin observaciones'}
                 </p>
-
             </div>
 
             ${esAdministrador ? `
-
                 <div class="acciones">
-
                     <button
                         class="btn-editar"
                         onclick="editarTraslado('${item.id_traslado}', '${item.id_transportable}')">
@@ -1140,7 +1002,6 @@ function renderizarTarjetasTraslado(lista) {
                     </button>
 
                     ${item.estado_solicitud === 'pendiente' ? `
-
                         <button
                             class="btn-aprobar"
                             onclick="resolverSolicitud('${item.id_traslado}', 'aprobado')">
@@ -1152,41 +1013,108 @@ function renderizarTarjetasTraslado(lista) {
                             onclick="resolverSolicitud('${item.id_traslado}', 'rechazado')">
                             Rechazar
                         </button>
-
                     ` : ''}
 
-            <!-- Permitir eliminar traslados aprobados o rechazados. -->
-            ${['aprobado', 'rechazado'].includes(item.estado_solicitud) ? `
+                    ${item.estado_solicitud === 'aprobado' ? `
+                        ${item.estado_traslado === 'aprobado' ? `
+                            <button
+                                class="btn-seguimiento"
+                                onclick="actualizarEstadoTraslado('${item.id_traslado}', 'en proceso')">
+                                En proceso
+                            </button>
+                        ` : item.estado_traslado === 'en proceso' ? `
+                            <button
+                                class="btn-aprobar"
+                                onclick="actualizarEstadoTraslado('${item.id_traslado}', 'finalizado')">
+                                Finalizar
+                            </button>
+                        ` : item.estado_traslado === 'finalizado' ? `
+                            <button
+                                class="btn-seguimiento"
+                                onclick="actualizarEstadoTraslado('${item.id_traslado}', 'en proceso')">
+                                En proceso
+                            </button>
+                        ` : ''}
+                    ` : ''}
 
-                <button
-                    class="btn-eliminar"
-                    onclick="eliminarTraslado('${item.id_traslado}')">
-                    Eliminar
-                </button>
+                    ${['aprobado', 'rechazado'].includes(item.estado_solicitud) ? `
+                        <button
+                            class="btn-eliminar"
+                            onclick="eliminarTraslado('${item.id_traslado}')">
+                            Eliminar
+                        </button>
+                    ` : ''}
 
-            ` : ''}
-
-            <!-- Permitir volver a aprobar una solicitud rechazada. -->
-            ${item.estado_solicitud === 'rechazado' ? `
-
-                <button
-                    class="btn-aprobar"
-                    onclick="resolverSolicitud('${item.id_traslado}', 'aprobado')">
-                    Aprobar
-                </button>
-
-            ` : ''}
-
+                    ${item.estado_solicitud === 'rechazado' ? `
+                        <button
+                            class="btn-aprobar"
+                            onclick="resolverSolicitud('${item.id_traslado}', 'aprobado')">
+                            Aprobar
+                        </button>
+                    ` : ''}
                 </div>
-
             ` : ''}
-
         `;
 
         contenedor.appendChild(card);
-
     });
+}
 
+
+// ======================================================
+// SOLICITAR UNA HORA MEDIANTE EL MODAL
+// ======================================================
+
+function solicitarHoraTraslado(tipo) {
+    return new Promise(resolve => {
+        const modal = document.getElementById('modalHoraTraslado');
+        const formulario = document.getElementById('formHoraTraslado');
+        const input = document.getElementById('inputHoraTraslado');
+        const titulo = document.getElementById('tituloModalHora');
+        const label = document.getElementById('labelHoraTraslado');
+
+        if (!modal || !formulario || !input || !titulo || !label) {
+            alert('No se encontró el modal para registrar la hora.');
+            resolve(null);
+            return;
+        }
+
+        titulo.textContent = tipo === 'salida'
+            ? 'Registrar hora de salida'
+            : 'Registrar hora de llegada';
+
+        label.textContent = tipo === 'salida'
+            ? 'Hora de salida'
+            : 'Hora de llegada';
+
+        input.value = '';
+        modal.style.display = 'flex';
+        input.focus();
+
+        const cerrar = valor => {
+            modal.style.display = 'none';
+            formulario.onsubmit = null;
+
+            document.getElementById('btnCancelarHora').onclick = null;
+            document.getElementById('btnCerrarModalHora').onclick = null;
+
+            resolve(valor);
+        };
+
+        formulario.onsubmit = evento => {
+            evento.preventDefault();
+
+            if (!input.value) {
+                alert('Debe ingresar una hora válida.');
+                return;
+            }
+
+            cerrar(input.value);
+        };
+
+        document.getElementById('btnCancelarHora').onclick = () => cerrar(null);
+        document.getElementById('btnCerrarModalHora').onclick = () => cerrar(null);
+    });
 }
 
 
@@ -1195,27 +1123,42 @@ function renderizarTarjetasTraslado(lista) {
 // ======================================================
 
 async function resolverSolicitud(idTraslado, estadoSolicitud) {
+    const traslado = todosLosTraslados.find(item =>
+        String(item.id_traslado) === String(idTraslado)
+    );
+
+    if (!traslado) {
+        alert('No se encontró el traslado.');
+        return;
+    }
 
     const accion = estadoSolicitud === 'aprobado'
-        ? 'confirmar'
+        ? 'aprobar'
         : 'rechazar';
 
     if (!confirm(`¿Desea ${accion} esta solicitud?`)) return;
 
-    try {
+    let horaSalida = null;
 
+    // Si no tiene hora de salida, debemos solicitarla antes de aprobar.
+    if (estadoSolicitud === 'aprobado' && !traslado.hora_salida) {
+        horaSalida = await solicitarHoraTraslado('salida');
+
+        if (!horaSalida) return;
+    }
+
+    try {
         const response = await fetch(
             '/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=resolver',
             {
                 method: 'POST',
-
                 headers: {
                     'Content-Type': 'application/json'
                 },
-
                 body: JSON.stringify({
                     id_traslado: idTraslado,
-                    estado_solicitud: estadoSolicitud
+                    estado_solicitud: estadoSolicitud,
+                    hora_salida: horaSalida
                 })
             }
         );
@@ -1223,25 +1166,79 @@ async function resolverSolicitud(idTraslado, estadoSolicitud) {
         const resultado = await response.json();
 
         if (!response.ok) {
-
             alert(resultado.error || 'No se pudo actualizar la solicitud.');
-
             return;
-
         }
 
         alert(resultado.mensaje || 'Solicitud actualizada.');
-
         await cargarTraslados();
 
     } catch (error) {
-
         console.error('Error al resolver solicitud:', error);
-
         alert('Ocurrió un error en la conexión.');
+    }
+}
 
+
+// ======================================================
+// ACTUALIZAR ESTADO OPERATIVO
+// ======================================================
+
+async function actualizarEstadoTraslado(idTraslado, nuevoEstado) {
+    const traslado = todosLosTraslados.find(item =>
+        String(item.id_traslado) === String(idTraslado)
+    );
+
+    if (!traslado) {
+        alert('No se encontró el traslado.');
+        return;
     }
 
+    let horaLlegada = null;
+
+    if (nuevoEstado === 'finalizado') {
+        horaLlegada = await solicitarHoraTraslado('llegada');
+
+        if (!horaLlegada) return;
+
+    } else {
+        const mensaje = traslado.estado_traslado === 'finalizado'
+            ? '¿Está seguro de que desea devolver este traslado a En proceso? Se eliminará su hora de llegada.'
+            : '¿Desea iniciar este traslado?';
+
+        if (!confirm(mensaje)) return;
+    }
+
+    try {
+        const response = await fetch(
+            '/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=estado',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id_traslado: idTraslado,
+                    estado_traslado: nuevoEstado,
+                    hora_llegada: horaLlegada
+                })
+            }
+        );
+
+        const resultado = await response.json();
+
+        if (!response.ok) {
+            alert(resultado.error || 'No se pudo actualizar el estado.');
+            return;
+        }
+
+        alert(resultado.mensaje || 'Estado actualizado correctamente.');
+        await cargarTraslados();
+
+    } catch (error) {
+        console.error('Error al actualizar el estado del traslado:', error);
+        alert('Ocurrió un error en la conexión.');
+    }
 }
 
 
@@ -1250,24 +1247,17 @@ async function resolverSolicitud(idTraslado, estadoSolicitud) {
 // ======================================================
 
 async function editarTraslado(idTraslado, idTransportable) {
-
     const traslado = todosLosTraslados.find(item =>
-
         String(item.id_traslado) === String(idTraslado) &&
         String(item.id_transportable) === String(idTransportable)
-
     );
 
     if (!traslado) {
-
         alert('No se encontró el traslado.');
-
         return;
-
     }
 
     modoEdicion = true;
-
     trasladoEditando = traslado;
 
     // Cargamos nuevamente las opciones para asegurar que los
@@ -1279,7 +1269,6 @@ async function editarTraslado(idTraslado, idTransportable) {
         : 'paciente';
 
     document.getElementById('tipoTransportable').value = tipo;
-
     actualizarCamposTransportable();
 
     document.getElementById('ambulancia').value =
@@ -1314,30 +1303,30 @@ async function editarTraslado(idTraslado, idTransportable) {
         ? `${chofer.nombre_chofer} ${chofer.apellido_chofer} - CI: ${chofer.ci_chofer}`
         : '';
 
-        // Recuperar el enfermero seleccionado.
-        const enfermero = enfermerosDisponibles.find(item =>
-            String(item.ci_enfermero) === String(traslado.ci_enfermero)
-        );
+    // Recuperar el enfermero seleccionado.
+    const enfermero = enfermerosDisponibles.find(item =>
+        String(item.ci_enfermero) === String(traslado.ci_enfermero)
+    );
 
-        document.getElementById('enfermero').value =
-            traslado.ci_enfermero || '';
+    document.getElementById('enfermero').value =
+        traslado.ci_enfermero || '';
 
-        document.getElementById('buscadorEnfermero').value = enfermero
-            ? `${enfermero.nombre_enfermero} ${enfermero.apellido_enfermero}`
-            : '';
+    document.getElementById('buscadorEnfermero').value = enfermero
+        ? `${enfermero.nombre_enfermero} ${enfermero.apellido_enfermero}`
+        : '';
 
+    // Recuperar el destino seleccionado.
+    const destino = destinosDisponibles.find(item =>
+        String(item.id_destino) === String(traslado.id_destino)
+    );
 
-        // Recuperar el destino seleccionado.
-        const destino = destinosDisponibles.find(item =>
-            String(item.id_destino) === String(traslado.id_destino)
-        );
+    document.getElementById('destino').value =
+        traslado.id_destino || '';
 
-        document.getElementById('destino').value =
-            traslado.id_destino || '';
+    document.getElementById('buscadorDestino').value = destino
+        ? destino.nombre_destino
+        : '';
 
-        document.getElementById('buscadorDestino').value = destino
-            ? destino.nombre_destino
-            : '';
     document.getElementById('fecha').value =
         traslado.fecha_traslado || '';
 
@@ -1347,26 +1336,12 @@ async function editarTraslado(idTraslado, idTransportable) {
     document.getElementById('observaciones').value =
         traslado.observaciones || '';
 
-    const estado = traslado.estado_traslado;
-
-    document.getElementById('estado').value =
-        estado === 'finalizado'
-            ? 'Finalizado'
-            : estado === 'en proceso'
-                ? 'En curso'
-                : 'Programado';
-
-        // Limpiar todas las sugerencias al cerrar el formulario.
-        document.getElementById('sugerenciasAmbulancia').innerHTML = '';
-        document.getElementById('sugerenciasConductor').innerHTML = '';
-        document.getElementById('sugerenciasPaciente').innerHTML = '';
-        document.getElementById('sugerenciasEnfermero').innerHTML = '';
-        document.getElementById('sugerenciasDestino').innerHTML = '';
-        document.getElementById('sugerenciasAmbulancia').innerHTML = '';
-        document.getElementById('sugerenciasConductor').innerHTML = '';
-        document.getElementById('sugerenciasPaciente').innerHTML = '';
-        document.getElementById('sugerenciasEnfermero').innerHTML = '';
-        document.getElementById('sugerenciasDestino').innerHTML = '';
+    // Limpiar todas las sugerencias al abrir el formulario.
+    document.getElementById('sugerenciasAmbulancia').innerHTML = '';
+    document.getElementById('sugerenciasConductor').innerHTML = '';
+    document.getElementById('sugerenciasPaciente').innerHTML = '';
+    document.getElementById('sugerenciasEnfermero').innerHTML = '';
+    document.getElementById('sugerenciasDestino').innerHTML = '';
 
     const titulo = document.querySelector(
         '.modal-traslado-header h2'
@@ -1377,7 +1352,6 @@ async function editarTraslado(idTraslado, idTransportable) {
     }
 
     document.getElementById('modalNuevoTraslado').style.display = 'flex';
-
 }
 
 
@@ -1386,11 +1360,9 @@ async function editarTraslado(idTraslado, idTransportable) {
 // ======================================================
 
 async function eliminarTraslado(id) {
-
     if (!confirm(`¿Desea eliminar el traslado ${id}?`)) return;
 
     try {
-
         const response = await fetch(
             `/kgade/KGA-Development-Studio/API/traslados/traslados.php?id=${encodeURIComponent(id)}`,
             {
@@ -1401,23 +1373,15 @@ async function eliminarTraslado(id) {
         const resultado = await response.json();
 
         if (!response.ok) {
-
             alert(resultado.error || 'No se pudo eliminar el traslado.');
-
             return;
-
         }
 
         alert(resultado.mensaje || 'Traslado eliminado correctamente.');
-
         await cargarTraslados();
 
     } catch (error) {
-
         console.error('Error al eliminar traslado:', error);
-
         alert('Ocurrió un error en la conexión.');
-
     }
-
 }

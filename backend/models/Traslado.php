@@ -442,99 +442,220 @@ class Traslado
     // APROBAR O RECHAZAR UNA SOLICITUD
     // ======================================================
 
-    public function resolverSolicitud(
-        string $idTraslado,
-        string $estadoSolicitud,
-        string $ciAdmin
-    ): bool {
+    
+public function resolverSolicitud(
+    string $idTraslado,
+    string $estadoSolicitud,
+    string $ciAdmin,
+    ?string $horaSalidaIngresada = null
+): bool {
+    try {
+        $this->conexion->beginTransaction();
 
-        try {
+        // Recuperar la solicitud y bloquearla durante la operación.
+        $sql = "SELECT ci_solicitante, ci_chofer, matricula, id_destino, hora_salida
+                FROM traslado
+                WHERE id_traslado = :id
+                AND estado_solicitud IN ('pendiente', 'rechazado')
+                FOR UPDATE";
 
-            $this->conexion->beginTransaction();
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->bindValue(':id', $idTraslado);
+        $sentencia->execute();
 
-        // Se pueden resolver solicitudes pendientes y volver a aprobar
-        // aquellas que anteriormente fueron rechazadas.
-        $sql = "SELECT ci_solicitante, ci_chofer, matricula, id_destino FROM traslado WHERE id_traslado = :id AND estado_solicitud IN ('pendiente', 'rechazado') FOR UPDATE";
+        $traslado = $sentencia->fetch(PDO::FETCH_ASSOC);
 
-            $sentencia = $this->conexion->prepare($sql);
-            $sentencia->bindValue(':id', $idTraslado);
-            $sentencia->execute();
-
-            $traslado = $sentencia->fetch(PDO::FETCH_ASSOC);
-
-            if (!$traslado) {
-
-                $this->conexion->rollBack();
-
-                return false;
-            }
-
-            $estadoTraslado = (
-                $estadoSolicitud === 'aprobado'
-            ) ? 'aprobado' : 'denegado';
-
-            // Actualizar los dos estados.
-            $sql = "UPDATE traslado SET estado_solicitud = :estado_solicitud, estado_traslado = :estado_traslado WHERE id_traslado = :id";
-
-            $sentencia = $this->conexion->prepare($sql);
-
-            $sentencia->bindValue(':estado_solicitud', $estadoSolicitud);
-            $sentencia->bindValue(':estado_traslado', $estadoTraslado);
-            $sentencia->bindValue(':id', $idTraslado);
-
-            $sentencia->execute();
-
-            // ----------------------------------------------
-            // NOTIFICAR AL EMPLEADO SOLICITANTE
-            // ----------------------------------------------
-
-            require_once __DIR__ . '/Notificacion.php';
-
-            $notificacion = new Notificacion();
-
-            $aprobada = $estadoSolicitud === 'aprobado';
-
-            $titulo = $aprobada
-                ? 'Traslado aprobado'
-                : 'Traslado rechazado';
-
-            $mensaje = $aprobada
-                ? 'Tu solicitud de traslado fue aprobada.'
-                : 'Tu solicitud de traslado fue rechazada.';
-
-            $resultadoNotificacion = $notificacion->crear(
-                $idTraslado,
-                $traslado['ci_chofer'],
-                $traslado['matricula'],
-                $traslado['id_destino'],
-                $ciAdmin,
-                $traslado['ci_solicitante'],
-                $titulo,
-                $mensaje
-            );
-
-            if (!$resultadoNotificacion) {
-
-                $this->conexion->rollBack();
-
-                return false;
-            }
-
-            $this->conexion->commit();
-
-            return true;
-
-        } catch (Throwable $e) {
-
-            if ($this->conexion->inTransaction()) {
-                $this->conexion->rollBack();
-            }
-
-            error_log("Error al resolver solicitud: " . $e->getMessage());
-
+        if (!$traslado) {
+            $this->conexion->rollBack();
             return false;
         }
+
+        // Al aprobar se conserva la hora existente o se utiliza la ingresada.
+        if ($estadoSolicitud === 'aprobado') {
+            $horaSalida = $horaSalidaIngresada ?: $traslado['hora_salida'];
+            $horaSalida = $horaSalida ? substr($horaSalida, 0, 5) : null;
+
+            // La aprobación requiere una hora de salida válida.
+            if (
+                !$horaSalida ||
+                !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $horaSalida)
+            ) {
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            $estadoTraslado = 'aprobado';
+        } else {
+            // Un traslado rechazado no puede conservar ninguna hora.
+            $horaSalida = null;
+            $estadoTraslado = 'denegado';
+        }
+
+        $sql = "UPDATE traslado
+                SET estado_solicitud = :estado_solicitud,
+                    estado_traslado = :estado_traslado,
+                    hora_salida = :hora_salida,
+                    hora_llegada = NULL
+                WHERE id_traslado = :id";
+
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->bindValue(':estado_solicitud', $estadoSolicitud);
+        $sentencia->bindValue(':estado_traslado', $estadoTraslado);
+        $sentencia->bindValue(
+            ':hora_salida',
+            $horaSalida,
+            $horaSalida === null ? PDO::PARAM_NULL : PDO::PARAM_STR
+        );
+        $sentencia->bindValue(':id', $idTraslado);
+        $sentencia->execute();
+
+        // Notificar al empleado que realizó la solicitud.
+        require_once __DIR__ . '/Notificacion.php';
+
+        $notificacion = new Notificacion();
+        $aprobada = $estadoSolicitud === 'aprobado';
+
+        $titulo = $aprobada
+            ? 'Traslado aprobado'
+            : 'Traslado rechazado';
+
+        $mensaje = $aprobada
+            ? 'Tu solicitud de traslado fue aprobada.'
+            : 'Tu solicitud de traslado fue rechazada.';
+
+        $resultadoNotificacion = $notificacion->crear(
+            $idTraslado,
+            $traslado['ci_chofer'],
+            $traslado['matricula'],
+            $traslado['id_destino'],
+            $ciAdmin,
+            $traslado['ci_solicitante'],
+            $titulo,
+            $mensaje
+        );
+
+        if (!$resultadoNotificacion) {
+            $this->conexion->rollBack();
+            return false;
+        }
+
+        $this->conexion->commit();
+        return true;
+
+    } catch (Throwable $e) {
+        if ($this->conexion->inTransaction()) {
+            $this->conexion->rollBack();
+        }
+
+        error_log("Error al resolver solicitud: " . $e->getMessage());
+        return false;
     }
+}
+
+
+public function actualizarEstadoOperativo(
+    string $idTraslado,
+    string $nuevoEstado,
+    ?string $horaLlegada = null
+): bool {
+    try {
+        $this->conexion->beginTransaction();
+
+        // Recuperar el estado actual y bloquear el traslado.
+        $sql = "SELECT estado_traslado, estado_solicitud, hora_salida
+                FROM traslado
+                WHERE id_traslado = :id
+                FOR UPDATE";
+
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->bindValue(':id', $idTraslado);
+        $sentencia->execute();
+
+        $traslado = $sentencia->fetch(PDO::FETCH_ASSOC);
+
+        if (!$traslado || $traslado['estado_solicitud'] !== 'aprobado') {
+            $this->conexion->rollBack();
+            return false;
+        }
+
+        $estadoActual = $traslado['estado_traslado'];
+
+        // Solo se puede avanzar desde programado a en proceso.
+        if (
+            $nuevoEstado === 'en proceso' &&
+            !in_array($estadoActual, ['aprobado', 'finalizado'], true)
+        ) {
+            $this->conexion->rollBack();
+            return false;
+        }
+
+        // Solo se puede finalizar un traslado que esté en proceso.
+        if (
+            $nuevoEstado === 'finalizado' &&
+            $estadoActual !== 'en proceso'
+        ) {
+            $this->conexion->rollBack();
+            return false;
+        }
+
+        if (!in_array($nuevoEstado, ['en proceso', 'finalizado'], true)) {
+            $this->conexion->rollBack();
+            return false;
+        }
+
+        // Todo traslado aprobado debe tener hora de salida.
+        if (empty($traslado['hora_salida'])) {
+            $this->conexion->rollBack();
+            return false;
+        }
+
+        if ($nuevoEstado === 'finalizado') {
+            // La hora de llegada es obligatoria al finalizar.
+            $horaLlegada = $horaLlegada
+                ? substr($horaLlegada, 0, 5)
+                : null;
+
+            if (
+                !$horaLlegada ||
+                !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $horaLlegada)
+            ) {
+                $this->conexion->rollBack();
+                return false;
+            }
+        } else {
+            // Al volver a en proceso, se elimina la hora de llegada.
+            $horaLlegada = null;
+        }
+
+        $sql = "UPDATE traslado
+                SET estado_traslado = :estado,
+                    hora_llegada = :hora_llegada
+                WHERE id_traslado = :id";
+
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->bindValue(':estado', $nuevoEstado);
+        $sentencia->bindValue(
+            ':hora_llegada',
+            $horaLlegada,
+            $horaLlegada === null ? PDO::PARAM_NULL : PDO::PARAM_STR
+        );
+        $sentencia->bindValue(':id', $idTraslado);
+        $sentencia->execute();
+
+        $this->conexion->commit();
+        return true;
+
+    } catch (Throwable $e) {
+        if ($this->conexion->inTransaction()) {
+            $this->conexion->rollBack();
+        }
+
+        error_log("Error al actualizar estado operativo: " . $e->getMessage());
+        return false;
+    }
+}
+
+
 
     // ======================================================
     // ACTUALIZAR UN TRASLADO
@@ -594,16 +715,33 @@ class Traslado
 
             $this->conexion->beginTransaction();
 
-            $estadoTraslado = $this->normalizarEstado(
-                $datos['estado'] ?? ''
-            );
-
             // ----------------------------------------------
             // ACTUALIZAR TRASLADO
             // ----------------------------------------------
 
-            $sqlTraslado = "UPDATE traslado SET ci_chofer = :ci_chofer, matricula = :matricula, id_destino = :id_destino, fecha_traslado = :fecha, hora_salida = :hora, observaciones = :observaciones, estado_traslado = :estado WHERE id_traslado = :id";
+            $sqlEstadoActual = "SELECT estado_solicitud
+                    FROM traslado
+                    WHERE id_traslado = :id";
 
+                $consultaEstado = $this->conexion->prepare($sqlEstadoActual);
+                $consultaEstado->bindValue(':id', $datos['id_traslado']);
+                $consultaEstado->execute();
+
+                $estadoSolicitudActual = $consultaEstado->fetchColumn();
+
+                if ($estadoSolicitudActual === false) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+            $sqlTraslado = "UPDATE traslado
+                SET ci_chofer = :ci_chofer,
+                    matricula = :matricula,
+                    id_destino = :id_destino,
+                    fecha_traslado = :fecha,
+                    hora_salida = :hora,
+                    observaciones = :observaciones
+                WHERE id_traslado = :id";
             $sentencia = $this->conexion->prepare($sqlTraslado);
 
             $sentencia->bindValue(':ci_chofer', $datos['ci_chofer']);
@@ -611,20 +749,24 @@ class Traslado
             $sentencia->bindValue(':id_destino', $datos['id_destino']);
             $sentencia->bindValue(':fecha', $datos['fecha']);
 
-            $hora = !empty($datos['hora'])
-                ? $datos['hora']
-                : null;
+            $hora = $estadoSolicitudActual === 'rechazado'
+                ? null
+                : (!empty($datos['hora']) ? $datos['hora'] : null);
 
-            $sentencia->bindValue(
-                ':hora',
-                $hora,
-                $hora === null ? PDO::PARAM_NULL : PDO::PARAM_STR
-            );
+            if (
+                $estadoSolicitudActual === 'aprobado' &&
+                (
+                    !$hora ||
+                    !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', substr($hora, 0, 5))
+                )
+            ) {
+                $this->conexion->rollBack();
+                return false;
+            }
 
             $observaciones = $datos['observaciones'] ?? '';
 
             $sentencia->bindValue(':observaciones', $observaciones);
-            $sentencia->bindValue(':estado', $estadoTraslado);
             $sentencia->bindValue(':id', $datos['id_traslado']);
 
             $sentencia->execute();
