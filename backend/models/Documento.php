@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../config/Database.php';
 
 class Documento
@@ -14,8 +15,8 @@ class Documento
     // OBTENER TODOS LOS DOCUMENTOS
     // ======================================================
 
-    public function obtenerTodos(): array {
-
+    public function obtenerTodos(): array
+    {
         $sql = "SELECT
                     d.id_documentos,
                     d.titulo_docs,
@@ -24,10 +25,12 @@ class Documento
                     d.fecha_carga AS fecha,
                     d.hora_carga AS hora,
                     d.ci_admin,
-                    cat.nombre_cat
+                    cat.nombre_cat,
+                    cat.estado_cat
                 FROM documentos d
-                LEFT JOIN categoria cat
+                INNER JOIN categoria cat
                     ON d.id_categoria = cat.id_categoria
+                WHERE cat.tipo_cat = 'docs'
                 ORDER BY d.fecha_carga DESC, d.hora_carga DESC";
 
         $sentencia = $this->conexion->prepare($sql);
@@ -36,30 +39,32 @@ class Documento
         return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
     // ======================================================
     // BUSCAR UN DOCUMENTO POR ID
     // ======================================================
 
-    public function buscarPorId(string $idDoc): ?array {
-
+    public function buscarPorId(string $idDoc): ?array
+    {
         $sql = "SELECT
-                    id_documentos,
-                    id_categoria,
-                    titulo_docs,
-                    descripcion_docs,
-                    nombre_archivo,
-                    ruta_archivo
-                FROM documentos
-                WHERE id_documentos = :id";
+                    d.id_documentos,
+                    d.id_categoria,
+                    d.titulo_docs,
+                    d.descripcion_docs,
+                    d.nombre_archivo,
+                    d.ruta_archivo
+                FROM documentos d
+                INNER JOIN categoria cat
+                    ON d.id_categoria = cat.id_categoria
+                WHERE d.id_documentos = :id
+                AND cat.tipo_cat = 'docs'";
 
         $sentencia = $this->conexion->prepare($sql);
+
         $sentencia->bindValue(':id', $idDoc);
         $sentencia->execute();
 
         return $sentencia->fetch(PDO::FETCH_ASSOC) ?: null;
     }
-
 
     // ======================================================
     // CREAR UN DOCUMENTO
@@ -74,11 +79,7 @@ class Documento
         string $rutaArchivo,
         string $ciAdmin
     ): bool {
-
         try {
-
-            // Ya no necesitamos insertar en una segunda tabla.
-            // La fecha, hora y CI se guardan directamente en documentos.
 
             $sql = "INSERT INTO documentos (
                         id_documentos,
@@ -117,23 +118,19 @@ class Documento
 
         } catch (Throwable $e) {
 
-            error_log("Error al crear documento: " . $e->getMessage());
+            error_log('Error al crear documento: ' . $e->getMessage());
 
             return false;
         }
     }
 
-
     // ======================================================
     // ELIMINAR UN DOCUMENTO
     // ======================================================
 
-    public function eliminar(string $idDoc): bool {
-
+    public function eliminar(string $idDoc): bool
+    {
         try {
-
-            // Ya no existe la tabla carga.
-            // Eliminamos directamente el registro del documento.
 
             $sql = "DELETE FROM documentos
                     WHERE id_documentos = :id";
@@ -145,7 +142,7 @@ class Documento
 
         } catch (Throwable $e) {
 
-            error_log("Error al eliminar documento: " . $e->getMessage());
+            error_log('Error al eliminar documento: ' . $e->getMessage());
 
             return false;
         }

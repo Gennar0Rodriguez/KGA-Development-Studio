@@ -1,3 +1,7 @@
+/* ======================================================
+   CONFIGURACIÓN GENERAL
+====================================================== */
+
 body {
     font-family: 'Lexend', sans-serif;
     background-color: #f0f4f8;
@@ -5,7 +9,7 @@ body {
 
 .documentos-container {
     width: 90%;
-    max-width: 1000px;
+    max-width: 1100px;
 
     margin: 30px auto;
     padding: 30px;
@@ -14,20 +18,22 @@ body {
 
     border-radius: 15px;
 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
     display: flex;
-
     flex-direction: column;
-}
 
-.documentos-container input{
-    width: 400px;
+    box-sizing: border-box;
 }
 
 .documentos-container h2 {
     margin-bottom: 20px;
 }
+
+
+/* ======================================================
+   BOTÓN SUBIR DOCUMENTO
+====================================================== */
 
 .btn-subir {
     background-color: #54a889;
@@ -52,21 +58,66 @@ body {
     background-color: #00a96b;
 }
 
+
+/* ======================================================
+   BUSCADOR
+====================================================== */
+
+.busqueda-documentos {
+    display: flex;
+    flex-direction: row;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
 .buscador {
     width: 100%;
 
     padding: 12px;
 
-    margin-bottom: 20px;
-
     border: 1px solid #ccc;
     border-radius: 10px;
+
+    font-family: "Lexend", sans-serif;
+
+    box-sizing: border-box;
+}
+
+.btn-buscar {
+    background-color: #0284c7;
+    color: white;
+
+    width: 60px;
+    height: 45px;
+
+    border: none;
+    border-radius: 8px;
+
+    cursor: pointer;
+}
+
+.btn-buscar:hover {
+    background-color: #0369a1;
+}
+
+
+/* ======================================================
+   TABLA DE DOCUMENTOS
+====================================================== */
+
+.tabla-responsive {
+    width: 100%;
+    overflow-x: auto;
 }
 
 .tabla-documentos {
     width: 100%;
 
     border-collapse: collapse;
+
+    min-width: 550px;
 }
 
 .tabla-documentos th {
@@ -90,6 +141,10 @@ body {
 }
 
 
+/* ======================================================
+   BOTÓN ELIMINAR
+====================================================== */
+
 .btn-eliminar-doc {
     background-color: #ef4444;
     color: white;
@@ -100,29 +155,32 @@ body {
     padding: 8px 12px;
 
     cursor: pointer;
-}
 
-.btn-qr:hover {
-    background-color: #0369a1;
+    font-family: "Lexend", sans-serif;
 }
 
 .btn-eliminar-doc:hover {
     background-color: #dc2626;
 }
 
-.busqueda-documentos {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    margin-bottom: 20px;
-}
 
-.btn-buscar {
-    background-color: #0284c7;
-    color: white;
-    width: 60px;
-    height: 45px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+/* ======================================================
+   RESPONSIVE
+====================================================== */
+
+@media (max-width: 768px) {
+
+    .documentos-container {
+        width: 95%;
+        padding: 18px;
+    }
+
+    .busqueda-documentos {
+        flex-direction: column;
+    }
+
+    .btn-buscar {
+        width: 100%;
+    }
+
 }

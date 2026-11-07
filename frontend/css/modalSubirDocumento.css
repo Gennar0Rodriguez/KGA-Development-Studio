@@ -1,3 +1,6 @@
+/* ======================================================
+   FONDO DEL MODAL
+====================================================== */
 
 .modal {
     display: none;
@@ -11,21 +14,21 @@
     width: 100%;
     height: 100%;
 
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.55);
 
     align-items: center;
     justify-content: center;
+
+    padding: 20px;
+    box-sizing: border-box;
 }
-
-
-.modal.mostrar {
-    display: flex;
-}
-
 
 .modal-contenido {
-    width: 600px;
-    max-width: 90%;
+    width: 650px;
+    max-width: 100%;
+    max-height: 90vh;
+
+    overflow-y: auto;
 
     background: white;
 
@@ -37,7 +40,6 @@
 
     animation: aparecerModal 0.2s ease;
 }
-
 
 @keyframes aparecerModal {
 
@@ -54,6 +56,10 @@
 }
 
 
+/* ======================================================
+   ENCABEZADO
+====================================================== */
+
 .modal-header {
     display: flex;
 
@@ -63,11 +69,9 @@
     margin-bottom: 20px;
 }
 
-
 .modal-header h2 {
     margin: 0;
 }
-
 
 .btn-cerrar {
     border: none;
@@ -81,11 +85,14 @@
     color: #555;
 }
 
-
 .btn-cerrar:hover {
     color: #000;
 }
 
+
+/* ======================================================
+   FORMULARIO DE DOCUMENTOS
+====================================================== */
 
 .modal-contenido form {
     display: flex;
@@ -94,11 +101,9 @@
     gap: 10px;
 }
 
-
 .modal-contenido input,
 .modal-contenido textarea,
 .modal-contenido select {
-
     width: 100%;
 
     box-sizing: border-box;
@@ -112,16 +117,27 @@
     font-family: "Lexend", sans-serif;
 }
 
-
 .modal-contenido textarea {
     min-height: 100px;
 
     resize: vertical;
 }
 
+.modal-contenido input:focus,
+.modal-contenido textarea:focus {
+    outline: none;
+
+    border-color: #0284c7;
+
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.12);
+}
+
+
+/* ======================================================
+   BOTONES DEL FORMULARIO
+====================================================== */
 
 .modal-acciones {
-
     display: flex;
 
     justify-content: flex-end;
@@ -131,10 +147,8 @@
     margin-top: 15px;
 }
 
-
 .btn-cancelar,
 .btn-subir {
-
     border: none;
 
     padding: 10px 18px;
@@ -146,20 +160,220 @@
     font-family: "Lexend", sans-serif;
 }
 
-
 .btn-cancelar {
     background: #e5e7eb;
+    color: #333;
 }
-
 
 .btn-subir {
-    background: #a5cac6;
-
+    background: #54a889;
     color: white;
 }
-
 
 .btn-cancelar:hover,
 .btn-subir:hover {
     opacity: 0.85;
+}
+
+
+/* ======================================================
+   ADMINISTRACIÓN DE CATEGORÍAS
+====================================================== */
+
+.gestion-categorias {
+    margin-bottom: 20px;
+}
+
+.gestion-categorias h3 {
+    margin-bottom: 8px;
+}
+
+.gestion-categorias p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.crear-categoria {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.crear-categoria input {
+    flex: 1;
+    min-width: 0;
+}
+
+.crear-categoria button {
+    border: none;
+
+    padding: 10px 14px;
+
+    border-radius: 6px;
+
+    background: #0284c7;
+    color: white;
+
+    cursor: pointer;
+
+    font-family: "Lexend", sans-serif;
+}
+
+.crear-categoria button:hover {
+    background: #0369a1;
+}
+
+.lista-categorias-admin {
+    list-style: none;
+
+    padding: 0;
+    margin: 15px 0 0;
+}
+
+.item-categoria-admin {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 10px;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.item-categoria-admin span {
+    overflow-wrap: anywhere;
+}
+
+.item-categoria-admin button {
+    flex-shrink: 0;
+
+    border: none;
+
+    padding: 7px 10px;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    font-family: "Lexend", sans-serif;
+    font-size: 13px;
+}
+
+.btn-deshabilitar-categoria {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.btn-deshabilitar-categoria:hover {
+    background: #fecaca;
+}
+
+.btn-reactivar-categoria {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.btn-reactivar-categoria:hover {
+    background: #bbf7d0;
+}
+
+
+/* ======================================================
+   AUTOCOMPLETADO DE CATEGORÍAS
+====================================================== */
+
+.autocomplete-categoria {
+    position: relative;
+    width: 100%;
+}
+
+.sugerencias-categorias {
+    display: none;
+
+    position: absolute;
+
+    top: 100%;
+    left: 0;
+
+    width: 100%;
+    max-height: 180px;
+
+    overflow-y: auto;
+
+    list-style: none;
+
+    padding: 0;
+    margin: 3px 0 0;
+
+    background: white;
+
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12);
+
+    z-index: 2100;
+}
+
+.sugerencias-categorias li {
+    padding: 11px 12px;
+
+    cursor: pointer;
+
+    border-bottom: 1px solid #eee;
+}
+
+.sugerencias-categorias li:last-child {
+    border-bottom: none;
+}
+
+.sugerencias-categorias li:hover {
+    background: #e0f2fe;
+}
+
+
+/* ======================================================
+   RESPONSIVE
+====================================================== */
+
+@media (max-width: 600px) {
+
+    .modal {
+        padding: 10px;
+    }
+
+    .modal-contenido {
+        padding: 18px;
+    }
+
+    .crear-categoria {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .crear-categoria button {
+        width: 100%;
+    }
+
+    .item-categoria-admin {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .item-categoria-admin button {
+        width: 100%;
+    }
+
+    .modal-acciones {
+        flex-direction: column;
+    }
+
+    .modal-acciones button {
+        width: 100%;
+    }
+
 }

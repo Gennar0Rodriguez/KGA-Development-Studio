@@ -1,41 +1,72 @@
 <?php
+
 session_start();
 
-header("X-Content-Type-Options: nosniff");
+header('X-Content-Type-Options: nosniff');
 
-require_once __DIR__ . "/../../backend/models/Documento.php";
+require_once __DIR__ . '/../../backend/models/Documento.php';
+require_once __DIR__ . '/../../backend/models/Categoria.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$documento = new Documento();
-$raizProyecto = dirname(__DIR__, 2); // La carpeta del proyecto (donde están API, backend, frontend y uploads)
-$tamañoMaximo = 10 * 1024 * 1024; // 10 MB de tamaño máximo
 
-// Se estandariza response con función
+$documento = new Documento();
+$categoria = new Categoria();
+
+$raizProyecto = dirname(__DIR__, 2);
+$tamanoMaximo = 10 * 1024 * 1024;
+
+// ======================================================
+// RESPUESTA JSON
+// ======================================================
+
 function responderJson(array $datos, int $codigo = 200): void
 {
     http_response_code($codigo);
 
-    header("Content-Type: application/json; charset=utf-8");
+    header('Content-Type: application/json; charset=utf-8');
 
     echo json_encode($datos);
 
     exit;
 }
 
+// ======================================================
+// VERIFICAR ADMINISTRADOR
+// ======================================================
 
-function resolverRutaArchivo(string $rutaRelativa, string $raizProyecto): ?string {
-    $raizUploads = realpath($raizProyecto . "/uploads/documentos");
+function verificarAdministrador(): bool
+{
+    $usuario = $_SESSION['usuario'] ?? [];
+
+    return isset($usuario['cargo'])
+        && strtolower(trim($usuario['cargo'])) === 'administrador';
+}
+
+// ======================================================
+// RESOLVER RUTA SEGURA DEL ARCHIVO
+// ======================================================
+
+function resolverRutaArchivo(
+    string $rutaRelativa,
+    string $raizProyecto
+): ?string {
+    $raizUploads = realpath(
+        $raizProyecto . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'documentos'
+    );
 
     if ($raizUploads === false) {
         return null;
     }
 
-    $rutaRelativa = str_replace(["\\", "/"],
+    $rutaRelativa = str_replace(
+        ['\\', '/'],
         DIRECTORY_SEPARATOR,
         $rutaRelativa
     );
 
-    $rutaFisica = realpath($raizProyecto . DIRECTORY_SEPARATOR . $rutaRelativa);
+    $rutaFisica = realpath(
+        $raizProyecto . DIRECTORY_SEPARATOR . $rutaRelativa
+    );
 
     if ($rutaFisica === false) {
         return null;
@@ -50,52 +81,79 @@ function resolverRutaArchivo(string $rutaRelativa, string $raizProyecto): ?strin
     return $rutaFisica;
 }
 
+// ======================================================
+// MÉTODOS HTTP
+// ======================================================
 
 switch ($metodo) {
+
+    // ==================================================
+    // GET: LISTAR O MOSTRAR UN DOCUMENTO
+    // ==================================================
+
     case 'GET':
+
         $idDocumento = $_GET['id'] ?? null;
 
-        // Si viene un ID se envía el PDF, si no se devuelve la lista de documentos
         if ($idDocumento !== null) {
+
             $datosDocumento = $documento->buscarPorId($idDocumento);
 
             if ($datosDocumento === null) {
                 responderJson([
-                    "error" => "Documento no encontrado"
+                    'error' => 'Documento no encontrado'
                 ], 404);
             }
 
             $rutaFisica = resolverRutaArchivo(
-                $datosDocumento["ruta_archivo"],
+                $datosDocumento['ruta_archivo'],
                 $raizProyecto
             );
 
-            if ($rutaFisica === null || !is_file($rutaFisica) || !is_readable($rutaFisica)) {
+            if (
+                $rutaFisica === null ||
+                !is_file($rutaFisica) ||
+                !is_readable($rutaFisica)
+            ) {
                 responderJson([
-                    "error" => "El archivo no existe o no se puede leer"
+                    'error' => 'El archivo no existe o no se puede leer'
                 ], 404);
             }
 
-            // Se limpia el nombre del pdf
-            $nombreArchivo = str_replace(["\r", "\n", '"', "\\"], "_", basename($datosDocumento["nombre_archivo"]));
+            $nombreArchivo = str_replace(
+                ["\r", "\n", '"', "\\"],
+                '_',
+                basename($datosDocumento['nombre_archivo'])
+            );
 
-            header("Content-Type: application/pdf");
+            header('Content-Type: application/pdf');
 
-            header('Content-Disposition: inline; filename="' . $nombreArchivo . '"'); // Nombre que se muestra
+            header(
+                'Content-Disposition: inline; filename="' . $nombreArchivo . '"'
+            );
 
-            header("Content-Length: " . filesize($rutaFisica)); // Tamaño PDF
+            header('Content-Length: ' . filesize($rutaFisica));
 
-            readfile($rutaFisica); // La API envía el archivo, o sea el (archivo es el) body de la request
-
-            exit; // Se corta acá para que no se mezcle el PDF con la lista de documentos
+            readfile($rutaFisica);
+            exit;
         }
 
         responderJson($documento->obtenerTodos());
 
-        exit;
+        break;
+
+    // ==================================================
+    // POST: SUBIR UN DOCUMENTO
+    // ==================================================
 
     case 'POST':
-        // El CI de quien sube el documento sale de la sesión
+
+        if (!verificarAdministrador()) {
+            responderJson([
+                'error' => 'No tiene permisos para subir documentos'
+            ], 403);
+        }
+
         $ciAdmin = $_SESSION['usuario']['ci_admin']
             ?? $_SESSION['ci_admin']
             ?? $_SESSION['ci']
@@ -103,182 +161,249 @@ switch ($metodo) {
 
         if (!$ciAdmin) {
             responderJson([
-                "error" => "Sesión no válida o no autenticada"
+                'error' => 'No se pudo identificar al administrador'
             ], 401);
         }
 
-        $titulo = $_POST['documentTitle'] ?? null;
-        $descripcion = $_POST['documentDescription'] ?? '';
-        $tipo = $_POST['documentTipe'] ?? 'C1';
+        $titulo = trim($_POST['documentTitle'] ?? '');
+        $descripcion = trim($_POST['documentDescription'] ?? '');
+        $idCategoria = trim($_POST['id_categoria'] ?? '');
 
-        // Se comprueba si en body.documentFile se recibe archivo
-        if (!$titulo || !isset($_FILES["documentFile"])) {
+        if ($titulo === '' || $idCategoria === '') {
             responderJson([
-                "error" => "Complete el título y seleccione un archivo"
+                'error' => 'Complete el título y seleccione una categoría válida'
             ], 400);
         }
 
-        $archivo = $_FILES["documentFile"];
-            /*
-                [
-                    "name" => "contrato.pdf",
-                    "type" => "application/pdf",
-                    "tmp_name" => "/tmp/phpABC123",
-                    "error" => 0,
-                    "size" => 245760
-                ]
-                tmp_name: el archivo aún no está en uploads/documentos/. PHP lo almacena temporalmente mientras procesa la petición
-            */
-
-
-        if ($archivo["error"] !== UPLOAD_ERR_OK) {
+        if (mb_strlen($titulo, 'UTF-8') > 50) {
             responderJson([
-                "error" => "Se produjo un error al subir el archivo"
+                'error' => 'El título no puede superar los 50 caracteres'
             ], 400);
         }
 
-        // Se comprueba que el archivo temporal (recordar tmp_name) sea válido
-        if (!is_uploaded_file($archivo["tmp_name"]) || $archivo["size"] <= 0) {
+        if (mb_strlen($descripcion, 'UTF-8') > 50) {
             responderJson([
-                "error" => "El archivo recibido no es válido"
+                'error' => 'La descripción no puede superar los 50 caracteres'
             ], 400);
         }
 
-        // Se comprueba tamaño del archivo
-        if ($archivo["size"] > $tamañoMaximo) {
+        // La categoría debe existir, ser de documentos y estar activa.
+        if (!$categoria->existeCategoriaDocumentoActiva($idCategoria)) {
             responderJson([
-                "error" => "El archivo supera el límite de 10 MB"
+                'error' => 'La categoría seleccionada no existe o está deshabilitada'
             ], 400);
         }
 
-        // Se comprueba que el archivo sea PDF
-        $finfo = finfo_open(FILEINFO_MIME_TYPE); // MIME: application/pdf, image/png, image/jpeg o text/plain
+        if (!isset($_FILES['documentFile'])) {
+            responderJson([
+                'error' => 'Debe seleccionar un archivo PDF'
+            ], 400);
+        }
 
-        $tipoMime = finfo_file($finfo, $archivo["tmp_name"]);
+        $archivo = $_FILES['documentFile'];
 
-        $handle = fopen($archivo["tmp_name"], "rb");
-        $cabecera = fread($handle, 5); // Se leen los primeros caracteres de un PDF %PDF- (abrir un PDF con editor de texto)
+        if ($archivo['error'] !== UPLOAD_ERR_OK) {
+            responderJson([
+                'error' => 'Se produjo un error al subir el archivo'
+            ], 400);
+        }
+
+        if (
+            !is_uploaded_file($archivo['tmp_name']) ||
+            $archivo['size'] <= 0
+        ) {
+            responderJson([
+                'error' => 'El archivo recibido no es válido'
+            ], 400);
+        }
+
+        if ($archivo['size'] > $tamanoMaximo) {
+            responderJson([
+                'error' => 'El archivo supera el límite de 10 MB'
+            ], 400);
+        }
+
+        // Comprobar el tipo MIME real del archivo.
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+
+        if ($finfo === false) {
+            responderJson([
+                'error' => 'No se pudo comprobar el archivo'
+            ], 500);
+        }
+
+        $tipoMime = finfo_file($finfo, $archivo['tmp_name']);
+
+        finfo_close($finfo);
+
+        // Comprobar también la cabecera característica de un PDF.
+        $handle = fopen($archivo['tmp_name'], 'rb');
+
+        if ($handle === false) {
+            responderJson([
+                'error' => 'No se pudo leer el archivo'
+            ], 400);
+        }
+
+        $cabecera = fread($handle, 5);
+
         fclose($handle);
 
-        // Recién acá se realiza la comprobación
-        if ($tipoMime !== "application/pdf" || $cabecera !== "%PDF-") {
+        if ($tipoMime !== 'application/pdf' || $cabecera !== '%PDF-') {
             responderJson([
-                "error" => "El archivo debe ser un PDF válido"
+                'error' => 'El archivo debe ser un PDF válido'
             ], 400);
         }
 
+        // Limpiar el nombre original del archivo.
+        $nombreOriginal = basename(
+            str_replace('\\', '/', $archivo['name'])
+        );
 
-        // Nombre del archivo ---INICIO------------------------------------------------------
-        // Se obtiene el nombre original, que es el que se guarda en la BD
-        $nombreOriginal = basename(str_replace("\\", "/", $archivo["name"]));
+        $nombreOriginal = preg_replace(
+            '/[\x00-\x1F\x7F]/',
+            '',
+            $nombreOriginal
+        );
 
-        $nombreOriginal = preg_replace('/[\x00-\x1F\x7F]/', "", $nombreOriginal);
-            // Eliminamos caracteres especiales mediante expresión regular, como los de control \x00-\x1F y \x7F
-
-        if ($nombreOriginal === "") {
-            $nombreOriginal = "documento.pdf";
+        if ($nombreOriginal === '') {
+            $nombreOriginal = 'documento.pdf';
         }
 
-        if (function_exists("mb_substr")) {
-            // Con codificación, en este caso UTF-8 (letras acentuadas u otros caracteres)
-            $nombreOriginal = mb_substr($nombreOriginal, 0, 255, "UTF-8");
+        if (function_exists('mb_substr')) {
+            $nombreOriginal = mb_substr(
+                $nombreOriginal,
+                0,
+                255,
+                'UTF-8'
+            );
         } else {
-            // Sin codificación. No Unicode
             $nombreOriginal = substr($nombreOriginal, 0, 255);
         }
-        // Nombre del archivo ---FIN------------------------------------------------------
 
-
-        // Seleccionar la categoria del documento
-        $idCategoria = 'C1';
-
-        if ($tipo === 'Emergencia') {
-            $idCategoria = 'C2';
-        }
-
-        // El ID del documento es también el nombre del PDF (el frontend lo busca como ID.pdf)
+        // Generar un identificador único para el documento.
         $idDocumento = 'DOC' . bin2hex(random_bytes(4));
 
-        $nombreServidor = $idDocumento . ".pdf";
+        $nombreServidor = $idDocumento . '.pdf';
 
+        $carpetaRelativa = 'uploads/documentos';
 
-        // Se crea la carpeta uploads/documentos, si es que ya no existe
-        $carpetaRelativa = "uploads/documentos";
+        $carpetaFisica = $raizProyecto
+            . DIRECTORY_SEPARATOR
+            . str_replace('/', DIRECTORY_SEPARATOR, $carpetaRelativa);
 
-        $carpetaFisica = $raizProyecto . DIRECTORY_SEPARATOR . str_replace("/", DIRECTORY_SEPARATOR, $carpetaRelativa);
-
-        if (!is_dir($carpetaFisica) && !mkdir($carpetaFisica, 0777, true) && !is_dir($carpetaFisica)) {
+        // Crear la carpeta si todavía no existe.
+        if (
+            !is_dir($carpetaFisica) &&
+            !mkdir($carpetaFisica, 0777, true) &&
+            !is_dir($carpetaFisica)
+        ) {
             responderJson([
-                "error" => "No se pudo crear la carpeta de destino"
+                'error' => 'No se pudo crear la carpeta de destino'
             ], 500);
         }
 
+        $rutaRelativa = $carpetaRelativa . '/' . $nombreServidor;
 
-        // El archivo queda en el srv en uploads/documentos/
-        $rutaRelativa = $carpetaRelativa . "/" . $nombreServidor;
+        $rutaFisica = $carpetaFisica
+            . DIRECTORY_SEPARATOR
+            . $nombreServidor;
 
-        $rutaFisica = $carpetaFisica . DIRECTORY_SEPARATOR . $nombreServidor;
-
-        if (!move_uploaded_file($archivo["tmp_name"], $rutaFisica)) {
+        if (!move_uploaded_file($archivo['tmp_name'], $rutaFisica)) {
             responderJson([
-                "error" => "No se pudo guardar el archivo en el servidor"
+                'error' => 'No se pudo guardar el archivo en el servidor'
             ], 500);
         }
 
-        // Se guarda el documento en la BD
-        if (!$documento->crear($idDocumento, $idCategoria, $titulo, $descripcion, $nombreOriginal, $rutaRelativa, $ciAdmin)) {
+        // Registrar el documento con el ID real de la categoría.
+        $guardado = $documento->crear(
+            $idDocumento,
+            $idCategoria,
+            $titulo,
+            $descripcion,
+            $nombreOriginal,
+            $rutaRelativa,
+            $ciAdmin
+        );
+
+        // Si falla la BD, quitar el archivo para no dejarlo suelto.
+        if (!$guardado) {
+
             if (is_file($rutaFisica)) {
-                // Si falla el guardado en la BD se borra el PDF
                 unlink($rutaFisica);
             }
 
             responderJson([
-                "error" => "No se pudo registrar el documento"
+                'error' => 'No se pudo registrar el documento'
             ], 500);
         }
 
-
         responderJson([
-            "mensaje" => "Documento subido correctamente",
-            "id" => $idDocumento
+            'mensaje' => 'Documento subido correctamente',
+            'id' => $idDocumento
         ], 201);
 
         break;
 
+    // ==================================================
+    // DELETE: ELIMINAR UN DOCUMENTO
+    // ==================================================
+
     case 'DELETE':
+
+        if (!verificarAdministrador()) {
+            responderJson([
+                'error' => 'No tiene permisos para eliminar documentos'
+            ], 403);
+        }
+
         $idDocumento = $_GET['id'] ?? null;
 
         if (!$idDocumento) {
             responderJson([
-                "error" => "Debe indicar el ID del documento"
+                'error' => 'Debe indicar el ID del documento'
             ], 400);
         }
 
+        // Recuperar el registro para comprobar que exista.
+        $datosDocumento = $documento->buscarPorId($idDocumento);
+
+        if ($datosDocumento === null) {
+            responderJson([
+                'error' => 'Documento no encontrado'
+            ], 404);
+        }
+
         $rutaFisica = resolverRutaArchivo(
-            "uploads/documentos/" . $idDocumento . ".pdf",
+            $datosDocumento['ruta_archivo'],
             $raizProyecto
         );
 
-        if ($rutaFisica !== null && is_file($rutaFisica) && !unlink($rutaFisica)) {
+        if (
+            $rutaFisica !== null &&
+            is_file($rutaFisica) &&
+            !unlink($rutaFisica)
+        ) {
             responderJson([
-                "error" => "No se pudo eliminar el archivo físico"
+                'error' => 'No se pudo eliminar el archivo físico'
             ], 500);
         }
 
         if (!$documento->eliminar($idDocumento)) {
             responderJson([
-                "error" => "No se pudo eliminar el registro"
+                'error' => 'No se pudo eliminar el registro'
             ], 500);
         }
 
         responderJson([
-            "mensaje" => "Documento eliminado correctamente"
+            'mensaje' => 'Documento eliminado correctamente'
         ]);
 
         break;
 
     default:
+
         responderJson([
-            "error" => "Método HTTP no permitido"
+            'error' => 'Método HTTP no permitido'
         ], 405);
 }

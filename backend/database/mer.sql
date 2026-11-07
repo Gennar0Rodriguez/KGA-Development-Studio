@@ -39,7 +39,7 @@ CREATE TABLE encuesta (
     PRIMARY KEY (id_encuesta, id_categoria),
     FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
-
+ 
 CREATE TABLE pregunta (
     id_pregunta VARCHAR(50) NOT NULL,
     id_encuesta VARCHAR(50) NOT NULL,
