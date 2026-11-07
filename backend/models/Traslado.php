@@ -84,38 +84,36 @@ class Traslado
         return 'en proceso';
     }
 
-
     // ======================================================
-// VALIDAR FECHA DEL TRASLADO
-// ======================================================
+    // VALIDAR FECHA DEL TRASLADO
+    // ======================================================
 
-private function validarFechaTraslado(string $fecha): bool
-{
-    // Utilizar la zona horaria de Uruguay.
-    $zonaHoraria = new DateTimeZone('America/Montevideo');
+    private function validarFechaTraslado(string $fecha): bool
+    {
+        // Utilizar la zona horaria de Uruguay.
+        $zonaHoraria = new DateTimeZone('America/Montevideo');
 
-    // Comprobar que la fecha tenga el formato correcto.
-    $fechaIngresada = DateTime::createFromFormat(
-        '!Y-m-d',
-        $fecha,
-        $zonaHoraria
-    );
+        // Comprobar que la fecha tenga el formato correcto.
+        $fechaIngresada = DateTime::createFromFormat(
+            '!Y-m-d',
+            $fecha,
+            $zonaHoraria
+        );
 
-    // Rechazar fechas inexistentes o con formato incorrecto.
-    if (
-        !$fechaIngresada ||
-        $fechaIngresada->format('Y-m-d') !== $fecha
-    ) {
-        return false;
+        // Rechazar fechas inexistentes o con formato incorrecto.
+        if (
+            !$fechaIngresada ||
+            $fechaIngresada->format('Y-m-d') !== $fecha
+        ) {
+            return false;
+        }
+
+        // Obtener la fecha actual de Uruguay.
+        $fechaActual = new DateTime('today', $zonaHoraria);
+
+        // La fecha del traslado debe ser hoy o posterior.
+        return $fechaIngresada >= $fechaActual;
     }
-
-    // Obtener la fecha actual de Uruguay.
-    $fechaActual = new DateTime('today', $zonaHoraria);
-
-    // La fecha del traslado debe ser hoy o posterior.
-    return $fechaIngresada >= $fechaActual;
-}
-
 
     // ======================================================
     // COMPROBAR SI EL CHOFER PUEDE UTILIZAR EL VEHÍCULO
@@ -126,7 +124,9 @@ private function validarFechaTraslado(string $fecha): bool
         string $matricula
     ): bool {
 
-        $sql = "SELECT COUNT(*) FROM conduce WHERE ci_chofer = :ci AND matricula = :matricula";
+        $sql = "SELECT COUNT(*) FROM conduce
+                WHERE ci_chofer = :ci
+                AND matricula = :matricula";
 
         $sentencia = $this->conexion->prepare($sql);
 
@@ -139,15 +139,188 @@ private function validarFechaTraslado(string $fecha): bool
     }
 
     // ======================================================
+    // BLOQUEAR LOS RECURSOS DEL TRASLADO
+    // ======================================================
+
+    private function bloquearRecursos(
+        string $ciChofer,
+        string $ciEnfermero,
+        string $matricula
+    ): bool {
+
+        /*
+         * Bloqueamos las filas de los tres recursos mientras
+         * se realiza la operación.
+         *
+         * Esto evita que dos administradores aprueben al mismo
+         * tiempo traslados que utilizan los mismos recursos.
+         *
+         * Siempre se bloquean en el mismo orden:
+         * 1. Chofer.
+         * 2. Enfermero.
+         * 3. Vehículo.
+         *
+         * Este orden ayuda a reducir los bloqueos cruzados.
+         */
+
+        $sqlChofer = "SELECT ci_chofer
+                      FROM chofer
+                      WHERE ci_chofer = :ci
+                      FOR UPDATE";
+
+        $sentencia = $this->conexion->prepare($sqlChofer);
+        $sentencia->bindValue(':ci', $ciChofer);
+        $sentencia->execute();
+
+        if (!$sentencia->fetch(PDO::FETCH_ASSOC)) {
+            return false;
+        }
+
+        $sqlEnfermero = "SELECT ci_enfermero
+                         FROM enfermero
+                         WHERE ci_enfermero = :ci
+                         FOR UPDATE";
+
+        $sentencia = $this->conexion->prepare($sqlEnfermero);
+        $sentencia->bindValue(':ci', $ciEnfermero);
+        $sentencia->execute();
+
+        if (!$sentencia->fetch(PDO::FETCH_ASSOC)) {
+            return false;
+        }
+
+        $sqlVehiculo = "SELECT matricula
+                        FROM vehiculo
+                        WHERE matricula = :matricula
+                        FOR UPDATE";
+
+        $sentencia = $this->conexion->prepare($sqlVehiculo);
+        $sentencia->bindValue(':matricula', $matricula);
+        $sentencia->execute();
+
+        if (!$sentencia->fetch(PDO::FETCH_ASSOC)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // ======================================================
+    // COMPROBAR DISPONIBILIDAD DE LOS RECURSOS
+    // ======================================================
+
+    private function recursosDisponibles(
+        string $ciChofer,
+        string $ciEnfermero,
+        string $matricula,
+        ?string $idExcluir = null
+    ): bool {
+
+        /*
+         * Un recurso está ocupado cuando aparece en otro
+         * traslado aprobado que todavía está aprobado
+         * o en proceso.
+         *
+         * Los traslados pendientes no ocupan recursos.
+         * Los finalizados y denegados tampoco.
+         *
+         * No se consideran fechas ni horarios: mientras
+         * el traslado siga activo, sus recursos están ocupados.
+         */
+
+        $sql = "SELECT COUNT(DISTINCT t.id_traslado)
+                FROM traslado t
+                INNER JOIN transporta tr
+                    ON tr.id_traslado = t.id_traslado
+                INNER JOIN transportable tb
+                    ON tb.id_transportable = tr.id_transportable
+                WHERE t.estado_solicitud = 'aprobado'
+                AND t.estado_traslado IN ('aprobado', 'en proceso')
+                AND (
+                    t.ci_chofer = :ci_chofer
+                    OR tb.ci_enfermero = :ci_enfermero
+                    OR t.matricula = :matricula
+                )";
+
+        // Si estamos modificando un traslado, no debemos
+        // compararlo contra sí mismo.
+        if ($idExcluir !== null) {
+            $sql .= " AND t.id_traslado <> :id_excluir";
+        }
+
+        $sentencia = $this->conexion->prepare($sql);
+
+        $sentencia->bindValue(':ci_chofer', $ciChofer);
+        $sentencia->bindValue(':ci_enfermero', $ciEnfermero);
+        $sentencia->bindValue(':matricula', $matricula);
+
+        if ($idExcluir !== null) {
+            $sentencia->bindValue(':id_excluir', $idExcluir);
+        }
+
+        $sentencia->execute();
+
+        // Si el resultado es cero, los tres recursos están libres.
+        return (int) $sentencia->fetchColumn() === 0;
+    }
+
+        // ======================================================
     // OBTENER TODOS LOS TRASLADOS
     // ======================================================
 
     public function obtenerTodos(?string $ciSolicitante = null): array
     {
+        $sql = "SELECT
+                    t.id_traslado,
+                    t.matricula,
+                    t.fecha_traslado,
+                    t.fecha_llegada,
+                    t.hora_salida,
+                    t.hora_llegada,
+                    t.lugar_origen,
+                    t.observaciones,
+                    t.estado_traslado,
+                    t.estado_solicitud,
+                    t.ci_solicitante,
+                    t.id_destino,
+                    t.ci_chofer,
+                    d.nombre_destino,
+                    CONCAT(ch.nombre_chofer, ' ', ch.apellido_chofer) AS chofer,
+                    CONCAT(enf.nombre_enfermero, ' ', enf.apellido_enfermero) AS enfermero,
+                    enf.ci_enfermero,
+                    tr.id_transportable,
+                    CASE
+                        WHEN p.id_transportable IS NOT NULL THEN 'paciente'
+                        WHEN el.id_transportable IS NOT NULL THEN 'organo'
+                        ELSE 'desconocido'
+                    END AS tipo_transportable,
+                    p.nombre_paciente,
+                    p.ci_paciente,
+                    p.oxigeno,
+                    el.nombre_elemento,
+                    el.descripcion_elemento,
+                    el.tipo_elemento
+                FROM traslado t
+                LEFT JOIN destino d
+                    ON t.id_destino = d.id_destino
+                LEFT JOIN chofer ch
+                    ON t.ci_chofer = ch.ci_chofer
+                LEFT JOIN transporta tr
+                    ON t.id_traslado = tr.id_traslado
+                LEFT JOIN transportable tr_able
+                    ON tr.id_transportable = tr_able.id_transportable
+                LEFT JOIN enfermero enf
+                    ON tr_able.ci_enfermero = enf.ci_enfermero
+                LEFT JOIN paciente p
+                    ON tr_able.id_transportable = p.id_transportable
+                LEFT JOIN elemento el
+                    ON tr_able.id_transportable = el.id_transportable ";
 
-        $sql = "SELECT t.id_traslado, t.matricula, t.fecha_traslado, t.fecha_llegada, t.hora_salida, t.hora_llegada, t.lugar_origen, t.observaciones, t.estado_traslado, t.estado_solicitud, t.ci_solicitante, t.id_destino, t.ci_chofer, d.nombre_destino, CONCAT( ch.nombre_chofer, ' ', ch.apellido_chofer ) AS chofer, CONCAT( enf.nombre_enfermero, ' ', enf.apellido_enfermero ) AS enfermero, enf.ci_enfermero, tr.id_transportable, CASE WHEN p.id_transportable IS NOT NULL THEN 'paciente' WHEN el.id_transportable IS NOT NULL THEN 'organo' ELSE 'desconocido' END AS tipo_transportable, p.nombre_paciente, p.ci_paciente, p.oxigeno, el.nombre_elemento, el.descripcion_elemento, el.tipo_elemento FROM traslado t LEFT JOIN destino d ON t.id_destino = d.id_destino LEFT JOIN chofer ch ON t.ci_chofer = ch.ci_chofer LEFT JOIN transporta tr ON t.id_traslado = tr.id_traslado LEFT JOIN transportable tr_able ON tr.id_transportable = tr_able.id_transportable LEFT JOIN enfermero enf ON tr_able.ci_enfermero = enf.ci_enfermero LEFT JOIN paciente p ON tr_able.id_transportable = p.id_transportable LEFT JOIN elemento el ON tr_able.id_transportable = el.id_transportable " . ($ciSolicitante !== null
-                    ? "WHERE t.ci_solicitante = :ci_solicitante"
-                    : "") . " ORDER BY t.fecha_traslado DESC, t.hora_salida DESC";
+        if ($ciSolicitante !== null) {
+            $sql .= " WHERE t.ci_solicitante = :ci_solicitante";
+        }
+
+        $sql .= " ORDER BY t.fecha_traslado DESC, t.hora_salida DESC";
 
         $sentencia = $this->conexion->prepare($sql);
 
@@ -164,62 +337,64 @@ private function validarFechaTraslado(string $fecha): bool
     // OBTENER OPCIONES PARA EL FORMULARIO
     // ======================================================
 
-            public function obtenerListasAuxiliares(): array{
-            // Obtener vehículos disponibles.
-            $sql = "SELECT matricula, modelo FROM vehiculo";
+    public function obtenerListasAuxiliares(): array
+    {
+        // Obtener vehículos registrados.
+        $sql = "SELECT matricula, modelo FROM vehiculo";
 
-            $sentencia = $this->conexion->prepare($sql);
-            $sentencia->execute();
-            $vehiculos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->execute();
+        $vehiculos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
-            // Obtener conductores registrados.
-            $sql = "SELECT ci_chofer, nombre_chofer, apellido_chofer FROM chofer";
+        // Obtener conductores registrados.
+        $sql = "SELECT ci_chofer, nombre_chofer, apellido_chofer FROM chofer";
 
-            $sentencia = $this->conexion->prepare($sql);
-            $sentencia->execute();
-            $choferes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->execute();
+        $choferes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
-            // Obtener enfermeros registrados.
-            $sql = "SELECT ci_enfermero, nombre_enfermero, apellido_enfermero FROM enfermero";
+        // Obtener enfermeros registrados.
+        $sql = "SELECT ci_enfermero, nombre_enfermero, apellido_enfermero FROM enfermero";
 
-            $sentencia = $this->conexion->prepare($sql);
-            $sentencia->execute();
-            $enfermeros = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->execute();
+        $enfermeros = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
-            // Obtener destinos disponibles.
-            $sql = "SELECT id_destino, nombre_destino FROM destino";
+        // Obtener destinos disponibles.
+        $sql = "SELECT id_destino, nombre_destino FROM destino";
 
-            $sentencia = $this->conexion->prepare($sql);
-            $sentencia->execute();
-            $destinos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->execute();
+        $destinos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
-            // Obtener pacientes registrados.
-            // DISTINCT evita repetir una misma combinación de CI y nombre.
-            $sql = "SELECT DISTINCT ci_paciente, nombre_paciente FROM paciente ORDER BY nombre_paciente";
+        // Obtener pacientes registrados.
+        $sql = "SELECT DISTINCT ci_paciente, nombre_paciente
+                FROM paciente
+                ORDER BY nombre_paciente";
 
-            $sentencia = $this->conexion->prepare($sql);
-            $sentencia->execute();
-            $pacientes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->execute();
+        $pacientes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
-            // Devolver todas las listas que utiliza el formulario.
-            return [
-                'vehiculos' => $vehiculos ?: [],
-                'choferes' => $choferes ?: [],
-                'enfermeros' => $enfermeros ?: [],
-                'destinos' => $destinos ?: [],
-                'pacientes' => $pacientes ?: []
-            ];
-        }
+        // Devolver todas las listas que utiliza el formulario.
+        return [
+            'vehiculos' => $vehiculos ?: [],
+            'choferes' => $choferes ?: [],
+            'enfermeros' => $enfermeros ?: [],
+            'destinos' => $destinos ?: [],
+            'pacientes' => $pacientes ?: []
+        ];
+    }
 
     // ======================================================
     // CREAR UN TRASLADO
     // ======================================================
 
-        public function crear(
-            array $datos,
-            string $ciSolicitante,
-            bool $esAdmin = false
-        ): bool {
+    public function crear(
+        array $datos,
+        string $ciSolicitante,
+        bool $esAdmin = false
+    ): bool {
 
         try {
 
@@ -245,8 +420,11 @@ private function validarFechaTraslado(string $fecha): bool
                     return false;
                 }
 
-                // Comprobar que la combinación CI-nombre exista en la base.
-                $sqlValidarPaciente = "SELECT COUNT(*) FROM paciente WHERE ci_paciente = :ci AND nombre_paciente = :nombre";
+                // Comprobar que la combinación CI-nombre exista.
+                $sqlValidarPaciente = "SELECT COUNT(*)
+                                       FROM paciente
+                                       WHERE ci_paciente = :ci
+                                       AND nombre_paciente = :nombre";
 
                 $sentenciaValidar = $this->conexion->prepare($sqlValidarPaciente);
 
@@ -267,7 +445,6 @@ private function validarFechaTraslado(string $fecha): bool
                 ) {
                     return false;
                 }
-
             }
 
             // El enfermero es obligatorio para ambos tipos.
@@ -285,20 +462,75 @@ private function validarFechaTraslado(string $fecha): bool
 
             $this->conexion->beginTransaction();
 
-            $idTraslado = $this->generarIdTraslado();
+            /*
+             * Si el administrador crea el traslado directamente
+             * como aprobado, los recursos deben estar disponibles.
+             *
+             * Las solicitudes de empleados quedan pendientes y
+             * no ocupan recursos hasta que sean aprobadas.
+             */
+            if ($esAdmin) {
 
+                if (
+                    !$this->bloquearRecursos(
+                        $datos['ci_chofer'],
+                        $datos['ci_enfermero'],
+                        $datos['matricula']
+                    )
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+                if (
+                    !$this->recursosDisponibles(
+                        $datos['ci_chofer'],
+                        $datos['ci_enfermero'],
+                        $datos['matricula']
+                    )
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+            }
+
+            $idTraslado = $this->generarIdTraslado();
             $idTransportable = $this->generarIdTransportable();
 
-            // Toda solicitud comienza pendiente.
+            // El administrador crea traslados aprobados.
+            // Los empleados crean solicitudes pendientes.
             $estadoSolicitud = $esAdmin ? 'aprobado' : 'pendiente';
-
             $estadoTraslado = $esAdmin ? 'aprobado' : 'pendiente';
 
             // ----------------------------------------------
             // INSERTAR TRASLADO
             // ----------------------------------------------
 
-            $sqlTraslado = "INSERT INTO traslado ( id_traslado, ci_chofer, matricula, id_destino, fecha_traslado, hora_salida, lugar_origen, estado_traslado, ci_solicitante, estado_solicitud, observaciones ) VALUES ( :id, :ci_chofer, :matricula, :id_destino, :fecha, :hora, :origen, :estado, :ci_solicitante, :estado_solicitud, :observaciones )";
+            $sqlTraslado = "INSERT INTO traslado (
+                                id_traslado,
+                                ci_chofer,
+                                matricula,
+                                id_destino,
+                                fecha_traslado,
+                                hora_salida,
+                                lugar_origen,
+                                estado_traslado,
+                                ci_solicitante,
+                                estado_solicitud,
+                                observaciones
+                            ) VALUES (
+                                :id,
+                                :ci_chofer,
+                                :matricula,
+                                :id_destino,
+                                :fecha,
+                                :hora,
+                                :origen,
+                                :estado,
+                                :ci_solicitante,
+                                :estado_solicitud,
+                                :observaciones
+                            )";
 
             $sentencia = $this->conexion->prepare($sqlTraslado);
 
@@ -341,7 +573,17 @@ private function validarFechaTraslado(string $fecha): bool
              * con el transportable en ambos casos.
              */
 
-            $sqlTransportable = "INSERT INTO transportable ( id_transportable, ci_enfermero, habitacion_retiro, piso_retiro ) VALUES ( :id, :ci_enfermero, '101', '1' )";
+            $sqlTransportable = "INSERT INTO transportable (
+                                    id_transportable,
+                                    ci_enfermero,
+                                    habitacion_retiro,
+                                    piso_retiro
+                                ) VALUES (
+                                    :id,
+                                    :ci_enfermero,
+                                    '101',
+                                    '1'
+                                )";
 
             $sentencia = $this->conexion->prepare($sqlTransportable);
 
@@ -357,12 +599,24 @@ private function validarFechaTraslado(string $fecha): bool
             if ($tipoTransportable === 'paciente') {
 
                 // Guardar los datos en la tabla paciente.
-
-                $sqlPaciente = "INSERT INTO paciente ( id_transportable, ci_paciente, nombre_paciente, accesorio, oxigeno, aislamiento ) VALUES ( :id, :ci_paciente, :nombre, 'silla', :oxigeno, FALSE )";
+                $sqlPaciente = "INSERT INTO paciente (
+                                    id_transportable,
+                                    ci_paciente,
+                                    nombre_paciente,
+                                    accesorio,
+                                    oxigeno,
+                                    aislamiento
+                                ) VALUES (
+                                    :id,
+                                    :ci_paciente,
+                                    :nombre,
+                                    'silla',
+                                    :oxigeno,
+                                    FALSE
+                                )";
 
                 $sentencia = $this->conexion->prepare($sqlPaciente);
 
-                // Se utiliza la CI real del paciente seleccionado.
                 $ciPaciente = trim($datos['ci_paciente']);
 
                 $oxigeno = (
@@ -372,6 +626,7 @@ private function validarFechaTraslado(string $fecha): bool
 
                 $sentencia->bindValue(':id', $idTransportable);
                 $sentencia->bindValue(':ci_paciente', $ciPaciente);
+
                 $sentencia->bindValue(
                     ':nombre',
                     trim($datos['paciente'])
@@ -388,9 +643,17 @@ private function validarFechaTraslado(string $fecha): bool
             } else {
 
                 // Guardar los datos en la tabla elemento.
-                // El tipo se establece como 'organo' según el MER.
-
-                $sqlElemento = "INSERT INTO elemento ( id_transportable, nombre_elemento, descripcion_elemento, tipo_elemento ) VALUES ( :id, :nombre, :descripcion, 'organo' )";
+                $sqlElemento = "INSERT INTO elemento (
+                                    id_transportable,
+                                    nombre_elemento,
+                                    descripcion_elemento,
+                                    tipo_elemento
+                                ) VALUES (
+                                    :id,
+                                    :nombre,
+                                    :descripcion,
+                                    'organo'
+                                )";
 
                 $sentencia = $this->conexion->prepare($sqlElemento);
 
@@ -407,14 +670,25 @@ private function validarFechaTraslado(string $fecha): bool
                 );
 
                 $sentencia->execute();
-
             }
 
             // ----------------------------------------------
             // RELACIONAR TRASLADO Y TRANSPORTABLE
             // ----------------------------------------------
 
-            $sqlTransporta = "INSERT INTO transporta ( id_transportable, id_traslado, ci_chofer, matricula, id_destino ) VALUES ( :id_transportable, :id_traslado, :ci_chofer, :matricula, :id_destino )";
+            $sqlTransporta = "INSERT INTO transporta (
+                                id_transportable,
+                                id_traslado,
+                                ci_chofer,
+                                matricula,
+                                id_destino
+                            ) VALUES (
+                                :id_transportable,
+                                :id_traslado,
+                                :ci_chofer,
+                                :matricula,
+                                :id_destino
+                            )";
 
             $sentencia = $this->conexion->prepare($sqlTransporta);
 
@@ -453,7 +727,6 @@ private function validarFechaTraslado(string $fecha): bool
                         "No se pudieron enviar todas las notificaciones de la solicitud."
                     );
                 }
-
             }
 
             $this->conexion->commit();
@@ -472,377 +745,467 @@ private function validarFechaTraslado(string $fecha): bool
         }
     }
 
-    // ======================================================
+        // ======================================================
     // APROBAR O RECHAZAR UNA SOLICITUD
     // ======================================================
 
-    
-// ======================================================
-// APROBAR O RECHAZAR UNA SOLICITUD
-// ======================================================
+    public function resolverSolicitud(
+        string $idTraslado,
+        string $estadoSolicitud,
+        string $ciAdmin,
+        ?string $horaSalida = null
+    ): bool {
 
-public function resolverSolicitud(
-    string $idTraslado,
-    string $estadoSolicitud,
-    string $ciAdmin,
-    ?string $horaSalida = null
-): bool {
+        try {
 
-    try {
+            $this->conexion->beginTransaction();
 
-        $this->conexion->beginTransaction();
+            // Recuperar la solicitud y bloquearla durante la operación.
+            $sql = "SELECT
+                        t.ci_solicitante,
+                        t.ci_chofer,
+                        t.matricula,
+                        t.id_destino,
+                        tb.ci_enfermero
+                    FROM traslado t
+                    INNER JOIN transporta tr
+                        ON tr.id_traslado = t.id_traslado
+                    INNER JOIN transportable tb
+                        ON tb.id_transportable = tr.id_transportable
+                    WHERE t.id_traslado = :id
+                    AND t.estado_solicitud IN ('pendiente', 'rechazado')
+                    FOR UPDATE";
 
-        // Recuperar la solicitud y bloquearla durante la operación.
-        $sql = "SELECT ci_solicitante, ci_chofer, matricula, id_destino
-                FROM traslado
-                WHERE id_traslado = :id
-                AND estado_solicitud IN ('pendiente', 'rechazado')
-                FOR UPDATE";
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->bindValue(':id', $idTraslado);
+            $sentencia->execute();
 
-        $sentencia = $this->conexion->prepare($sql);
-        $sentencia->bindValue(':id', $idTraslado);
-        $sentencia->execute();
+            $traslado = $sentencia->fetch(PDO::FETCH_ASSOC);
 
-        $traslado = $sentencia->fetch(PDO::FETCH_ASSOC);
-
-        if (!$traslado) {
-            $this->conexion->rollBack();
-            return false;
-        }
-
-        // Determinar el estado operativo y las horas.
-        if ($estadoSolicitud === 'aprobado') {
-
-            // Para aprobar es obligatorio registrar la hora de salida.
-            if (
-                empty($horaSalida) ||
-                !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/', $horaSalida)
-            ) {
+            if (!$traslado) {
                 $this->conexion->rollBack();
                 return false;
             }
 
+            // Determinar el estado operativo y las horas.
+            if ($estadoSolicitud === 'aprobado') {
 
-            $sqlFecha = "SELECT fecha_traslado
-             FROM traslado
-             WHERE id_traslado = :id";
+                // Para aprobar es obligatorio registrar la hora de salida.
+                if (
+                    empty($horaSalida) ||
+                    !preg_match(
+                        '/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/',
+                        $horaSalida
+                    )
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
 
-            $consultaFecha = $this->conexion->prepare($sqlFecha);
-            $consultaFecha->bindValue(':id', $idTraslado);
-            $consultaFecha->execute();
+                $sqlFecha = "SELECT fecha_traslado
+                             FROM traslado
+                             WHERE id_traslado = :id";
 
-            $fechaTraslado = $consultaFecha->fetchColumn();
+                $consultaFecha = $this->conexion->prepare($sqlFecha);
+                $consultaFecha->bindValue(':id', $idTraslado);
+                $consultaFecha->execute();
 
-            if (
-                !$fechaTraslado ||
-                !$this->validarFechaTraslado($fechaTraslado)
-            ) {
+                $fechaTraslado = $consultaFecha->fetchColumn();
+
+                if (
+                    !$fechaTraslado ||
+                    !$this->validarFechaTraslado($fechaTraslado)
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+                /*
+                 * Antes de aprobar, bloquear los tres recursos.
+                 * Así evitamos que otro traslado los ocupe
+                 * simultáneamente.
+                 */
+                if (
+                    !$this->bloquearRecursos(
+                        $traslado['ci_chofer'],
+                        $traslado['ci_enfermero'],
+                        $traslado['matricula']
+                    )
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+                // Comprobar que ningún otro traslado los esté utilizando.
+                if (
+                    !$this->recursosDisponibles(
+                        $traslado['ci_chofer'],
+                        $traslado['ci_enfermero'],
+                        $traslado['matricula'],
+                        $idTraslado
+                    )
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+                $estadoTraslado = 'aprobado';
+
+                // Al aprobar se registra la salida y se limpia la llegada.
+                $horaLlegada = null;
+
+            } elseif ($estadoSolicitud === 'rechazado') {
+
+                $estadoTraslado = 'denegado';
+
+                // Una solicitud rechazada no conserva ninguna hora.
+                $horaSalida = null;
+                $horaLlegada = null;
+
+            } else {
+
+                $this->conexion->rollBack();
+                return false;
+
+            }
+
+            // Actualizar los estados y las horas del traslado.
+            $sql = "UPDATE traslado
+                    SET estado_solicitud = :estado_solicitud,
+                        estado_traslado = :estado_traslado,
+                        hora_salida = :hora_salida,
+                        hora_llegada = :hora_llegada,
+                        fecha_llegada = NULL
+                    WHERE id_traslado = :id";
+
+            $sentencia = $this->conexion->prepare($sql);
+
+            $sentencia->bindValue(':estado_solicitud', $estadoSolicitud);
+            $sentencia->bindValue(':estado_traslado', $estadoTraslado);
+
+            $sentencia->bindValue(
+                ':hora_salida',
+                $horaSalida,
+                $horaSalida === null ? PDO::PARAM_NULL : PDO::PARAM_STR
+            );
+
+            $sentencia->bindValue(
+                ':hora_llegada',
+                $horaLlegada,
+                PDO::PARAM_NULL
+            );
+
+            $sentencia->bindValue(':id', $idTraslado);
+
+            $sentencia->execute();
+
+            // ----------------------------------------------
+            // NOTIFICAR AL EMPLEADO SOLICITANTE
+            // ----------------------------------------------
+
+            require_once __DIR__ . '/Notificacion.php';
+
+            $notificacion = new Notificacion();
+
+            $aprobada = $estadoSolicitud === 'aprobado';
+
+            $titulo = $aprobada
+                ? 'Traslado aprobado'
+                : 'Traslado rechazado';
+
+            $mensaje = $aprobada
+                ? 'Tu solicitud de traslado fue aprobada.'
+                : 'Tu solicitud de traslado fue rechazada.';
+
+            $resultadoNotificacion = $notificacion->crear(
+                $idTraslado,
+                $traslado['ci_chofer'],
+                $traslado['matricula'],
+                $traslado['id_destino'],
+                $ciAdmin,
+                $traslado['ci_solicitante'],
+                $titulo,
+                $mensaje
+            );
+
+            if (!$resultadoNotificacion) {
                 $this->conexion->rollBack();
                 return false;
             }
 
-            $estadoTraslado = 'aprobado';
+            $this->conexion->commit();
 
-            // Al aprobar se registra la salida y se limpia la llegada.
-            $horaLlegada = null;
+            return true;
 
-        } elseif ($estadoSolicitud === 'rechazado') {
+        } catch (Throwable $e) {
 
-            $estadoTraslado = 'denegado';
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
 
-            // Una solicitud rechazada no conserva ninguna hora.
-            $horaSalida = null;
-            $horaLlegada = null;
+            error_log("Error al resolver solicitud: " . $e->getMessage());
 
-        } else {
-
-            $this->conexion->rollBack();
-            return false;
-
-        }
-
-        // Actualizar los estados y las horas del traslado.
-        $sql = "UPDATE traslado
-                SET estado_solicitud = :estado_solicitud,
-                    estado_traslado = :estado_traslado,
-                    hora_salida = :hora_salida,
-                    hora_llegada = :hora_llegada,
-                    fecha_llegada = NULL
-                WHERE id_traslado = :id";
-
-        $sentencia = $this->conexion->prepare($sql);
-
-        $sentencia->bindValue(':estado_solicitud', $estadoSolicitud);
-        $sentencia->bindValue(':estado_traslado', $estadoTraslado);
-
-        $sentencia->bindValue(
-            ':hora_salida',
-            $horaSalida,
-            $horaSalida === null ? PDO::PARAM_NULL : PDO::PARAM_STR
-        );
-
-        $sentencia->bindValue(
-            ':hora_llegada',
-            $horaLlegada,
-            PDO::PARAM_NULL
-        );
-
-        $sentencia->bindValue(':id', $idTraslado);
-
-        $sentencia->execute();
-
-        // ----------------------------------------------
-        // NOTIFICAR AL EMPLEADO SOLICITANTE
-        // ----------------------------------------------
-
-        require_once __DIR__ . '/Notificacion.php';
-
-        $notificacion = new Notificacion();
-
-        $aprobada = $estadoSolicitud === 'aprobado';
-
-        $titulo = $aprobada
-            ? 'Traslado aprobado'
-            : 'Traslado rechazado';
-
-        $mensaje = $aprobada
-            ? 'Tu solicitud de traslado fue aprobada.'
-            : 'Tu solicitud de traslado fue rechazada.';
-
-        $resultadoNotificacion = $notificacion->crear(
-            $idTraslado,
-            $traslado['ci_chofer'],
-            $traslado['matricula'],
-            $traslado['id_destino'],
-            $ciAdmin,
-            $traslado['ci_solicitante'],
-            $titulo,
-            $mensaje
-        );
-
-        if (!$resultadoNotificacion) {
-            $this->conexion->rollBack();
             return false;
         }
-
-        $this->conexion->commit();
-
-        return true;
-
-    } catch (Throwable $e) {
-
-        if ($this->conexion->inTransaction()) {
-            $this->conexion->rollBack();
-        }
-
-        error_log("Error al resolver solicitud: " . $e->getMessage());
-
-        return false;
     }
-}
-
-// ======================================================
-// ACTUALIZAR ESTADO OPERATIVO
-// ======================================================
-
-public function actualizarEstadoOperativo(
-    string $idTraslado,
-    string $nuevoEstado,
-    ?string $horaLlegada = null,
-    ?string $fechaLlegada = null
-): bool {
-
-    try {
-
-        $this->conexion->beginTransaction();
-
-        // Recuperar los datos necesarios y bloquear el traslado.
-        $sql = "SELECT estado_traslado,
-                       estado_solicitud,
-                       fecha_traslado,
-                       hora_salida
-                FROM traslado
-                WHERE id_traslado = :id
-                FOR UPDATE";
-
-        $sentencia = $this->conexion->prepare($sql);
-        $sentencia->bindValue(':id', $idTraslado);
-        $sentencia->execute();
-
-        $traslado = $sentencia->fetch(PDO::FETCH_ASSOC);
-
-        if (
-            !$traslado ||
-            $traslado['estado_solicitud'] !== 'aprobado'
-        ) {
-            $this->conexion->rollBack();
-            return false;
-        }
-
-        $estadoActual = $traslado['estado_traslado'];
-
-        // Solo se puede iniciar un traslado aprobado
-        // o devolver uno finalizado a proceso.
-        if (
-            $nuevoEstado === 'en proceso' &&
-            !in_array($estadoActual, ['aprobado', 'finalizado'], true)
-        ) {
-            $this->conexion->rollBack();
-            return false;
-        }
-
-        // Solo se puede finalizar un traslado en proceso.
-        if (
-            $nuevoEstado === 'finalizado' &&
-            $estadoActual !== 'en proceso'
-        ) {
-            $this->conexion->rollBack();
-            return false;
-        }
-
-        if (!in_array($nuevoEstado, ['en proceso', 'finalizado'], true)) {
-            $this->conexion->rollBack();
-            return false;
-        }
-
-        // Todo traslado debe tener una fecha y hora de salida.
-        if (
-            empty($traslado['fecha_traslado']) ||
-            empty($traslado['hora_salida'])
-        ) {
-            $this->conexion->rollBack();
-            return false;
-        }
-
-        if ($nuevoEstado === 'finalizado') {
-
-            // La fecha y la hora de llegada son obligatorias.
-            if (
-                empty($fechaLlegada) ||
-                empty($horaLlegada)
-            ) {
-                $this->conexion->rollBack();
-                return false;
-            }
-
-            // Comprobar el formato de la hora.
-            $horaLlegada = substr($horaLlegada, 0, 5);
-
-            if (
-                !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $horaLlegada)
-            ) {
-                $this->conexion->rollBack();
-                return false;
-            }
-
-            // Comprobar que la fecha de llegada sea válida.
-            $zonaHoraria = new DateTimeZone('America/Montevideo');
-
-            $fechaLlegadaValidada = DateTime::createFromFormat(
-                '!Y-m-d',
-                $fechaLlegada,
-                $zonaHoraria
-            );
-
-            if (
-                !$fechaLlegadaValidada ||
-                $fechaLlegadaValidada->format('Y-m-d') !== $fechaLlegada
-            ) {
-                $this->conexion->rollBack();
-                return false;
-            }
-
-            // La llegada no puede ser anterior al día del traslado
-            // ni estar registrada en una fecha futura.
-            $fechaSalida = new DateTime(
-                $traslado['fecha_traslado'],
-                $zonaHoraria
-            );
-
-            $fechaActual = new DateTime('today', $zonaHoraria);
-
-            if (
-                $fechaLlegadaValidada < $fechaSalida ||
-                $fechaLlegadaValidada > $fechaActual
-            ) {
-                $this->conexion->rollBack();
-                return false;
-            }
-
-            // Combinar las fechas y horas para comparar
-            // los momentos reales de salida y llegada.
-            $salida = new DateTime(
-                $traslado['fecha_traslado'] . ' ' . $traslado['hora_salida'],
-                $zonaHoraria
-            );
-
-            $llegada = new DateTime(
-                $fechaLlegada . ' ' . $horaLlegada,
-                $zonaHoraria
-            );
-
-            // La llegada debe ocurrir estrictamente después de la salida.
-            if ($llegada <= $salida) {
-                $this->conexion->rollBack();
-                return false;
-            }
-
-        } else {
-
-            // Al volver a en proceso se eliminan los datos de llegada.
-            $horaLlegada = null;
-            $fechaLlegada = null;
-
-        }
-
-        // Actualizar el estado y los datos de llegada.
-        $sql = "UPDATE traslado
-                SET estado_traslado = :estado,
-                    hora_llegada = :hora_llegada,
-                    fecha_llegada = :fecha_llegada
-                WHERE id_traslado = :id";
-
-        $sentencia = $this->conexion->prepare($sql);
-
-        $sentencia->bindValue(':estado', $nuevoEstado);
-
-        $sentencia->bindValue(
-            ':hora_llegada',
-            $horaLlegada,
-            $horaLlegada === null ? PDO::PARAM_NULL : PDO::PARAM_STR
-        );
-
-        $sentencia->bindValue(
-            ':fecha_llegada',
-            $fechaLlegada,
-            $fechaLlegada === null ? PDO::PARAM_NULL : PDO::PARAM_STR
-        );
-
-        $sentencia->bindValue(':id', $idTraslado);
-
-        $sentencia->execute();
-
-        $this->conexion->commit();
-
-        return true;
-
-    } catch (Throwable $e) {
-
-        if ($this->conexion->inTransaction()) {
-            $this->conexion->rollBack();
-        }
-
-        error_log(
-            "Error al actualizar estado operativo: " . $e->getMessage()
-        );
-
-        return false;
-    }
-}
-
-
 
     // ======================================================
+    // ACTUALIZAR ESTADO OPERATIVO
+    // ======================================================
+
+    public function actualizarEstadoOperativo(
+        string $idTraslado,
+        string $nuevoEstado,
+        ?string $horaLlegada = null,
+        ?string $fechaLlegada = null
+    ): bool {
+
+        try {
+
+            $this->conexion->beginTransaction();
+
+            // Recuperar los datos necesarios y bloquear el traslado.
+            $sql = "SELECT
+                        estado_traslado,
+                        estado_solicitud,
+                        fecha_traslado,
+                        hora_salida
+                    FROM traslado
+                    WHERE id_traslado = :id
+                    FOR UPDATE";
+
+            $sentencia = $this->conexion->prepare($sql);
+            $sentencia->bindValue(':id', $idTraslado);
+            $sentencia->execute();
+
+            $traslado = $sentencia->fetch(PDO::FETCH_ASSOC);
+
+            if (
+                !$traslado ||
+                $traslado['estado_solicitud'] !== 'aprobado'
+            ) {
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            $estadoActual = $traslado['estado_traslado'];
+
+            // Solo se puede iniciar un traslado aprobado
+            // o devolver uno finalizado a proceso.
+            if (
+                $nuevoEstado === 'en proceso' &&
+                !in_array($estadoActual, ['aprobado', 'finalizado'], true)
+            ) {
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            // Solo se puede finalizar un traslado en proceso.
+            if (
+                $nuevoEstado === 'finalizado' &&
+                $estadoActual !== 'en proceso'
+            ) {
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            if (!in_array($nuevoEstado, ['en proceso', 'finalizado'], true)) {
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            // Todo traslado debe tener fecha y hora de salida.
+            if (
+                empty($traslado['fecha_traslado']) ||
+                empty($traslado['hora_salida'])
+            ) {
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            /*
+             * Al iniciar o reactivar un traslado, comprobar
+             * que sus recursos continúen disponibles.
+             *
+             * Se excluye el propio traslado de la búsqueda.
+             */
+            if ($nuevoEstado === 'en proceso') {
+
+                // Recuperar los recursos asociados al traslado.
+                $sqlRecursos = "SELECT
+                                    t.ci_chofer,
+                                    t.matricula,
+                                    tb.ci_enfermero
+                                FROM traslado t
+                                INNER JOIN transporta tr
+                                    ON tr.id_traslado = t.id_traslado
+                                INNER JOIN transportable tb
+                                    ON tb.id_transportable = tr.id_transportable
+                                WHERE t.id_traslado = :id";
+
+                $consultaRecursos = $this->conexion->prepare($sqlRecursos);
+                $consultaRecursos->bindValue(':id', $idTraslado);
+                $consultaRecursos->execute();
+
+                $recursos = $consultaRecursos->fetch(PDO::FETCH_ASSOC);
+
+                if (!$recursos) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+                if (
+                    !$this->bloquearRecursos(
+                        $recursos['ci_chofer'],
+                        $recursos['ci_enfermero'],
+                        $recursos['matricula']
+                    )
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+                if (
+                    !$this->recursosDisponibles(
+                        $recursos['ci_chofer'],
+                        $recursos['ci_enfermero'],
+                        $recursos['matricula'],
+                        $idTraslado
+                    )
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+            }
+
+            if ($nuevoEstado === 'finalizado') {
+
+                // La fecha y la hora de llegada son obligatorias.
+                if (
+                    empty($fechaLlegada) ||
+                    empty($horaLlegada)
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+                // Comprobar el formato de la hora.
+                $horaLlegada = substr($horaLlegada, 0, 5);
+
+                if (
+                    !preg_match(
+                        '/^(?:[01]\d|2[0-3]):[0-5]\d$/',
+                        $horaLlegada
+                    )
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+                // Comprobar que la fecha de llegada sea válida.
+                $zonaHoraria = new DateTimeZone('America/Montevideo');
+
+                $fechaLlegadaValidada = DateTime::createFromFormat(
+                    '!Y-m-d',
+                    $fechaLlegada,
+                    $zonaHoraria
+                );
+
+                if (
+                    !$fechaLlegadaValidada ||
+                    $fechaLlegadaValidada->format('Y-m-d') !== $fechaLlegada
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+                // La llegada no puede ser anterior al día del traslado
+                // ni estar registrada en una fecha futura.
+                $fechaSalida = new DateTime(
+                    $traslado['fecha_traslado'],
+                    $zonaHoraria
+                );
+
+                $fechaActual = new DateTime('today', $zonaHoraria);
+
+                if (
+                    $fechaLlegadaValidada < $fechaSalida ||
+                    $fechaLlegadaValidada > $fechaActual
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+                // Combinar las fechas y horas para comparar
+                // los momentos reales de salida y llegada.
+                $salida = new DateTime(
+                    $traslado['fecha_traslado'] . ' ' . $traslado['hora_salida'],
+                    $zonaHoraria
+                );
+
+                $llegada = new DateTime(
+                    $fechaLlegada . ' ' . $horaLlegada,
+                    $zonaHoraria
+                );
+
+                // La llegada debe ocurrir después de la salida.
+                if ($llegada <= $salida) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+
+            } else {
+
+                // Al volver a en proceso se eliminan los datos de llegada.
+                $horaLlegada = null;
+                $fechaLlegada = null;
+            }
+
+            // Actualizar el estado y los datos de llegada.
+            $sql = "UPDATE traslado
+                    SET estado_traslado = :estado,
+                        hora_llegada = :hora_llegada,
+                        fecha_llegada = :fecha_llegada
+                    WHERE id_traslado = :id";
+
+            $sentencia = $this->conexion->prepare($sql);
+
+            $sentencia->bindValue(':estado', $nuevoEstado);
+
+            $sentencia->bindValue(
+                ':hora_llegada',
+                $horaLlegada,
+                $horaLlegada === null ? PDO::PARAM_NULL : PDO::PARAM_STR
+            );
+
+            $sentencia->bindValue(
+                ':fecha_llegada',
+                $fechaLlegada,
+                $fechaLlegada === null ? PDO::PARAM_NULL : PDO::PARAM_STR
+            );
+
+            $sentencia->bindValue(':id', $idTraslado);
+
+            $sentencia->execute();
+
+            $this->conexion->commit();
+
+            return true;
+
+        } catch (Throwable $e) {
+
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+
+            error_log(
+                "Error al actualizar estado operativo: " . $e->getMessage()
+            );
+
+            return false;
+        }
+    }
+        // ======================================================
     // ACTUALIZAR UN TRASLADO
     // ======================================================
 
@@ -856,34 +1219,37 @@ public function actualizarEstadoOperativo(
                 return false;
             }
 
-        if ($tipoTransportable === 'paciente') {
+            if ($tipoTransportable === 'paciente') {
 
-            $ciPaciente = trim($datos['ci_paciente'] ?? '');
-            $nombrePaciente = trim($datos['paciente'] ?? '');
+                $ciPaciente = trim($datos['ci_paciente'] ?? '');
+                $nombrePaciente = trim($datos['paciente'] ?? '');
 
-            if (!preg_match('/^[0-9]{8}$/', $ciPaciente)) {
-                return false;
-            }
+                if (!preg_match('/^[0-9]{8}$/', $ciPaciente)) {
+                    return false;
+                }
 
-            if ($nombrePaciente === '') {
-                return false;
-            }
+                if ($nombrePaciente === '') {
+                    return false;
+                }
 
-            // La combinación debe existir antes de actualizar el traslado.
-            $sqlValidarPaciente = "SELECT COUNT(*) FROM paciente WHERE ci_paciente = :ci AND nombre_paciente = :nombre";
+                // La combinación debe existir antes de actualizar.
+                $sqlValidarPaciente = "SELECT COUNT(*)
+                                       FROM paciente
+                                       WHERE ci_paciente = :ci
+                                       AND nombre_paciente = :nombre";
 
-            $sentenciaValidar = $this->conexion->prepare($sqlValidarPaciente);
+                $sentenciaValidar = $this->conexion->prepare($sqlValidarPaciente);
 
-            $sentenciaValidar->bindValue(':ci', $ciPaciente);
-            $sentenciaValidar->bindValue(':nombre', $nombrePaciente);
+                $sentenciaValidar->bindValue(':ci', $ciPaciente);
+                $sentenciaValidar->bindValue(':nombre', $nombrePaciente);
 
-            $sentenciaValidar->execute();
+                $sentenciaValidar->execute();
 
-            if ($sentenciaValidar->fetchColumn() < 1) {
-                return false;
-            }
+                if ($sentenciaValidar->fetchColumn() < 1) {
+                    return false;
+                }
 
-        } else {
+            } else {
 
                 if (
                     empty(trim($datos['nombre_elemento'] ?? '')) ||
@@ -891,47 +1257,107 @@ public function actualizarEstadoOperativo(
                 ) {
                     return false;
                 }
-
             }
 
-            if (empty($datos['ci_enfermero'])) {
+            if (
+                empty($datos['ci_enfermero']) ||
+                empty($datos['ci_chofer']) ||
+                empty($datos['matricula']) ||
+                empty($datos['id_traslado']) ||
+                empty($datos['id_transportable'])
+            ) {
                 return false;
             }
 
             $this->conexion->beginTransaction();
+
+            // La fecha debe ser válida.
             if (
                 empty($datos['fecha']) ||
                 !$this->validarFechaTraslado($datos['fecha'])
             ) {
+                $this->conexion->rollBack();
                 return false;
             }
+
             // ----------------------------------------------
-            // ACTUALIZAR TRASLADO
+            // RECUPERAR Y BLOQUEAR EL ESTADO ACTUAL
             // ----------------------------------------------
 
-            $sqlEstadoActual = "SELECT estado_solicitud
-                    FROM traslado
-                    WHERE id_traslado = :id";
+            $sqlEstadoActual = "SELECT
+                                    estado_solicitud,
+                                    estado_traslado
+                                FROM traslado
+                                WHERE id_traslado = :id
+                                FOR UPDATE";
 
-                $consultaEstado = $this->conexion->prepare($sqlEstadoActual);
-                $consultaEstado->bindValue(':id', $datos['id_traslado']);
-                $consultaEstado->execute();
+            $consultaEstado = $this->conexion->prepare($sqlEstadoActual);
+            $consultaEstado->bindValue(':id', $datos['id_traslado']);
+            $consultaEstado->execute();
 
-                $estadoSolicitudActual = $consultaEstado->fetchColumn();
+            $trasladoActual = $consultaEstado->fetch(PDO::FETCH_ASSOC);
 
-                if ($estadoSolicitudActual === false) {
+            if (!$trasladoActual) {
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            $estadoSolicitudActual = $trasladoActual['estado_solicitud'];
+            $estadoTrasladoActual = $trasladoActual['estado_traslado'];
+
+            /*
+             * Si el traslado está aprobado y todavía no finalizó,
+             * los recursos nuevos deben estar disponibles.
+             *
+             * Los pendientes, rechazados y finalizados no ocupan
+             * recursos y por eso no necesitan esta comprobación.
+             */
+            if (
+                $estadoSolicitudActual === 'aprobado' &&
+                in_array(
+                    $estadoTrasladoActual,
+                    ['aprobado', 'en proceso'],
+                    true
+                )
+            ) {
+
+                if (
+                    !$this->bloquearRecursos(
+                        $datos['ci_chofer'],
+                        $datos['ci_enfermero'],
+                        $datos['matricula']
+                    )
+                ) {
                     $this->conexion->rollBack();
                     return false;
                 }
 
+                if (
+                    !$this->recursosDisponibles(
+                        $datos['ci_chofer'],
+                        $datos['ci_enfermero'],
+                        $datos['matricula'],
+                        $datos['id_traslado']
+                    )
+                ) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
+            }
+
+            // ----------------------------------------------
+            // ACTUALIZAR TRASLADO
+            // ----------------------------------------------
+
             $sqlTraslado = "UPDATE traslado
-                SET ci_chofer = :ci_chofer,
-                    matricula = :matricula,
-                    id_destino = :id_destino,
-                    fecha_traslado = :fecha,
-                    hora_salida = :hora,
-                    observaciones = :observaciones
-                WHERE id_traslado = :id";
+                            SET ci_chofer = :ci_chofer,
+                                matricula = :matricula,
+                                id_destino = :id_destino,
+                                fecha_traslado = :fecha,
+                                hora_salida = :hora,
+                                observaciones = :observaciones
+                            WHERE id_traslado = :id";
+
             $sentencia = $this->conexion->prepare($sqlTraslado);
 
             $sentencia->bindValue(':ci_chofer', $datos['ci_chofer']);
@@ -943,11 +1369,15 @@ public function actualizarEstadoOperativo(
                 ? null
                 : (!empty($datos['hora']) ? $datos['hora'] : null);
 
+            // Los traslados aprobados deben conservar una hora válida.
             if (
                 $estadoSolicitudActual === 'aprobado' &&
                 (
                     !$hora ||
-                    !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', substr($hora, 0, 5))
+                    !preg_match(
+                        '/^(?:[01]\d|2[0-3]):[0-5]\d$/',
+                        substr($hora, 0, 5)
+                    )
                 )
             ) {
                 $this->conexion->rollBack();
@@ -965,7 +1395,12 @@ public function actualizarEstadoOperativo(
             // ACTUALIZAR RELACIÓN TRANSPORTA
             // ----------------------------------------------
 
-            $sqlTransporta = "UPDATE transporta SET ci_chofer = :ci_chofer, matricula = :matricula, id_destino = :id_destino WHERE id_traslado = :id_traslado AND id_transportable = :id_transportable";
+            $sqlTransporta = "UPDATE transporta
+                              SET ci_chofer = :ci_chofer,
+                                  matricula = :matricula,
+                                  id_destino = :id_destino
+                              WHERE id_traslado = :id_traslado
+                              AND id_transportable = :id_transportable";
 
             $sentencia = $this->conexion->prepare($sqlTransporta);
 
@@ -973,6 +1408,7 @@ public function actualizarEstadoOperativo(
             $sentencia->bindValue(':matricula', $datos['matricula']);
             $sentencia->bindValue(':id_destino', $datos['id_destino']);
             $sentencia->bindValue(':id_traslado', $datos['id_traslado']);
+
             $sentencia->bindValue(
                 ':id_transportable',
                 $datos['id_transportable']
@@ -984,7 +1420,11 @@ public function actualizarEstadoOperativo(
             // ACTUALIZAR NOTIFICACIONES
             // ----------------------------------------------
 
-            $sqlNotificaciones = "UPDATE notifica SET ci_chofer = :ci_chofer, matricula = :matricula, id_destino = :id_destino WHERE id_traslado = :id";
+            $sqlNotificaciones = "UPDATE notifica
+                                  SET ci_chofer = :ci_chofer,
+                                      matricula = :matricula,
+                                      id_destino = :id_destino
+                                  WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sqlNotificaciones);
 
@@ -999,7 +1439,9 @@ public function actualizarEstadoOperativo(
             // ACTUALIZAR ENFERMERO
             // ----------------------------------------------
 
-            $sqlEnfermero = "UPDATE transportable SET ci_enfermero = :ci_enfermero WHERE id_transportable = :id";
+            $sqlEnfermero = "UPDATE transportable
+                             SET ci_enfermero = :ci_enfermero
+                             WHERE id_transportable = :id";
 
             $sentencia = $this->conexion->prepare($sqlEnfermero);
 
@@ -1021,13 +1463,15 @@ public function actualizarEstadoOperativo(
              * un órgano, o viceversa.
              */
 
-            $sqlEliminarPaciente = "DELETE FROM paciente WHERE id_transportable = :id";
+            $sqlEliminarPaciente = "DELETE FROM paciente
+                                    WHERE id_transportable = :id";
 
             $sentencia = $this->conexion->prepare($sqlEliminarPaciente);
             $sentencia->bindValue(':id', $datos['id_transportable']);
             $sentencia->execute();
 
-            $sqlEliminarElemento = "DELETE FROM elemento WHERE id_transportable = :id";
+            $sqlEliminarElemento = "DELETE FROM elemento
+                                    WHERE id_transportable = :id";
 
             $sentencia = $this->conexion->prepare($sqlEliminarElemento);
             $sentencia->bindValue(':id', $datos['id_transportable']);
@@ -1035,7 +1479,21 @@ public function actualizarEstadoOperativo(
 
             if ($tipoTransportable === 'paciente') {
 
-                $sqlPaciente = "INSERT INTO paciente ( id_transportable, ci_paciente, nombre_paciente, accesorio, oxigeno, aislamiento ) VALUES ( :id, :ci_paciente, :nombre, 'silla', :oxigeno, FALSE )";
+                $sqlPaciente = "INSERT INTO paciente (
+                                    id_transportable,
+                                    ci_paciente,
+                                    nombre_paciente,
+                                    accesorio,
+                                    oxigeno,
+                                    aislamiento
+                                ) VALUES (
+                                    :id,
+                                    :ci_paciente,
+                                    :nombre,
+                                    'silla',
+                                    :oxigeno,
+                                    FALSE
+                                )";
 
                 $sentencia = $this->conexion->prepare($sqlPaciente);
 
@@ -1068,7 +1526,17 @@ public function actualizarEstadoOperativo(
 
             } else {
 
-                $sqlElemento = "INSERT INTO elemento ( id_transportable, nombre_elemento, descripcion_elemento, tipo_elemento ) VALUES ( :id, :nombre, :descripcion, 'organo' )";
+                $sqlElemento = "INSERT INTO elemento (
+                                    id_transportable,
+                                    nombre_elemento,
+                                    descripcion_elemento,
+                                    tipo_elemento
+                                ) VALUES (
+                                    :id,
+                                    :nombre,
+                                    :descripcion,
+                                    'organo'
+                                )";
 
                 $sentencia = $this->conexion->prepare($sqlElemento);
 
@@ -1088,7 +1556,6 @@ public function actualizarEstadoOperativo(
                 );
 
                 $sentencia->execute();
-
             }
 
             $this->conexion->commit();
@@ -1118,7 +1585,9 @@ public function actualizarEstadoOperativo(
             $this->conexion->beginTransaction();
 
             // Recuperar los transportables relacionados.
-            $sql = "SELECT id_transportable FROM transporta WHERE id_traslado = :id";
+            $sql = "SELECT id_transportable
+                    FROM transporta
+                    WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $idTraslado);
@@ -1127,21 +1596,24 @@ public function actualizarEstadoOperativo(
             $transportables = $sentencia->fetchAll(PDO::FETCH_COLUMN);
 
             // Eliminar notificaciones relacionadas.
-            $sql = "DELETE FROM notifica WHERE id_traslado = :id";
+            $sql = "DELETE FROM notifica
+                    WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $idTraslado);
             $sentencia->execute();
 
             // Eliminar relaciones.
-            $sql = "DELETE FROM transporta WHERE id_traslado = :id";
+            $sql = "DELETE FROM transporta
+                    WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $idTraslado);
             $sentencia->execute();
 
             // Eliminar traslado.
-            $sql = "DELETE FROM traslado WHERE id_traslado = :id";
+            $sql = "DELETE FROM traslado
+                    WHERE id_traslado = :id";
 
             $sentencia = $this->conexion->prepare($sql);
             $sentencia->bindValue(':id', $idTraslado);
@@ -1151,7 +1623,9 @@ public function actualizarEstadoOperativo(
             // a ningún otro traslado.
             foreach ($transportables as $idTransportable) {
 
-                $sql = "SELECT COUNT(*) FROM transporta WHERE id_transportable = :id";
+                $sql = "SELECT COUNT(*)
+                        FROM transporta
+                        WHERE id_transportable = :id";
 
                 $sentencia = $this->conexion->prepare($sql);
                 $sentencia->bindValue(':id', $idTransportable);
@@ -1162,28 +1636,29 @@ public function actualizarEstadoOperativo(
                 if (!$sigueUtilizado) {
 
                     // Eliminar paciente si existe.
-                    $sql = "DELETE FROM paciente WHERE id_transportable = :id";
+                    $sql = "DELETE FROM paciente
+                            WHERE id_transportable = :id";
 
                     $sentencia = $this->conexion->prepare($sql);
                     $sentencia->bindValue(':id', $idTransportable);
                     $sentencia->execute();
 
                     // Eliminar elemento si existe.
-                    $sql = "DELETE FROM elemento WHERE id_transportable = :id";
+                    $sql = "DELETE FROM elemento
+                            WHERE id_transportable = :id";
 
                     $sentencia = $this->conexion->prepare($sql);
                     $sentencia->bindValue(':id', $idTransportable);
                     $sentencia->execute();
 
                     // Eliminar transportable.
-                    $sql = "DELETE FROM transportable WHERE id_transportable = :id";
+                    $sql = "DELETE FROM transportable
+                            WHERE id_transportable = :id";
 
                     $sentencia = $this->conexion->prepare($sql);
                     $sentencia->bindValue(':id', $idTransportable);
                     $sentencia->execute();
-
                 }
-
             }
 
             $this->conexion->commit();
@@ -1201,5 +1676,4 @@ public function actualizarEstadoOperativo(
             return false;
         }
     }
-
 }
