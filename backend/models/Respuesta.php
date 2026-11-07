@@ -57,8 +57,8 @@ class Respuesta
     // OBTENER TODAS LAS RESPUESTAS
     // ======================================================
 
-    public function obtenerTodos(): array {
-
+    public function obtenerTodos(): array
+    {
         $sql = "SELECT * FROM respuesta";
 
         $sentencia = $this->conexion->prepare($sql);
@@ -198,7 +198,12 @@ class Respuesta
         string $idCategoria
     ): array {
 
-        // Promedio general de respuestas numéricas entre 1 y 5.
+        // --------------------------------------------------
+        // PROMEDIO GENERAL
+        // --------------------------------------------------
+        // Conservamos esta consulta porque el panel actual
+        // todavía muestra el promedio general de la encuesta.
+
         $sqlGeneral = "SELECT
                             AVG(CAST(informacion AS DECIMAL(3,1))) AS promedio_general,
                             COUNT(*) AS total_respuestas
@@ -218,16 +223,43 @@ class Respuesta
         $datosGenerales = $stmtGeneral->fetch(PDO::FETCH_ASSOC);
 
 
-        // Promedio individual de cada pregunta.
+        // --------------------------------------------------
+        // PROMEDIO INDIVIDUAL DE CADA PREGUNTA
+        // --------------------------------------------------
+        // Partimos de pregunta para que aparezcan también
+        // las preguntas que todavía no tienen respuestas.
+        //
+        // Los filtros de respuesta están dentro del ON.
+        // Si estuvieran en el WHERE, perderíamos las
+        // preguntas que no tienen coincidencias.
+
         $sqlPorPregunta = "SELECT
-                                id_pregunta,
-                                AVG(CAST(informacion AS DECIMAL(3,1))) AS promedio
-                           FROM respuesta
-                           WHERE id_encuesta = :id_encuesta
-                           AND id_categoria = :id_categoria
-                           AND tipo = 'opcion multiple'
-                           AND informacion REGEXP '^[1-5]$'
-                           GROUP BY id_pregunta";
+                                p.id_pregunta,
+                                p.nombre_pregunta,
+
+                                AVG(
+                                    CAST(r.informacion AS DECIMAL(3,1))
+                                ) AS promedio,
+
+                                COUNT(r.id_respuesta) AS cantidad_respuestas
+
+                           FROM pregunta p
+
+                           LEFT JOIN respuesta r
+                                ON p.id_pregunta = r.id_pregunta
+                                AND p.id_encuesta = r.id_encuesta
+                                AND p.id_categoria = r.id_categoria
+                                AND r.tipo = 'opcion multiple'
+                                AND r.informacion REGEXP '^[1-5]$'
+
+                           WHERE p.id_encuesta = :id_encuesta
+                           AND p.id_categoria = :id_categoria
+
+                           GROUP BY
+                                p.id_pregunta,
+                                p.nombre_pregunta
+
+                           ORDER BY p.id_pregunta";
 
         $stmtPregunta = $this->conexion->prepare($sqlPorPregunta);
 
@@ -239,23 +271,45 @@ class Respuesta
         $promediosPregunta = $stmtPregunta->fetchAll(PDO::FETCH_ASSOC);
 
 
-        // Devolvemos los nombres que ya utiliza el JavaScript.
+        // --------------------------------------------------
+        // DEVOLVER LOS RESULTADOS
+        // --------------------------------------------------
+        // Si no hay respuestas, AVG devuelve NULL y COUNT
+        // devuelve 0. No convertimos NULL en cero porque
+        // "Sin respuestas" no es lo mismo que un promedio 0.
+
         return [
+
             'promedioGeneral' => round(
-                (float)($datosGenerales['promedio_general'] ?? 0),
+                (float) ($datosGenerales['promedio_general'] ?? 0),
                 1
             ),
 
-            'totalRespuestas' => (int)($datosGenerales['total_respuestas'] ?? 0),
+            'totalRespuestas' => (int) (
+                $datosGenerales['total_respuestas'] ?? 0
+            ),
 
-            'promediosPregunta' => array_map(function ($pregunta) {
+            'promediosPregunta' => array_map(
+                function ($pregunta) {
 
-                return [
-                    'id_pregunta' => $pregunta['id_pregunta'],
-                    'promedio' => round((float)$pregunta['promedio'], 1)
-                ];
+                    return [
 
-            }, $promediosPregunta)
+                        'id_pregunta' => $pregunta['id_pregunta'],
+
+                        'nombre_pregunta' => $pregunta['nombre_pregunta'],
+
+                        'promedio' => $pregunta['promedio'] !== null
+                            ? round((float) $pregunta['promedio'], 1)
+                            : null,
+
+                        'cantidad_respuestas' => (int) (
+                            $pregunta['cantidad_respuestas']
+                        )
+
+                    ];
+                },
+                $promediosPregunta
+            )
         ];
     }
 }

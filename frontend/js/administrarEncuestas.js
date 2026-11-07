@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
 
     // ==========================================
@@ -543,6 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderizarEstadisticas(datos) {
 
+        // Conservamos el promedio general del panel actual.
         elemPromedio.innerHTML =
             `${datos.promedioGeneral || 0} <small>/ 5</small>`;
 
@@ -557,31 +557,60 @@ document.addEventListener('DOMContentLoaded', () => {
             contenedorResultados.appendChild(titulo);
         }
 
+        // Si la encuesta todavía no tiene preguntas.
         if (
-            datos.promediosPregunta &&
-            datos.promediosPregunta.length > 0
+            !datos.promediosPregunta ||
+            datos.promediosPregunta.length === 0
         ) {
 
-            datos.promediosPregunta.forEach((item, index) => {
+            const mensaje = document.createElement('p');
 
-                const resultado = document.createElement('div');
+            mensaje.textContent = 'Esta encuesta todavía no tiene preguntas.';
 
-                resultado.classList.add('resultado');
+            contenedorResultados.appendChild(mensaje);
 
-                const nombre = document.createElement('span');
+            return;
+        }
 
-                nombre.textContent = `Pregunta ${index + 1}`;
+        // Mostrar el resultado individual de cada pregunta.
+        datos.promediosPregunta.forEach(item => {
 
-                const promedio = document.createElement('strong');
+            const resultado = document.createElement('div');
+
+            resultado.classList.add('resultado');
+
+            // Texto real de la pregunta.
+            const nombre = document.createElement('span');
+
+            nombre.textContent = item.nombre_pregunta;
+
+            // Promedio individual.
+            const promedio = document.createElement('strong');
+
+            if (
+                item.promedio === null ||
+                Number(item.cantidad_respuestas) === 0
+            ) {
+
+                promedio.textContent = 'Sin respuestas';
+
+            } else {
 
                 promedio.textContent = `${item.promedio} / 5`;
+            }
 
-                resultado.appendChild(nombre);
-                resultado.appendChild(promedio);
+            // Cantidad de respuestas utilizadas para ese promedio.
+            const cantidad = document.createElement('small');
 
-                contenedorResultados.appendChild(resultado);
-            });
-        }
+            cantidad.textContent =
+                `${item.cantidad_respuestas} respuestas`;
+
+            resultado.appendChild(nombre);
+            resultado.appendChild(promedio);
+            resultado.appendChild(cantidad);
+
+            contenedorResultados.appendChild(resultado);
+        });
     }
 
 
