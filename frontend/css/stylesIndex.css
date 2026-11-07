@@ -1,9 +1,23 @@
+/* Fuente de todos los h1 y h2 */
+h1,
+h2 {
+    font-family: "Inconsolata", monospace;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+
 body {
     font-family:"Lexend", sans-serif;
     background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("../img/clinicas.jpg");
     background-position: center 30%;
     margin: 0;
     padding: 0;
+    background-color: #1f2d3a;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 
 header {
@@ -18,10 +32,13 @@ header img {
 }
 
 .login-title {
-    font-family: "Inter", sans-serif;
-    font-weight: 600;
+    font-family: "Inconsolata", monospace;
+    font-weight: 700;
     letter-spacing: -0.5px;
-    color: #ffffff; 
+    color: #ffffff;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
 }
 
 main {
