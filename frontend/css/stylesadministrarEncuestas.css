@@ -59,13 +59,13 @@ header h1 {
 
 hr {
     border: none;
-    height: 5px;
+    height: 10px;
     background: #159ed0;
 }
 
 .layout {
     display: flex;
-    min-height: calc(100vh - 95px);
+    min-height: calc(100vh - 100px); 
 }
 
 .sidebar {
