@@ -38,6 +38,7 @@ class Enfermero
         ]);
     }
 
+
     public function actualizar(array $datos): bool
     {
         $sql = "UPDATE enfermero
@@ -53,8 +54,25 @@ class Enfermero
             ':apellido' => $datos['apellido_enfermero']
         ]);
 
-        return $consulta->rowCount() > 0;
+        // Si no hubo cambios, comprobamos que el enfermero exista.
+        if ($consulta->rowCount() === 0) {
+
+            $sql = "SELECT COUNT(*)
+                    FROM enfermero
+                    WHERE ci_enfermero = :ci";
+
+            $consulta = $this->conexion->prepare($sql);
+
+            $consulta->execute([
+                ':ci' => $datos['ci_enfermero']
+            ]);
+
+            return (int) $consulta->fetchColumn() > 0;
+        }
+
+        return true;
     }
+
 
     public function eliminar(string $ci): bool
     {

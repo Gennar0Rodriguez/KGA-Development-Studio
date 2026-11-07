@@ -36,33 +36,8 @@ function campoValido(array $datos, string $campo, int $maximo): bool
         && mb_strlen(trim($datos[$campo])) <= $maximo;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
-
-verificarAdministrador();
-
-try {
-
-    $enfermero = new Enfermero();
-
-    // GET: devuelve los enfermeros para el selector de pacientes.
-    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        responderJson($enfermero->obtenerTodos());
-    }
-
-    // POST: registra un enfermero.
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        responderJson(['mensaje' => 'Método no permitido.'], 405);
-    }
-
-    $datos = json_decode(file_get_contents('php://input'), true);
-
-    if (!is_array($datos)) {
-        responderJson(['mensaje' => 'Los datos enviados no son válidos.'], 400);
-    }
-
+function validarDatos(array $datos): array
+{
     $campos = [
         'ci_enfermero' => 8,
         'nombre_enfermero' => 50,
@@ -83,15 +58,75 @@ try {
         ], 400);
     }
 
-    $enfermero->crear([
+    return [
         'ci_enfermero' => trim($datos['ci_enfermero']),
         'nombre_enfermero' => trim($datos['nombre_enfermero']),
         'apellido_enfermero' => trim($datos['apellido_enfermero'])
-    ]);
+    ];
+}
 
-    responderJson([
-        'mensaje' => 'Enfermero registrado correctamente.'
-    ], 201);
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+
+verificarAdministrador();
+
+try {
+
+    $enfermero = new Enfermero();
+    $metodo = $_SERVER['REQUEST_METHOD'];
+
+    // GET: devuelve todos los enfermeros.
+    if ($metodo === 'GET') {
+        responderJson($enfermero->obtenerTodos());
+    }
+
+    // Solo aceptamos POST y PUT para modificar los datos.
+    if (!in_array($metodo, ['POST', 'PUT'], true)) {
+        responderJson([
+            'mensaje' => 'Método no permitido.'
+        ], 405);
+    }
+
+    $datosRecibidos = json_decode(
+        file_get_contents('php://input'),
+        true
+    );
+
+    if (!is_array($datosRecibidos)) {
+        responderJson([
+            'mensaje' => 'Los datos enviados no son válidos.'
+        ], 400);
+    }
+
+    $datos = validarDatos($datosRecibidos);
+
+    // POST: registra un nuevo enfermero.
+    if ($metodo === 'POST') {
+
+        $enfermero->crear($datos);
+
+        responderJson([
+            'mensaje' => 'Enfermero registrado correctamente.'
+        ], 201);
+    }
+
+    // PUT: actualiza un enfermero existente.
+    if ($metodo === 'PUT') {
+
+        $actualizado = $enfermero->actualizar($datos);
+
+        if (!$actualizado) {
+            responderJson([
+                'mensaje' => 'No se encontró el enfermero indicado.'
+            ], 404);
+        }
+
+        responderJson([
+            'mensaje' => 'Enfermero actualizado correctamente.'
+        ]);
+    }
 
 } catch (PDOException $error) {
 
