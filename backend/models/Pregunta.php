@@ -57,6 +57,43 @@ class Pregunta
         return $sentencia->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+    // ======================================================
+    // CREAR UNA PREGUNTA
+    // ======================================================
+
+    public function crear(
+        string $idPregunta,
+        string $tituloEncuesta,
+        string $idCategoria,
+        string $nombrePregunta
+    ): bool {
+
+        $sql = "INSERT INTO pregunta (
+                    id_pregunta,
+                    titulo_enc,
+                    id_categoria,
+                    nombre_pregunta,
+                    tipo
+                )
+                VALUES (
+                    :id_pregunta,
+                    :titulo_enc,
+                    :id_categoria,
+                    :nombre_pregunta,
+                    :tipo
+                )";
+
+        $sentencia = $this->conexion->prepare($sql);
+
+        $sentencia->bindValue(':id_pregunta', $idPregunta);
+        $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
+        $sentencia->bindValue(':id_categoria', $idCategoria);
+        $sentencia->bindValue(':nombre_pregunta', $nombrePregunta);
+        $sentencia->bindValue(':tipo', 'opcion multiple');
+
+        return $sentencia->execute();
+    }
+
     // Modificar el texto de una pregunta existente.
     public function editarPregunta(
         string $idPregunta,
