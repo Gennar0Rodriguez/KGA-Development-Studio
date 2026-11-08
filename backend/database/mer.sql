@@ -115,6 +115,7 @@ CREATE TABLE traslado (
 );
 
 CREATE TABLE notifica (
+    numero_notificacion INT NOT NULL AUTO_INCREMENT,
     id_traslado VARCHAR(50) NOT NULL,
     ci_chofer VARCHAR(8) NOT NULL,
     matricula VARCHAR(15) NOT NULL,
@@ -126,7 +127,7 @@ CREATE TABLE notifica (
     titulo_not VARCHAR(100) NOT NULL,
     descripcion_not VARCHAR(255) NOT NULL,
     ci_receptor VARCHAR(8) NOT NULL,
-    PRIMARY KEY (id_traslado, ci_chofer, matricula, id_destino, ci_admin),
+    PRIMARY KEY (numero_notificacion, id_traslado, ci_chofer, matricula, id_destino, ci_admin),
     FOREIGN KEY (id_traslado) REFERENCES traslado(id_traslado) ON DELETE CASCADE,
     FOREIGN KEY (ci_chofer) REFERENCES chofer(ci_chofer) ON DELETE CASCADE,
     FOREIGN KEY (matricula) REFERENCES vehiculo(matricula) ON DELETE CASCADE,
