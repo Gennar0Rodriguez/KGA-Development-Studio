@@ -74,28 +74,13 @@ class Enfermero
 
     public function eliminar(string $ci): bool
     {
-        // Evitamos que la eliminación del enfermero borre transportables
-        // y pacientes o elementos asociados mediante ON DELETE CASCADE.
-        $sql = "SELECT COUNT(*)
-                FROM transportable
-                WHERE ci_enfermero = :ci";
-
-        $consulta = $this->conexion->prepare($sql);
-        $consulta->execute([
-            ':ci' => $ci
-        ]);
-
-        // Si existen registros asociados, no permitimos eliminarlo.
-        if ((int) $consulta->fetchColumn() > 0) {
-            throw new RuntimeException(
-                'No se puede eliminar el enfermero porque tiene pacientes o elementos asociados.'
-            );
-        }
-
+        // La base de datos se encarga de colocar NULL
+        // en ci_enfermero de los transportables relacionados.
         $sql = "DELETE FROM enfermero
                 WHERE ci_enfermero = :ci";
 
         $consulta = $this->conexion->prepare($sql);
+
         $consulta->execute([
             ':ci' => $ci
         ]);

@@ -30,15 +30,22 @@ class Elemento
 
     public function obtenerTodos(): array
     {
-        $sql = "SELECT el.id_transportable, el.nombre_elemento, el.descripcion_elemento, el.tipo_elemento, t.ci_enfermero,
-        CONCAT(e.nombre_enfermero, ' ', e.apellido_enfermero)
-                        AS nombre_enfermero,
+        $sql = "SELECT
+                    el.id_transportable,
+                    el.nombre_elemento,
+                    el.descripcion_elemento,
+                    el.tipo_elemento,
+                    t.ci_enfermero,
+                    COALESCE(
+                        CONCAT(e.nombre_enfermero, ' ', e.apellido_enfermero),
+                        'Sin asignar'
+                    ) AS nombre_enfermero,
                     t.habitacion_retiro,
                     t.piso_retiro
                 FROM elemento el
                 INNER JOIN transportable t
                     ON el.id_transportable = t.id_transportable
-                INNER JOIN enfermero e
+                LEFT JOIN enfermero e
                     ON t.ci_enfermero = e.ci_enfermero
                 ORDER BY el.nombre_elemento";
 

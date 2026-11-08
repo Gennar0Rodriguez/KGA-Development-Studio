@@ -40,14 +40,16 @@ class Paciente
                     p.oxigeno,
                     p.aislamiento,
                     t.ci_enfermero,
-                    CONCAT(e.nombre_enfermero, ' ', e.apellido_enfermero)
-                        AS nombre_enfermero,
+                    COALESCE(
+                        CONCAT(e.nombre_enfermero, ' ', e.apellido_enfermero),
+                        'Sin asignar'
+                    ) AS nombre_enfermero,
                     t.habitacion_retiro,
                     t.piso_retiro
                 FROM paciente p
                 INNER JOIN transportable t
                     ON p.id_transportable = t.id_transportable
-                INNER JOIN enfermero e
+                LEFT JOIN enfermero e
                     ON t.ci_enfermero = e.ci_enfermero
                 ORDER BY p.nombre_paciente";
 
