@@ -11,8 +11,7 @@ CREATE TABLE administrativo (
 );
 
 CREATE TABLE categoria (
-    id_categoria VARCHAR(50) PRIMARY KEY NOT NULL,
-    nombre_cat VARCHAR(50) NOT NULL,
+    nombre_cat VARCHAR(50) PRIMARY KEY NOT NULL,
     tipo_cat ENUM ('docs', 'encuestas'),
     estado_cat ENUM('activa', 'deshabilitada') NOT NULL DEFAULT 'activa'
 );
@@ -20,48 +19,47 @@ CREATE TABLE categoria (
 CREATE TABLE documentos (
     id_documentos VARCHAR(50) PRIMARY KEY NOT NULL,
     ci_admin VARCHAR(8),
-    id_categoria VARCHAR(50),
+    nombre_cat VARCHAR(50),
     hora_carga TIME NOT NULL,
     fecha_carga DATE NOT NULL,
     titulo_docs VARCHAR(50) NOT NULL,
     descripcion_docs VARCHAR(50),
     nombre_archivo VARCHAR(255) NOT NULL,
     ruta_archivo VARCHAR(255) NOT NULL,
-    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria),
+    FOREIGN KEY (nombre_cat) REFERENCES categoria(nombre_cat),
     FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin) ON DELETE SET NULL
 );
 
 CREATE TABLE encuesta (
-    id_encuesta VARCHAR(50) NOT NULL,
-    id_categoria VARCHAR(50) NOT NULL,
-    descripcion_enc VARCHAR(50),
     titulo_enc VARCHAR(50) NOT NULL,
-    PRIMARY KEY (id_encuesta, id_categoria),
-    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
+    nombre_cat VARCHAR(50) NOT NULL,
+    descripcion_enc VARCHAR(50),
+    PRIMARY KEY (titulo_enc, nombre_cat),
+    FOREIGN KEY (nombre_cat) REFERENCES categoria(nombre_cat)
 );
  
 CREATE TABLE pregunta (
     id_pregunta VARCHAR(50) NOT NULL,
-    id_encuesta VARCHAR(50) NOT NULL,
-    id_categoria VARCHAR(50) NOT NULL,
+    titulo_enc VARCHAR(50) NOT NULL,
+    nombre_cat VARCHAR(50) NOT NULL,
     nombre_pregunta VARCHAR(50) NOT NULL,
     tipo ENUM('opcion multiple', 'texto') NOT NULL,
-    PRIMARY KEY (id_pregunta, id_encuesta, id_categoria),
-    FOREIGN KEY (id_encuesta) REFERENCES encuesta(id_encuesta),
-    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
+    PRIMARY KEY (id_pregunta, titulo_enc, nombre_cat),
+    FOREIGN KEY (titulo_enc) REFERENCES encuesta(titulo_enc),
+    FOREIGN KEY (nombre_cat) REFERENCES categoria(nombre_cat)
 );
 
 CREATE TABLE respuesta (
     id_respuesta VARCHAR(50) NOT NULL,
     id_pregunta VARCHAR(50) NOT NULL,
-    id_encuesta VARCHAR(50) NOT NULL,
-    id_categoria VARCHAR(50) NOT NULL,
+    titulo_enc VARCHAR(50) NOT NULL,
+    nombre_cat VARCHAR(50) NOT NULL,
     informacion VARCHAR(50),
     tipo ENUM('opcion multiple', 'texto') NOT NULL,
-    PRIMARY KEY (id_respuesta, id_pregunta, id_encuesta),
+    PRIMARY KEY (id_respuesta, id_pregunta, titulo_enc),
     FOREIGN KEY (id_pregunta) REFERENCES pregunta(id_pregunta),
-    FOREIGN KEY (id_encuesta) REFERENCES encuesta(id_encuesta),
-    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
+    FOREIGN KEY (titulo_enc) REFERENCES encuesta(titulo_enc),
+    FOREIGN KEY (nombre_cat) REFERENCES categoria(nombre_cat)
 );
 
 CREATE TABLE chofer (
