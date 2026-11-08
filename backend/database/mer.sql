@@ -22,36 +22,33 @@ CREATE TABLE documentos (
     id_documentos VARCHAR(50) PRIMARY KEY NOT NULL,
     ci_admin VARCHAR(8),
     id_categoria VARCHAR(50) NOT NULL,
-    nombre_cat VARCHAR(50) NOT NULL,
     hora_carga TIME NOT NULL,
     fecha_carga DATE NOT NULL,
     titulo_docs VARCHAR(50) NOT NULL,
     descripcion_docs VARCHAR(50),
     nombre_archivo VARCHAR(255) NOT NULL,
     ruta_archivo VARCHAR(255) NOT NULL,
-    FOREIGN KEY (id_categoria, nombre_cat) REFERENCES categoria(id_categoria, nombre_cat),
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria),
     FOREIGN KEY (ci_admin) REFERENCES administrativo(ci_admin) ON DELETE SET NULL
 );
 
 CREATE TABLE encuesta (
     titulo_enc VARCHAR(50) NOT NULL,
     id_categoria VARCHAR(50) NOT NULL,
-    nombre_cat VARCHAR(50) NOT NULL,
     descripcion_enc VARCHAR(50),
     PRIMARY KEY (titulo_enc, id_categoria),
-    FOREIGN KEY (id_categoria, nombre_cat) REFERENCES categoria(id_categoria, nombre_cat)
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
  
 CREATE TABLE pregunta (
     id_pregunta VARCHAR(50) NOT NULL,
     titulo_enc VARCHAR(50) NOT NULL,
     id_categoria VARCHAR(50) NOT NULL,
-    nombre_cat VARCHAR(50) NOT NULL,
     nombre_pregunta VARCHAR(50) NOT NULL,
     tipo ENUM('opcion multiple', 'texto') NOT NULL,
     PRIMARY KEY (id_pregunta, titulo_enc),
     FOREIGN KEY (titulo_enc) REFERENCES encuesta(titulo_enc),
-    FOREIGN KEY (id_categoria, nombre_cat) REFERENCES categoria(id_categoria, nombre_cat)
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
 
 CREATE TABLE respuesta (
@@ -59,13 +56,12 @@ CREATE TABLE respuesta (
     id_pregunta VARCHAR(50) NOT NULL,
     titulo_enc VARCHAR(50) NOT NULL,
     id_categoria VARCHAR(50) NOT NULL,
-    nombre_cat VARCHAR(50) NOT NULL,
     informacion VARCHAR(50),
     tipo ENUM('opcion multiple', 'texto') NOT NULL,
     PRIMARY KEY (id_respuesta, id_pregunta, id_categoria, titulo_enc),
     FOREIGN KEY (id_pregunta) REFERENCES pregunta(id_pregunta),
     FOREIGN KEY (titulo_enc) REFERENCES encuesta(titulo_enc),
-    FOREIGN KEY (id_categoria, nombre_cat) REFERENCES categoria(id_categoria, nombre_cat)
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
 
 CREATE TABLE chofer (
