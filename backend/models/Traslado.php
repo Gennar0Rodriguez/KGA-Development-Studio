@@ -1196,17 +1196,14 @@ public function crear(
 
                 // La llegada no puede ser anterior al día del traslado
                 // ni estar registrada en una fecha futura.
+                // La fecha de llegada no puede ser anterior
+                // al día en que se realizó el traslado.
                 $fechaSalida = new DateTime(
                     $traslado['fecha_traslado'],
                     $zonaHoraria
                 );
 
-                $fechaActual = new DateTime('today', $zonaHoraria);
-
-                if (
-                    $fechaLlegadaValidada < $fechaSalida ||
-                    $fechaLlegadaValidada > $fechaActual
-                ) {
+                if ($fechaLlegadaValidada < $fechaSalida) {
                     $this->conexion->rollBack();
                     return false;
                 }
