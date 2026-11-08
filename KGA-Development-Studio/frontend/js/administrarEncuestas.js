@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCerrarEncuesta = document.getElementById('cerrarModalEncuesta');
     const btnCancelarEncuesta = document.getElementById('cancelarEncuesta');
 
-    const rutaAPI = '/kgade/KGA-Development-Studio/API';
+    const rutaAPI = '/kgade/KGA-Development-Studio/KGA-Development-Studio/API';
 
 
     // ==========================================

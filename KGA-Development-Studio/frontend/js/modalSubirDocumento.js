@@ -3,10 +3,10 @@
 // ======================================================
 
 const API_DOCUMENTOS =
-    '/kgade/KGA-Development-Studio/API/documentos/documentos.php';
+    '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/documentos/documentos.php';
 
 const API_CATEGORIAS =
-    '/kgade/KGA-Development-Studio/API/categorias/categorias.php';
+    '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/categorias/categorias.php';
 
 // Información que se obtiene desde el servidor.
 let todosLosDocumentos = [];

@@ -16,7 +16,7 @@ async function cerrarSesion() {
 
     try {
 
-        await fetch('/kgade/KGA-Development-Studio/API/logout.php', {
+        await fetch('/kgade/KGA-Development-Studio/KGA-Development-Studio/API/logout.php', {
             method: 'GET'
         });
 

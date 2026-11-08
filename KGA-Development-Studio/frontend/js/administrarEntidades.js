@@ -4,7 +4,7 @@
 
 const REGISTROS_POR_PAGINA = 10;
 
-const RUTA_API = '/kgade/KGA-Development-Studio/API';
+const RUTA_API = '/kgade/KGA-Development-Studio/KGA-Development-Studio/API';
 
 // Cada entidad utiliza su propio controlador.
 const endpointsEntidades = {

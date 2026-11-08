@@ -35,7 +35,7 @@ async function iniciarPollingNotificaciones() {
     try {
 
         const response = await fetch(
-            '/kgade/KGA-Development-Studio/API/notificaciones/notificaciones.php',
+            '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/notificaciones/notificaciones.php',
             {
                 method: 'GET',
                 credentials: 'same-origin',
@@ -215,7 +215,7 @@ async function marcarNotificacionLeida(item) {
     try {
 
         const response = await fetch(
-            '/kgade/KGA-Development-Studio/API/notificaciones/notificaciones.php',
+            '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/notificaciones/notificaciones.php',
             {
                 method: 'PUT',
                 credentials: 'same-origin',
@@ -259,7 +259,7 @@ async function eliminarNotificacion(item) {
     try {
 
         const response = await fetch(
-            '/kgade/KGA-Development-Studio/API/notificaciones/notificaciones.php',
+            '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/notificaciones/notificaciones.php',
             {
                 method: 'DELETE',
                 credentials: 'same-origin',

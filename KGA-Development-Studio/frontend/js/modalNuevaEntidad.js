@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGuardar = document.getElementById('btnGuardarEntidad');
     const tituloModal = document.getElementById('tituloModalEntidad');
 
-    const RUTA_API = '/kgade/KGA-Development-Studio/API';
+    const RUTA_API = '/kgade/KGA-Development-Studio/KGA-Development-Studio/API';
 
     const RUTAS_API = {
         chofer: `${RUTA_API}/choferes/choferes.php`,

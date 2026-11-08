@@ -1,10 +1,10 @@
-// sidebar del empleado: sirve para las paginas que abren empleados y administradores. Si no hay sesion va al login
+// sidebar del administrador: ve todas las paginas. Si no es administrador lo saca de la pagina
 
-verificarSesion();
+verificarAdministrador();
 
-async function verificarSesion() {
+async function verificarAdministrador() {
     try {
-        const response = await fetch('/kgade/KGA-Development-Studio/API/sesion.php');
+        const response = await fetch('/kgade/KGA-Development-Studio/KGA-Development-Studio/API/sesion.php');
 
         if (!response.ok) {
             window.location.href = 'index.html';
@@ -22,10 +22,16 @@ async function verificarSesion() {
         const usuario = datos.usuario || {};
         const cargo = (usuario.cargo || '').toString().toLowerCase().trim();
 
+        // un empleado no puede entrar a las paginas del administrador
+        if (cargo !== 'administrador') {
+            window.location.href = 'gestionAmbulancias.html';
+            return;
+        }
+
         cargarSidebar(usuario, cargo);
 
     } catch (error) {
-        console.error('Error al verificar la sesion:', error);
+        console.error('Error al verificar el administrador:', error);
         window.location.href = 'index.html';
     }
 }
@@ -33,6 +39,7 @@ async function verificarSesion() {
 function cargarSidebar(usuario, cargo) {
     const contenedorSidebar = document.getElementById("sidebar");
 
+    // ambulanciaFormulario.html no tiene sidebar
     if (!contenedorSidebar) {
         return;
     }
@@ -60,41 +67,8 @@ function cargarSidebar(usuario, cargo) {
                 lblNombre.textContent = usuario.nombre_admin || 'Usuario';
             }
 
-            const esAdmin = (cargo === 'administrador');
-
-            // el empleado no ve las paginas del administrador
-            if (!esAdmin) {
-                const navDoc = document.getElementById('navDocumentos');
-                const navUsu = document.getElementById('navUsuarios');
-                const navEnc = document.getElementById('navEncuesta');
-                const navEnt = document.getElementById('navEntidades');
-
-                if (navDoc) navDoc.style.setProperty('display', 'none', 'important');
-                if (navUsu) navUsu.style.setProperty('display', 'none', 'important');
-                if (navEnc) navEnc.style.setProperty('display', 'none', 'important');
-                if (navEnt) navEnt.style.setProperty('display', 'none', 'important');
-            }
-
             // Evento para avisar que la sidebar y la campanita se cargaron
             document.dispatchEvent(new CustomEvent("sidebarCargada"));
         })
         .catch(err => console.error("Error cargando la sidebar:", err));
-}
-
-const contenedorHeader = document.getElementById("header");
-
-if (contenedorHeader) {
-    fetch("../components/header.html")
-        .then(response => response.text())
-        .then(data => {
-            contenedorHeader.innerHTML = data;
-
-            const titulo = document.body.dataset.titulo;
-            const elemTitulo = document.getElementById("tituloPagina");
-
-            if (elemTitulo && titulo) {
-                elemTitulo.textContent = titulo;
-            }
-        })
-        .catch(err => console.error("Error cargando el header:", err));
 }

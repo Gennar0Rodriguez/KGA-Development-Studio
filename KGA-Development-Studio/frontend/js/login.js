@@ -10,7 +10,7 @@ document.getElementById('formLogin').addEventListener('submit', async (event) =>
     };
 
     try {
-        const response = await fetch('/kgade/KGA-Development-Studio/API/login.php', {
+        const response = await fetch('/kgade/KGA-Development-Studio/KGA-Development-Studio/API/login.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

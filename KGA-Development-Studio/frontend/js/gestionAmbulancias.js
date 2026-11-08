@@ -1,5 +1,5 @@
 // Ruta del endpoint que administra los vehículos.
-const RUTA_API_AMBULANCIAS = '/kgade/KGA-Development-Studio/API/ambulancias/ambulancias.php';
+const RUTA_API_AMBULANCIAS = '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/ambulancias/ambulancias.php';
 
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('modalNuevaAmbulancia');

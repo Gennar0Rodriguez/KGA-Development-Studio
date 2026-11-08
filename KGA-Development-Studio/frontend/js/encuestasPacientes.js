@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const panelBusqueda = document.querySelector('.busqueda-encuestas');
 
-    const rutaAPI = '/kgade/KGA-Development-Studio/API';
+    const rutaAPI = '/kgade/KGA-Development-Studio/KGA-Development-Studio/API';
 
 
     // ==========================================

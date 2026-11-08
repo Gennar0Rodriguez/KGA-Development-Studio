@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function obtenerSesion() {
     try {
         const response = await fetch(
-            '/kgade/KGA-Development-Studio/API/sesion.php'
+            '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/sesion.php'
         );
 
         if (!response.ok) {
@@ -378,7 +378,7 @@ async function guardarTraslado(cerrarModal) {
 
     try {
         const response = await fetch(
-            '/kgade/KGA-Development-Studio/API/traslados/traslados.php',
+            '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/traslados/traslados.php',
             {
                 method: metodoHttp,
                 headers: {
@@ -526,7 +526,7 @@ function filtrarTraslados() {
 async function cargarOpcionesFormulario() {
     try {
         const response = await fetch(
-            '/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=auxiliares'
+            '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/traslados/traslados.php?action=auxiliares'
         );
 
         if (!response.ok) {
@@ -981,7 +981,7 @@ function buscarElementos() {
 async function cargarTraslados() {
     try {
         const response = await fetch(
-            '/kgade/KGA-Development-Studio/API/traslados/traslados.php'
+            '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/traslados/traslados.php'
         );
 
         // Leer la respuesta para poder identificar errores del servidor.
@@ -1297,7 +1297,7 @@ async function resolverSolicitud(idTraslado, estadoSolicitud) {
     try {
 
         const response = await fetch(
-            '/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=resolver',
+            '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/traslados/traslados.php?action=resolver',
             {
                 method: 'POST',
 
@@ -1389,7 +1389,7 @@ async function actualizarEstadoTraslado(idTraslado, nuevoEstado) {
     try {
 
         const response = await fetch(
-            '/kgade/KGA-Development-Studio/API/traslados/traslados.php?action=estado',
+            '/kgade/KGA-Development-Studio/KGA-Development-Studio/API/traslados/traslados.php?action=estado',
             {
                 method: 'POST',
                 headers: {
@@ -1566,7 +1566,7 @@ async function eliminarTraslado(id) {
 
     try {
         const response = await fetch(
-            `/kgade/KGA-Development-Studio/API/traslados/traslados.php?id=${encodeURIComponent(id)}`,
+            `/kgade/KGA-Development-Studio/KGA-Development-Studio/API/traslados/traslados.php?id=${encodeURIComponent(id)}`,
             {
                 method: 'DELETE'
             }

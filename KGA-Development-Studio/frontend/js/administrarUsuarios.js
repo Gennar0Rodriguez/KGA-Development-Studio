@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Cargar sesión del servidor
 async function cargarSesion() {
     try {
-        const response = await fetch('/kgade/KGA-Development-Studio/API/sesion.php');
+        const response = await fetch('/kgade/KGA-Development-Studio/KGA-Development-Studio/API/sesion.php');
         if (!response.ok) return;
 
         const datos = await response.json();
@@ -63,7 +63,7 @@ function obtenerCiSesionActual() {
 // Cargar usuarios desde la API
 async function cargarUsuarios() {
     try {
-        const response = await fetch('/kgade/KGA-Development-Studio/API/usuario/usuarios.php');
+        const response = await fetch('/kgade/KGA-Development-Studio/KGA-Development-Studio/API/usuario/usuarios.php');
         if (!response.ok) throw new Error('Error al obtener respuesta de la API');
         
         todosLosUsuarios = await response.json();
@@ -307,7 +307,7 @@ async function guardarOCambiarUsuario(event) {
     const metodoHttp = modoEdicion ? 'PUT' : 'POST';
 
     try {
-        const response = await fetch('/kgade/KGA-Development-Studio/API/usuario/usuarios.php', {
+        const response = await fetch('/kgade/KGA-Development-Studio/KGA-Development-Studio/API/usuario/usuarios.php', {
             method: metodoHttp,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datos)
@@ -353,7 +353,7 @@ async function eliminarUsuario(ci) {
     if (!confirm(`¿Desea eliminar el usuario con CI ${ci}?`)) return;
 
     try {
-        const response = await fetch(`/kgade/KGA-Development-Studio/API/usuario/usuarios.php?id=${ci}`, {
+        const response = await fetch(`/kgade/KGA-Development-Studio/KGA-Development-Studio/API/usuario/usuarios.php?id=${ci}`, {
             method: 'DELETE'
         });
 
