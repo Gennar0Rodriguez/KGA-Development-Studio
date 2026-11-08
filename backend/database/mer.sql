@@ -39,7 +39,7 @@ CREATE TABLE encuesta (
     PRIMARY KEY (titulo_enc, id_categoria),
     FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
- 
+
 CREATE TABLE pregunta (
     id_pregunta VARCHAR(50) NOT NULL,
     titulo_enc VARCHAR(50) NOT NULL,
@@ -184,124 +184,122 @@ CREATE TABLE transporta (
 
 INSERT INTO administrativo (ci_admin, nombre_admin, apellido_admin, contraseña_admin, cargo) VALUES
 ('12345678', 'Ezequiel', 'Matta', 'Ari', 'administrador'),
-('23456789', 'Gennaro', 'Rodriguez', 'gen', 'empleado'),
+('87654321', 'Joaquin', 'Fida', 'Trunks', 'administrador'),
 ('34567890', 'Ari', 'Matta', 'Eze', 'administrador'),
-('45678901', 'Ana', 'Rodriguez', 'clave123', 'empleado'),
-('56789012', 'Luis', 'Martinez', 'pwd321', 'empleado');
+('56789012', 'Cristiano', 'Ronaldo', 'cr7', 'empleado'),
+('56789843', 'Connor', 'Mcgregor', 'ufc', 'empleado'),
+('58729012', 'Islam', 'Makhachev', 'ufc', 'empleado'),
+('23456789', 'Gennaro', 'Rodriguez', 'gen', 'administrador'),
+('45678901', 'Santiago', 'Marichal', 'cracken', 'administrador');
 
 INSERT INTO categoria (id_categoria, nombre_cat, tipo_cat, estado_cat) VALUES
-('cat_doc_1', 'Manuales', 'docs', 'activa'),
-('cat_doc_2', 'Protocolos', 'docs', 'activa'),
-('cat_enc_1', 'Satisfaccion', 'encuestas', 'activa'),
-('cat_enc_2', 'Calidad de Servicio', 'encuestas', 'activa'),
-('cat_doc_3', 'Reglamentos', 'docs', 'deshabilitada');
+('CAT-01', 'Normativas', 'docs', 'activa'),
+('CAT-02', 'Formularios', 'docs', 'activa'),
+('CAT-03', 'Satisfaccion', 'encuestas', 'activa'),
+('CAT-04', 'Calidad', 'encuestas', 'activa'),
+('CAT-05', 'Manuales', 'docs', 'deshabilitada');
 
 INSERT INTO documentos (id_documentos, ci_admin, id_categoria, hora_carga, fecha_carga, titulo_docs, descripcion_docs, nombre_archivo, ruta_archivo) VALUES
-('doc_001', '12345678', 'cat_doc_1', '08:00:00', '2026-06-01', 'Manual General', 'Manual operativo', 'manual.pdf', '/docs/manual.pdf'),
-('doc_002', '12345678', 'cat_doc_2', '09:30:00', '2026-06-02', 'Protocolo COVID', 'Normas sanitarias', 'protocolo.pdf', '/docs/protocolo.pdf'),
-('doc_003', '34567890', 'cat_doc_1', '10:15:00', '2026-06-03', 'Guia Rapida', 'Guia para nuevos', 'guia.pdf', '/docs/guia.pdf'),
-('doc_004', '34567890', 'cat_doc_2', '11:00:00', '2026-06-04', 'Protocolo Urgencias', 'Atencion rapida', 'urgencias.pdf', '/docs/urgencias.pdf'),
-('doc_005', '12345678', 'cat_doc_3', '12:00:00', '2026-06-05', 'Reglamento Antiguo', 'Version pasada', 'reglamento.pdf', '/docs/reglamento.pdf');
+('DOC-101', '12345678', 'CAT-01', '08:30:00', '2026-01-10', 'Reglamento', 'Reglamento interno', 'reglamento.pdf', 'API/uploads/documentos/testdocumentos1.pdf'),
+('DOC-102', '87654321', 'CAT-01', '09:15:00', '2026-01-11', 'Protocolo', 'Protocolo de seguridad', 'protocolo.pdf', 'API/uploads/documentos/testdocumentos2.pdf'),
+('DOC-103', '34567890', 'CAT-02', '10:00:00', '2026-01-12', 'Formulario A', 'Formulario de ingreso', 'form_a.pdf', 'API/uploads/documentos/testdocumentos1.pdf'),
+('DOC-104', '23456789', 'CAT-02', '11:20:00', '2026-01-13', 'Formulario B', 'Formulario de salida', 'form_b.pdf', 'API/uploads/documentos/testdocumentos2.pdf'),
+('DOC-105', '45678901', 'CAT-05', '14:00:00', '2026-01-14', 'Manual Antiguo', 'Manual viejo', 'manual.pdf', 'API/uploads/documentos/testdocumentos1.pdf');
 
 INSERT INTO encuesta (titulo_enc, id_categoria, descripcion_enc) VALUES
-('Encuesta Satisfaccion 2026', 'cat_enc_1', 'Evaluacion anual'),
-('Calidad Atencion', 'cat_enc_2', 'Servicio de traslado'),
-('Clima Laboral', 'cat_enc_1', 'Ambiente de trabajo'),
-('Evaluacion Choferes', 'cat_enc_2', 'Desempeno en ruta'),
-('Feedback General', 'cat_enc_1', 'Opinion general');
+('Evaluacion Servicio', 'CAT-03', 'Encuesta sobre el servicio general'),
+('Atencion Telefonica', 'CAT-03', 'Calificacion de operadores'),
+('Ambiente Laboral', 'CAT-04', 'Encuesta interna para empleados'),
+('Logistica', 'CAT-04', 'Evaluacion de traslados'),
+('Feedback General', 'CAT-03', 'Opiniones generales');
 
 INSERT INTO pregunta (id_pregunta, titulo_enc, id_categoria, nombre_pregunta, tipo) VALUES
-('p_01', 'Encuesta Satisfaccion 2026', 'cat_enc_1', 'Como califica el servicio?', 'opcion multiple'),
-('p_02', 'Encuesta Satisfaccion 2026', 'cat_enc_1', 'Comentarios adicionales', 'texto'),
-('p_01', 'Calidad Atencion', 'cat_enc_2', 'Fue puntual?', 'opcion multiple'),
-('p_01', 'Clima Laboral', 'cat_enc_1', 'Se siente comodo?', 'opcion multiple'),
-('p_01', 'Feedback General', 'cat_enc_1', 'Sugerencias', 'texto');
+('P-01', 'Evaluacion Servicio', 'CAT-03', 'Como califica el servicio?', 'opcion multiple'),
+('P-02', 'Evaluacion Servicio', 'CAT-03', 'Comentarios adicionales', 'texto'),
+('P-03', 'Atencion Telefonica', 'CAT-03', 'Fue atendido rapidamente?', 'opcion multiple'),
+('P-04', 'Ambiente Laboral', 'CAT-04', 'Se siente comodo en su area?', 'opcion multiple'),
+('P-05', 'Logistica', 'CAT-04', 'Describa su experiencia', 'texto');
 
 INSERT INTO respuesta (id_respuesta, id_pregunta, titulo_enc, id_categoria, informacion, tipo) VALUES
-('r_01', 'p_01', 'Encuesta Satisfaccion 2026', 'cat_enc_1', 'Excelente', 'opcion multiple'),
-('r_02', 'p_02', 'Encuesta Satisfaccion 2026', 'cat_enc_1', 'Todo muy bien', 'texto'),
-('r_03', 'p_01', 'Calidad Atencion', 'cat_enc_2', 'Si', 'opcion multiple'),
-('r_04', 'p_01', 'Clima Laboral', 'cat_enc_1', 'Siempre', 'opcion multiple'),
-('r_05', 'p_01', 'Feedback General', 'cat_enc_1', 'Ninguna', 'texto');
+('R-01', 'P-01', 'Evaluacion Servicio', 'CAT-03', 'Excelente', 'opcion multiple'),
+('R-02', 'P-02', 'Evaluacion Servicio', 'CAT-03', 'Todo muy bien', 'texto'),
+('R-03', 'P-03', 'Atencion Telefonica', 'CAT-03', 'Si', 'opcion multiple'),
+('R-04', 'P-04', 'Ambiente Laboral', 'CAT-04', 'Si', 'opcion multiple'),
+('R-05', 'P-05', 'Logistica', 'CAT-04', 'Puntual y eficiente', 'texto');
 
 INSERT INTO chofer (ci_chofer, nombre_chofer, apellido_chofer, telefono) VALUES
-('11111111', 'Pedro', 'Gomez', '099123456'),
-('22222222', 'Sofia', 'Fernandez', '098234567'),
-('33333333', 'Jorge', 'Silva', '097345678'),
-('44444444', 'Lucia', 'Ramirez', '096456789'),
-('55555555', 'Martin', 'Acosta', '095567890');
+('11111111', 'Georges', 'St-Pierre', '099111111'),
+('22222222', 'Antonio', 'Pacheco', '099222222'),
+('33333333', 'Rodrigo', 'Verrone', '099333333'),
+('44444444', 'Martin', 'Benitez', '099444444'),
+('55555555', 'Facundo', 'Suarez', '099555555');
 
 INSERT INTO vehiculo (matricula, modelo, capacidad, tipo_vehiculo, camilla, observaciones) VALUES
-('ABC1234', 'Sprinter', '3', 'ambulancia', 1, 'Equipada'),
-('DEF5678', 'Kangoo', '2', 'auto', 0, 'Sin camilla'),
-('GHI9012', 'Transit', '4', 'ambulancia', 1, 'Unidad movil 2'),
-('JKL3456', 'Corolla', '4', 'auto', 0, 'Auto administrativo'),
-('MNO7890', 'Master', '3', 'otro', 0, 'Utilitario');
+('SCA-1234', 'Mercedes Sprinter', '3', 'ambulancia', 1, 'Equipada'),
+('SCA-5678', 'Ford Transit', '3', 'ambulancia', 1, 'Sin novedad'),
+('SCI-9012', 'Renault Kangoo', '2', 'auto', 0, 'Urbano'),
+('SCI-3456', 'Fiat Fiorino', '2', 'auto', 0, 'Buen estado'),
+('SCO-7890', 'Toyota Hilux', '4', 'otro', 0, '4x4');
 
 INSERT INTO conduce (ci_chofer, matricula) VALUES
-('11111111', 'ABC1234'),
-('22222222', 'DEF5678'),
-('33333333', 'GHI9012'),
-('44444444', 'JKL3456'),
-('55555555', 'MNO7890');
+('11111111', 'SCA-1234'),
+('22222222', 'SCA-5678'),
+('33333333', 'SCI-9012'),
+('44444444', 'SCI-3456'),
+('55555555', 'SCO-7890');
 
 INSERT INTO destino (id_destino, nombre_destino, direccion, ruta) VALUES
-('dest_01', 'Hospital Central', 'Av. Italia 1234', 'Ruta 1'),
-('dest_02', 'Clinica Norte', 'Bv. Artigas 567', 'Ruta 5'),
-('dest_03', 'Sanatorio Sur', '8 de Octubre 890', 'Ruta 8'),
-('dest_04', 'Centro Medico', 'Garzon 432', 'Ruta 6'),
-('dest_05', 'Hospital de Clinicas', 'Italia s/n', 'Ruta 10');
+('DEST-01', 'Hospital Central', 'Av. Italia 1500', 'Ruta 1'),
+('DEST-02', 'Sanatorio Americano', 'Bv. Artigas 1600', 'Ruta 2'),
+('DEST-03', 'Clinica Modelo', '8 de Octubre 2300', 'Ruta 3'),
+('DEST-04', 'Hospital de Clinicas', 'Italia s/n', 'Ruta 4'),
+('DEST-05', 'Sanatorio Britanico', 'Avenida Garibaldi 1700', 'Ruta 5');
 
 INSERT INTO traslado (id_traslado, ci_chofer, matricula, id_destino, fecha_traslado, fecha_llegada, hora_salida, hora_llegada, lugar_origen, estado_traslado, ci_solicitante, estado_solicitud, observaciones) VALUES
-('tras_01', '11111111', 'ABC1234', 'dest_01', '2026-06-01', '2026-06-01', '08:00:00', '08:30:00', 'Casa Central', 'finalizado', '12345678', 'aprobado', 'Sin novedad'),
-('tras_02', '22222222', 'DEF5678', 'dest_02', '2026-06-02', '2026-06-02', '09:00:00', '09:45:00', 'Sucursal Norte', 'aprobado', '23456789', 'aprobado', 'Trafico denso'),
-('tras_03', '33333333', 'GHI9012', 'dest_03', '2026-06-03', '2026-06-03', '10:00:00', '10:20:00', 'Base Sur', 'en proceso', '34567890', 'pendiente', 'En curso'),
-('tras_04', '44444444', 'JKL3456', 'dest_04', '2026-06-04', NULL, '11:00:00', NULL, 'Oficina Este', 'pendiente', '45678901', 'pendiente', 'Esperando aprobacion'),
-('tras_05', '55555555', 'MNO7890', 'dest_05', '2026-06-05', '2026-06-05', '12:00:00', '12:50:00', 'Estacion Central', 'denegado', '56789012', 'rechazado', 'Cancelado por clima');
+('TR-01', '11111111', 'SCA-1234', 'DEST-01', '2026-02-01', '2026-02-01', '08:00:00', '08:45:00', 'Barrio Sur', 'finalizado', '12345678', 'aprobado', 'Sin contratiempos'),
+('TR-02', '22222222', 'SCA-5678', 'DEST-02', '2026-02-02', '2026-02-02', '09:00:00', '09:50:00', 'Pocitos', 'finalizado', '87654321', 'aprobado', 'Traslado rapido'),
+('TR-03', '33333333', 'SCI-9012', 'DEST-03', '2026-02-03', '2026-02-03', '10:00:00', '10:30:00', 'Centro', 'aprobado', '34567890', 'aprobado', 'Normal'),
+('TR-04', '44444444', 'SCI-3456', 'DEST-04', '2026-02-04', NULL, '11:00:00', NULL, 'Malvin', 'en proceso', '23456789', 'pendiente', 'En camino'),
+('TR-05', '55555555', 'SCO-7890', 'DEST-05', '2026-02-05', NULL, '12:00:00', NULL, 'Buceo', 'pendiente', '45678901', 'pendiente', 'Esperando autorizacion');
 
-INSERT INTO notifica (numero_notificacion, id_traslado, ci_chofer, matricula, id_destino, ci_admin, ci_emisor, fecha_envio, leido, titulo_not, descripcion_not, ci_receptor) VALUES
-(1, 'tras_01', '11111111', 'ABC1234', 'dest_01', '12345678', '12345678', '2026-06-01 08:00:00', 1, 'Traslado Finalizado', 'El traslado se completo con exito', '11111111'),
-(2, 'tras_02', '22222222', 'DEF5678', 'dest_02', '12345678', '12345678', '2026-06-02 09:00:00', 0, 'Nuevo Traslado', 'Tienes un traslado aprobado', '22222222'),
-(3, 'tras_03', '33333333', 'GHI9012', 'dest_03', '34567890', '34567890', '2026-06-03 10:00:00', 0, 'En Proceso', 'Traslado en curso', '33333333'),
-(4, 'tras_04', '44444444', 'JKL3456', 'dest_04', '34567890', '34567890', '2026-06-04 11:00:00', 1, 'Solicitud Pendiente', 'Su solicitud esta pendiente', '44444444'),
-(5, 'tras_05', '55555555', 'MNO7890', 'dest_05', '12345678', '12345678', '2026-06-05 12:00:00', 1, 'Traslado Denegado', 'El traslado fue rechazado', '55555555');
+INSERT INTO notifica (id_traslado, ci_chofer, matricula, id_destino, ci_admin, ci_emisor, fecha_envio, leido, titulo_not, descripcion_not, ci_receptor) VALUES
+('TR-01', '11111111', 'SCA-1234', 'DEST-01', '12345678', '12345678', '2026-02-01 07:30:00', 1, 'Asignacion', 'Se le asigno un traslado', '11111111'),
+('TR-02', '22222222', 'SCA-5678', 'DEST-02', '87654321', '87654321', '2026-02-02 08:30:00', 1, 'Asignacion', 'Nuevo traslado confirmado', '22222222'),
+('TR-03', '33333333', 'SCI-9012', 'DEST-03', '34567890', '34567890', '2026-02-03 09:30:00', 0, 'Aviso', 'Traslado programado', '33333333'),
+('TR-04', '44444444', 'SCI-3456', 'DEST-04', '23456789', '23456789', '2026-02-04 10:30:00', 0, 'Pendiente', 'Revision de solicitud', '44444444'),
+('TR-05', '55555555', 'SCO-7890', 'DEST-05', '45678901', '45678901', '2026-02-05 11:30:00', 0, 'Alerta', 'Solicitud en espera', '55555555');
 
 INSERT INTO enfermero (ci_enfermero, nombre_enfermero, apellido_enfermero) VALUES
-('66666666', 'Carmen', 'Perez'),
-('77777777', 'Roberto', 'Diaz'),
-('88888888', 'Elena', 'Suarez'),
-('99999999', 'Gabriel', 'Morales'),
-('10101010', 'Valeria', 'Rios');
+('66666666', 'Agustina', 'Duarte'),
+('77777777', 'Sofia', 'Pereira'),
+('88888888', 'Kenia', 'Kronberg'),
+('99999999', 'Jorge', 'Gimenez'),
+('10101010', 'Pedro', 'Picapiedra');
 
 INSERT INTO transportable (id_transportable, ci_enfermero, habitacion_retiro, piso_retiro) VALUES
-('trans_01', '66666666', 'Hab 101', 'Piso 1'),
-('trans_02', '77777777', 'Hab 202', 'Piso 2'),
-('trans_03', '88888888', 'Hab 303', 'Piso 3'),
-('trans_04', '99999999', 'Hab 404', 'Piso 4'),
-('trans_05', '10101010', 'Hab 505', 'Piso 5'),
-('trans_06', '66666666', 'Lab Central', 'Planta Baja'),
-('trans_07', '77777777', 'Farmacia', 'Piso 1'),
-('trans_08', '88888888', 'Banco Sangre', 'Subsuelo'),
-('trans_09', '99999999', 'Archivo', 'Piso 3'),
-('trans_10', '10101010', 'Quirofano', 'Piso 4');
+('TRANS-01', '66666666', 'Hab 101', 'Piso 1'),
+('TRANS-02', '77777777', 'Hab 202', 'Piso 2'),
+('TRANS-03', '88888888', 'Hab 303', 'Piso 3'),
+('TRANS-04', '99999999', 'Hab 404', 'Piso 4'),
+('TRANS-05', '10101010', 'Hab 505', 'Piso 5');
 
 INSERT INTO paciente (id_transportable, ci_paciente, nombre_paciente, accesorio, oxigeno, aislamiento) VALUES
-('trans_01', '12121212', 'Juan Perez', 'silla', 1, 0),
-('trans_02', '13131313', 'Maria Lopez', 'baston', 0, 1),
-('trans_03', '14141414', 'Carlos Gomez', 'otro', 1, 1),
-('trans_04', '15151515', 'Ana Rodriguez', 'silla', 0, 0),
-('trans_05', '16161616', 'Luis Martinez', 'baston', 1, 0);
+('TRANS-01', '12121212', 'Juan Perez', 'baston', 0, 0),
+('TRANS-02', '13131313', 'Roberto Gomez', 'silla', 1, 0),
+('TRANS-03', '14141414', 'Carlos Ruiz', 'otro', 0, 1),
+('TRANS-04', '15151515', 'Miguel Angel', 'baston', 0, 0),
+('TRANS-05', '16161616', 'Alberto Fernandez', 'silla', 1, 1);
 
 INSERT INTO elemento (id_transportable, nombre_elemento, descripcion_elemento, tipo_elemento) VALUES
-('trans_06', 'Riñones', 'Organo para trasplante', 'organo'),
-('trans_07', 'Historial Medico', 'Documentacion confidencial', 'documentacion'),
-('trans_08', 'Sangre Tipo A', 'Unidades de sangre', 'otro'),
-('trans_09', 'Consentimiento', 'Fichas firmadas', 'documentacion'),
-('trans_10', 'Corazon', 'Organo refrigerado', 'organo');
+('TRANS-01', 'Riñón', 'Organo para trasplante', 'organo'),
+('TRANS-02', 'Historial', 'Carpeta clinica', 'documentacion'),
+('TRANS-03', 'Corazon', 'Organo vital', 'organo'),
+('TRANS-04', 'Consentimiento', 'Firma de autorizacion', 'documentacion'),
+('TRANS-05', 'Kit Medico', 'Insumos varios', 'otro');
 
 INSERT INTO transporta (id_transportable, id_traslado, ci_chofer, matricula, id_destino) VALUES
-('trans_01', 'tras_01', '11111111', 'ABC1234', 'dest_01'),
-('trans_02', 'tras_02', '22222222', 'DEF5678', 'dest_02'),
-('trans_03', 'tras_03', '33333333', 'GHI9012', 'dest_03'),
-('trans_04', 'tras_04', '44444444', 'JKL3456', 'dest_04'),
-('trans_05', 'tras_05', '55555555', 'MNO7890', 'dest_05');
+('TRANS-01', 'TR-01', '11111111', 'SCA-1234', 'DEST-01'),
+('TRANS-02', 'TR-02', '22222222', 'SCA-5678', 'DEST-02'),
+('TRANS-03', 'TR-03', '33333333', 'SCI-9012', 'DEST-03'),
+('TRANS-04', 'TR-04', '44444444', 'SCI-3456', 'DEST-04'),
+('TRANS-05', 'TR-05', '55555555', 'SCO-7890', 'DEST-05');
