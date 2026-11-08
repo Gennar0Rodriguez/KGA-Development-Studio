@@ -390,360 +390,409 @@ class Traslado
     // CREAR UN TRASLADO
     // ======================================================
 
-    public function crear(
-        array $datos,
-        string $ciSolicitante,
-        bool $esAdmin = false
-    ): bool {
 
-        try {
+public function crear(
+    array $datos,
+    string $ciSolicitante,
+    bool $esAdmin = false
+): bool {
 
-            // Determinar qué tipo de elemento se va a transportar.
-            $tipoTransportable = $datos['tipo_transportable'] ?? 'paciente';
+    // Registrar en qué etapa se encuentra la creación.
+    $etapa = 'inicio';
 
-            if (!in_array($tipoTransportable, ['paciente', 'organo'], true)) {
-                return false;
-            }
+    try {
 
-            // Comprobar los datos específicos del tipo seleccionado.
-            if ($tipoTransportable === 'paciente') {
+        // Determinar qué tipo de elemento se va a transportar.
+        $tipoTransportable = $datos['tipo_transportable'] ?? 'paciente';
 
-                $ciPaciente = trim($datos['ci_paciente'] ?? '');
-                $nombrePaciente = trim($datos['paciente'] ?? '');
-
-                // La CI debe tener exactamente ocho dígitos.
-                if (!preg_match('/^[0-9]{8}$/', $ciPaciente)) {
-                    return false;
-                }
-
-                if ($nombrePaciente === '') {
-                    return false;
-                }
-
-                // Comprobar que la combinación CI-nombre exista.
-                $sqlValidarPaciente = "SELECT COUNT(*)
-                                       FROM paciente
-                                       WHERE ci_paciente = :ci
-                                       AND nombre_paciente = :nombre";
-
-                $sentenciaValidar = $this->conexion->prepare($sqlValidarPaciente);
-
-                $sentenciaValidar->bindValue(':ci', $ciPaciente);
-                $sentenciaValidar->bindValue(':nombre', $nombrePaciente);
-
-                $sentenciaValidar->execute();
-
-                if ($sentenciaValidar->fetchColumn() < 1) {
-                    return false;
-                }
-
-            } else {
-
-                if (
-                    empty(trim($datos['nombre_elemento'] ?? '')) ||
-                    empty(trim($datos['descripcion_elemento'] ?? ''))
-                ) {
-                    return false;
-                }
-            }
-
-            // El enfermero es obligatorio para ambos tipos.
-            if (empty($datos['ci_enfermero'])) {
-                return false;
-            }
-
-            // La fecha del traslado no puede ser anterior a hoy.
-            if (
-                empty($datos['fecha']) ||
-                !$this->validarFechaTraslado($datos['fecha'])
-            ) {
-                return false;
-            }
-
-            $this->conexion->beginTransaction();
-
-            /*
-             * Si el administrador crea el traslado directamente
-             * como aprobado, los recursos deben estar disponibles.
-             *
-             * Las solicitudes de empleados quedan pendientes y
-             * no ocupan recursos hasta que sean aprobadas.
-             */
-            if ($esAdmin) {
-
-                if (
-                    !$this->bloquearRecursos(
-                        $datos['ci_chofer'],
-                        $datos['ci_enfermero'],
-                        $datos['matricula']
-                    )
-                ) {
-                    $this->conexion->rollBack();
-                    return false;
-                }
-
-                if (
-                    !$this->recursosDisponibles(
-                        $datos['ci_chofer'],
-                        $datos['ci_enfermero'],
-                        $datos['matricula']
-                    )
-                ) {
-                    $this->conexion->rollBack();
-                    return false;
-                }
-            }
-
-            $idTraslado = $this->generarIdTraslado();
-            $idTransportable = $this->generarIdTransportable();
-
-            // El administrador crea traslados aprobados.
-            // Los empleados crean solicitudes pendientes.
-            $estadoSolicitud = $esAdmin ? 'aprobado' : 'pendiente';
-            $estadoTraslado = $esAdmin ? 'aprobado' : 'pendiente';
-
-            // ----------------------------------------------
-            // INSERTAR TRASLADO
-            // ----------------------------------------------
-
-            $sqlTraslado = "INSERT INTO traslado (
-                                id_traslado,
-                                ci_chofer,
-                                matricula,
-                                id_destino,
-                                fecha_traslado,
-                                hora_salida,
-                                lugar_origen,
-                                estado_traslado,
-                                ci_solicitante,
-                                estado_solicitud,
-                                observaciones
-                            ) VALUES (
-                                :id,
-                                :ci_chofer,
-                                :matricula,
-                                :id_destino,
-                                :fecha,
-                                :hora,
-                                :origen,
-                                :estado,
-                                :ci_solicitante,
-                                :estado_solicitud,
-                                :observaciones
-                            )";
-
-            $sentencia = $this->conexion->prepare($sqlTraslado);
-
-            $sentencia->bindValue(':id', $idTraslado);
-            $sentencia->bindValue(':ci_chofer', $datos['ci_chofer']);
-            $sentencia->bindValue(':matricula', $datos['matricula']);
-            $sentencia->bindValue(':id_destino', $datos['id_destino']);
-            $sentencia->bindValue(':fecha', $datos['fecha']);
-
-            $hora = !empty($datos['hora'])
-                ? $datos['hora']
-                : null;
-
-            $sentencia->bindValue(
-                ':hora',
-                $hora,
-                $hora === null ? PDO::PARAM_NULL : PDO::PARAM_STR
-            );
-
-            $origen = 'Hospital de Clínicas';
-
-            $sentencia->bindValue(':origen', $origen);
-            $sentencia->bindValue(':estado', $estadoTraslado);
-            $sentencia->bindValue(':ci_solicitante', $ciSolicitante);
-            $sentencia->bindValue(':estado_solicitud', $estadoSolicitud);
-
-            $observaciones = $datos['observaciones'] ?? '';
-
-            $sentencia->bindValue(':observaciones', $observaciones);
-
-            $sentencia->execute();
-
-            // ----------------------------------------------
-            // INSERTAR TRANSPORTABLE
-            // ----------------------------------------------
-
-            /*
-             * Esta tabla se utiliza tanto para pacientes como
-             * para órganos. El enfermero queda relacionado
-             * con el transportable en ambos casos.
-             */
-
-            $sqlTransportable = "INSERT INTO transportable (
-                                    id_transportable,
-                                    ci_enfermero,
-                                    habitacion_retiro,
-                                    piso_retiro
-                                ) VALUES (
-                                    :id,
-                                    :ci_enfermero,
-                                    '101',
-                                    '1'
-                                )";
-
-            $sentencia = $this->conexion->prepare($sqlTransportable);
-
-            $sentencia->bindValue(':id', $idTransportable);
-            $sentencia->bindValue(':ci_enfermero', $datos['ci_enfermero']);
-
-            $sentencia->execute();
-
-            // ----------------------------------------------
-            // INSERTAR PACIENTE U ÓRGANO
-            // ----------------------------------------------
-
-            if ($tipoTransportable === 'paciente') {
-
-                // Guardar los datos en la tabla paciente.
-                $sqlPaciente = "INSERT INTO paciente (
-                                    id_transportable,
-                                    ci_paciente,
-                                    nombre_paciente,
-                                    accesorio,
-                                    oxigeno,
-                                    aislamiento
-                                ) VALUES (
-                                    :id,
-                                    :ci_paciente,
-                                    :nombre,
-                                    'silla',
-                                    :oxigeno,
-                                    FALSE
-                                )";
-
-                $sentencia = $this->conexion->prepare($sqlPaciente);
-
-                $ciPaciente = trim($datos['ci_paciente']);
-
-                $oxigeno = (
-                    ($datos['oxigeno'] ?? '') === 'Si' ||
-                    ($datos['oxigeno'] ?? '') === '1'
-                ) ? 1 : 0;
-
-                $sentencia->bindValue(':id', $idTransportable);
-                $sentencia->bindValue(':ci_paciente', $ciPaciente);
-
-                $sentencia->bindValue(
-                    ':nombre',
-                    trim($datos['paciente'])
-                );
-
-                $sentencia->bindValue(
-                    ':oxigeno',
-                    $oxigeno,
-                    PDO::PARAM_INT
-                );
-
-                $sentencia->execute();
-
-            } else {
-
-                // Guardar los datos en la tabla elemento.
-                $sqlElemento = "INSERT INTO elemento (
-                                    id_transportable,
-                                    nombre_elemento,
-                                    descripcion_elemento,
-                                    tipo_elemento
-                                ) VALUES (
-                                    :id,
-                                    :nombre,
-                                    :descripcion,
-                                    'organo'
-                                )";
-
-                $sentencia = $this->conexion->prepare($sqlElemento);
-
-                $sentencia->bindValue(':id', $idTransportable);
-
-                $sentencia->bindValue(
-                    ':nombre',
-                    trim($datos['nombre_elemento'])
-                );
-
-                $sentencia->bindValue(
-                    ':descripcion',
-                    trim($datos['descripcion_elemento'])
-                );
-
-                $sentencia->execute();
-            }
-
-            // ----------------------------------------------
-            // RELACIONAR TRASLADO Y TRANSPORTABLE
-            // ----------------------------------------------
-
-            $sqlTransporta = "INSERT INTO transporta (
-                                id_transportable,
-                                id_traslado,
-                                ci_chofer,
-                                matricula,
-                                id_destino
-                            ) VALUES (
-                                :id_transportable,
-                                :id_traslado,
-                                :ci_chofer,
-                                :matricula,
-                                :id_destino
-                            )";
-
-            $sentencia = $this->conexion->prepare($sqlTransporta);
-
-            $sentencia->bindValue(':id_transportable', $idTransportable);
-            $sentencia->bindValue(':id_traslado', $idTraslado);
-            $sentencia->bindValue(':ci_chofer', $datos['ci_chofer']);
-            $sentencia->bindValue(':matricula', $datos['matricula']);
-            $sentencia->bindValue(':id_destino', $datos['id_destino']);
-
-            $sentencia->execute();
-
-            // ----------------------------------------------
-            // NOTIFICAR A LOS ADMINISTRADORES
-            // ----------------------------------------------
-
-            if (!$esAdmin) {
-
-                require_once __DIR__ . '/Notificacion.php';
-
-                $notificacion = new Notificacion();
-
-                $resultadoNotificacion = $notificacion->notificarATodos(
-                    $idTraslado,
-                    $datos['ci_chofer'],
-                    $datos['matricula'],
-                    $datos['id_destino'],
-                    $ciSolicitante,
-                    'Nueva solicitud de traslado',
-                    'Se registró una nueva solicitud para el vehículo ' .
-                        $datos['matricula']
-                );
-
-                // El traslado se guarda aunque falle una notificación.
-                if (!$resultadoNotificacion) {
-                    error_log(
-                        "No se pudieron enviar todas las notificaciones de la solicitud."
-                    );
-                }
-            }
-
-            $this->conexion->commit();
-
-            return true;
-
-        } catch (Throwable $e) {
-
-            if ($this->conexion->inTransaction()) {
-                $this->conexion->rollBack();
-            }
-
-            error_log("Error en crear traslado: " . $e->getMessage());
-
+        if (!in_array($tipoTransportable, ['paciente', 'organo'], true)) {
+            $etapa = 'validacion_tipo';
+            error_log("DIAGNOSTICO TRASLADO: tipo de transportable inválido.");
             return false;
         }
+
+        // Comprobar los datos específicos del tipo seleccionado.
+        if ($tipoTransportable === 'paciente') {
+
+            $ciPaciente = trim($datos['ci_paciente'] ?? '');
+            $nombrePaciente = trim($datos['paciente'] ?? '');
+
+            if (!preg_match('/^[0-9]{8}$/', $ciPaciente)) {
+                $etapa = 'validacion_ci_paciente';
+                error_log("DIAGNOSTICO TRASLADO: CI del paciente inválida.");
+                return false;
+            }
+
+            if ($nombrePaciente === '') {
+                $etapa = 'validacion_nombre_paciente';
+                error_log("DIAGNOSTICO TRASLADO: nombre del paciente vacío.");
+                return false;
+            }
+
+            // Comprobar que la combinación CI-nombre exista.
+            $sqlValidarPaciente = "SELECT COUNT(*)
+                                   FROM paciente
+                                   WHERE ci_paciente = :ci
+                                   AND nombre_paciente = :nombre";
+
+            $sentenciaValidar = $this->conexion->prepare($sqlValidarPaciente);
+            $sentenciaValidar->bindValue(':ci', $ciPaciente);
+            $sentenciaValidar->bindValue(':nombre', $nombrePaciente);
+            $sentenciaValidar->execute();
+
+            if ($sentenciaValidar->fetchColumn() < 1) {
+                $etapa = 'paciente_no_encontrado';
+                error_log("DIAGNOSTICO TRASLADO: paciente no encontrado.");
+                return false;
+            }
+
+        } else {
+
+            if (
+                empty(trim($datos['nombre_elemento'] ?? '')) ||
+                empty(trim($datos['descripcion_elemento'] ?? ''))
+            ) {
+                $etapa = 'validacion_elemento';
+                error_log("DIAGNOSTICO TRASLADO: datos del órgano incompletos.");
+                return false;
+            }
+        }
+
+        // El enfermero es obligatorio para ambos tipos.
+        if (empty($datos['ci_enfermero'])) {
+            $etapa = 'validacion_enfermero';
+            error_log("DIAGNOSTICO TRASLADO: falta el enfermero.");
+            return false;
+        }
+
+        // Comprobar los recursos necesarios para ambos tipos.
+        foreach (['ci_chofer', 'matricula', 'id_destino'] as $campo) {
+            if (empty($datos[$campo])) {
+                $etapa = 'validacion_' . $campo;
+                error_log("DIAGNOSTICO TRASLADO: falta el campo " . $campo);
+                return false;
+            }
+        }
+
+        // La fecha del traslado no puede ser anterior a hoy.
+        if (
+            empty($datos['fecha']) ||
+            !$this->validarFechaTraslado($datos['fecha'])
+        ) {
+            $etapa = 'validacion_fecha';
+            error_log("DIAGNOSTICO TRASLADO: fecha inválida.");
+            return false;
+        }
+
+        // Iniciar la transacción.
+        $etapa = 'inicio_transaccion';
+        $this->conexion->beginTransaction();
+
+        /*
+         * Los administradores crean traslados aprobados.
+         * Por eso deben comprobar que los recursos estén libres.
+         */
+        if ($esAdmin) {
+
+            // Bloquear chofer, enfermero y vehículo.
+            $etapa = 'bloqueo_recursos';
+
+            if (
+                !$this->bloquearRecursos(
+                    $datos['ci_chofer'],
+                    $datos['ci_enfermero'],
+                    $datos['matricula']
+                )
+            ) {
+                error_log(
+                    "DIAGNOSTICO TRASLADO: bloquearRecursos devolvió false. " .
+                    "Chofer: {$datos['ci_chofer']}, " .
+                    "Enfermero: {$datos['ci_enfermero']}, " .
+                    "Vehículo: {$datos['matricula']}"
+                );
+
+                $this->conexion->rollBack();
+                return false;
+            }
+
+            // Comprobar que ninguno esté ocupado.
+            $etapa = 'comprobacion_disponibilidad';
+
+            if (
+                !$this->recursosDisponibles(
+                    $datos['ci_chofer'],
+                    $datos['ci_enfermero'],
+                    $datos['matricula']
+                )
+            ) {
+                error_log(
+                    "DIAGNOSTICO TRASLADO: recursosDisponibles devolvió false. " .
+                    "Chofer: {$datos['ci_chofer']}, " .
+                    "Enfermero: {$datos['ci_enfermero']}, " .
+                    "Vehículo: {$datos['matricula']}"
+                );
+
+                $this->conexion->rollBack();
+                return false;
+            }
+        }
+
+        // Generar identificadores únicos.
+        $etapa = 'generacion_identificadores';
+
+        $idTraslado = $this->generarIdTraslado();
+        $idTransportable = $this->generarIdTransportable();
+
+        // Definir los estados según el tipo de usuario.
+        $estadoSolicitud = $esAdmin ? 'aprobado' : 'pendiente';
+        $estadoTraslado = $esAdmin ? 'aprobado' : 'pendiente';
+
+        // ----------------------------------------------
+        // INSERTAR TRASLADO
+        // ----------------------------------------------
+
+        $etapa = 'insertar_traslado';
+
+        $sqlTraslado = "INSERT INTO traslado (
+                            id_traslado,
+                            ci_chofer,
+                            matricula,
+                            id_destino,
+                            fecha_traslado,
+                            hora_salida,
+                            lugar_origen,
+                            estado_traslado,
+                            ci_solicitante,
+                            estado_solicitud,
+                            observaciones
+                        ) VALUES (
+                            :id,
+                            :ci_chofer,
+                            :matricula,
+                            :id_destino,
+                            :fecha,
+                            :hora,
+                            :origen,
+                            :estado,
+                            :ci_solicitante,
+                            :estado_solicitud,
+                            :observaciones
+                        )";
+
+        $sentencia = $this->conexion->prepare($sqlTraslado);
+
+        $sentencia->bindValue(':id', $idTraslado);
+        $sentencia->bindValue(':ci_chofer', $datos['ci_chofer']);
+        $sentencia->bindValue(':matricula', $datos['matricula']);
+        $sentencia->bindValue(':id_destino', $datos['id_destino']);
+        $sentencia->bindValue(':fecha', $datos['fecha']);
+
+        $hora = !empty($datos['hora']) ? $datos['hora'] : null;
+
+        $sentencia->bindValue(
+            ':hora',
+            $hora,
+            $hora === null ? PDO::PARAM_NULL : PDO::PARAM_STR
+        );
+
+        $origen = 'Hospital de Clínicas';
+
+        $sentencia->bindValue(':origen', $origen);
+        $sentencia->bindValue(':estado', $estadoTraslado);
+        $sentencia->bindValue(':ci_solicitante', $ciSolicitante);
+        $sentencia->bindValue(':estado_solicitud', $estadoSolicitud);
+
+        $observaciones = $datos['observaciones'] ?? '';
+        $sentencia->bindValue(':observaciones', $observaciones);
+
+        $sentencia->execute();
+
+        // ----------------------------------------------
+        // INSERTAR TRANSPORTABLE
+        // ----------------------------------------------
+
+        $etapa = 'insertar_transportable';
+
+        $sqlTransportable = "INSERT INTO transportable (
+                                id_transportable,
+                                ci_enfermero,
+                                habitacion_retiro,
+                                piso_retiro
+                            ) VALUES (
+                                :id,
+                                :ci_enfermero,
+                                '101',
+                                '1'
+                            )";
+
+        $sentencia = $this->conexion->prepare($sqlTransportable);
+
+        $sentencia->bindValue(':id', $idTransportable);
+        $sentencia->bindValue(':ci_enfermero', $datos['ci_enfermero']);
+
+        $sentencia->execute();
+
+        // ----------------------------------------------
+        // INSERTAR PACIENTE U ÓRGANO
+        // ----------------------------------------------
+
+        if ($tipoTransportable === 'paciente') {
+
+            $etapa = 'insertar_paciente';
+
+            $sqlPaciente = "INSERT INTO paciente (
+                                id_transportable,
+                                ci_paciente,
+                                nombre_paciente,
+                                accesorio,
+                                oxigeno,
+                                aislamiento
+                            ) VALUES (
+                                :id,
+                                :ci_paciente,
+                                :nombre,
+                                'silla',
+                                :oxigeno,
+                                FALSE
+                            )";
+
+            $sentencia = $this->conexion->prepare($sqlPaciente);
+
+            $oxigeno = (
+                ($datos['oxigeno'] ?? '') === 'Si' ||
+                ($datos['oxigeno'] ?? '') === '1'
+            ) ? 1 : 0;
+
+            $sentencia->bindValue(':id', $idTransportable);
+            $sentencia->bindValue(':ci_paciente', $ciPaciente);
+            $sentencia->bindValue(':nombre', $nombrePaciente);
+
+            $sentencia->bindValue(
+                ':oxigeno',
+                $oxigeno,
+                PDO::PARAM_INT
+            );
+
+            $sentencia->execute();
+
+        } else {
+
+            $etapa = 'insertar_elemento';
+
+            $sqlElemento = "INSERT INTO elemento (
+                                id_transportable,
+                                nombre_elemento,
+                                descripcion_elemento,
+                                tipo_elemento
+                            ) VALUES (
+                                :id,
+                                :nombre,
+                                :descripcion,
+                                'organo'
+                            )";
+
+            $sentencia = $this->conexion->prepare($sqlElemento);
+
+            $sentencia->bindValue(':id', $idTransportable);
+            $sentencia->bindValue(
+                ':nombre',
+                trim($datos['nombre_elemento'])
+            );
+            $sentencia->bindValue(
+                ':descripcion',
+                trim($datos['descripcion_elemento'])
+            );
+
+            $sentencia->execute();
+        }
+
+        // ----------------------------------------------
+        // RELACIONAR TRASLADO Y TRANSPORTABLE
+        // ----------------------------------------------
+
+        $etapa = 'insertar_transporta';
+
+        $sqlTransporta = "INSERT INTO transporta (
+                            id_transportable,
+                            id_traslado,
+                            ci_chofer,
+                            matricula,
+                            id_destino
+                        ) VALUES (
+                            :id_transportable,
+                            :id_traslado,
+                            :ci_chofer,
+                            :matricula,
+                            :id_destino
+                        )";
+
+        $sentencia = $this->conexion->prepare($sqlTransporta);
+
+        $sentencia->bindValue(':id_transportable', $idTransportable);
+        $sentencia->bindValue(':id_traslado', $idTraslado);
+        $sentencia->bindValue(':ci_chofer', $datos['ci_chofer']);
+        $sentencia->bindValue(':matricula', $datos['matricula']);
+        $sentencia->bindValue(':id_destino', $datos['id_destino']);
+
+        $sentencia->execute();
+
+        // ----------------------------------------------
+        // NOTIFICAR A LOS ADMINISTRADORES
+        // ----------------------------------------------
+
+        if (!$esAdmin) {
+
+            $etapa = 'notificaciones';
+
+            require_once __DIR__ . '/Notificacion.php';
+
+            $notificacion = new Notificacion();
+
+            $resultadoNotificacion = $notificacion->notificarATodos(
+                $idTraslado,
+                $datos['ci_chofer'],
+                $datos['matricula'],
+                $datos['id_destino'],
+                $ciSolicitante,
+                'Nueva solicitud de traslado',
+                'Se registró una nueva solicitud para el vehículo ' .
+                    $datos['matricula']
+            );
+
+            if (!$resultadoNotificacion) {
+                error_log(
+                    "No se pudieron enviar todas las notificaciones de la solicitud."
+                );
+            }
+        }
+
+        // Confirmar todos los cambios.
+        $etapa = 'confirmar_transaccion';
+
+        $this->conexion->commit();
+
+        error_log(
+            "DIAGNOSTICO TRASLADO: creación completada. ID: " . $idTraslado
+        );
+
+        return true;
+
+    } catch (Throwable $e) {
+
+        if ($this->conexion->inTransaction()) {
+            $this->conexion->rollBack();
+        }
+
+        error_log(
+            "ERROR CREAR TRASLADO | Etapa: " . $etapa .
+            " | Mensaje: " . $e->getMessage() .
+            " | Archivo: " . $e->getFile() .
+            " | Línea: " . $e->getLine()
+        );
+
+        return false;
     }
+}
 
         // ======================================================
     // APROBAR O RECHAZAR UNA SOLICITUD
@@ -837,17 +886,15 @@ class Traslado
                 }
 
                 // Comprobar que ningún otro traslado los esté utilizando.
-                if (
-                    !$this->recursosDisponibles(
-                        $traslado['ci_chofer'],
-                        $traslado['ci_enfermero'],
-                        $traslado['matricula'],
-                        $idTraslado
-                    )
-                ) {
-                    $this->conexion->rollBack();
-                    return false;
-                }
+            if (!$this->recursosDisponibles(
+                $datos['ci_chofer'],
+                $datos['ci_enfermero'],
+                $datos['matricula']
+            )) {
+                error_log("DIAGNOSTICO TRASLADO: recursos ocupados");
+                $this->conexion->rollBack();
+                return false;
+            }
 
                 $estadoTraslado = 'aprobado';
 
@@ -1675,5 +1722,5 @@ class Traslado
 
             return false;
         }
-    }
+    }   
 }
