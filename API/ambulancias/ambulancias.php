@@ -45,6 +45,11 @@ try {
             $tipo = trim($datos['tipo_vehiculo'] ?? '');
             $camilla = $datos['camilla'] ?? null;
 
+            // Toda ambulancia debe disponer obligatoriamente de camilla.
+            if ($tipo === 'ambulancia') {
+                $camilla = '1';
+            }
+
             if (
                 $matricula === '' ||
                 $modelo === '' ||

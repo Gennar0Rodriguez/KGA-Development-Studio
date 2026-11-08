@@ -8,6 +8,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCerrar = document.getElementById('btnCerrarModalAmbulancia');
     const btnCancelar = document.getElementById('btnCancelarModalAmbulancia');
     const btnGuardar = document.getElementById('btnGuardarAmbulancia');
+    const tipoVehiculo = document.getElementById('tipoVehiculo');
+    const camillaVehiculo = document.getElementById('camillaVehiculo');
+
+    // Si es ambulancia, la camilla es obligatoria.
+    const actualizarCamilla = () => {
+        if (tipoVehiculo.value === 'ambulancia') {
+            camillaVehiculo.value = '1';
+            camillaVehiculo.disabled = true;
+        } else {
+            camillaVehiculo.disabled = false;
+        }
+    };
+
+    tipoVehiculo.addEventListener('change', actualizarCamilla);
     const mensaje = document.getElementById('mensajeAmbulancia');
 
     // Si falta algún elemento, evitamos que el resto del JavaScript falle.
@@ -19,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Abrir el modal y dejar el formulario listo para un registro nuevo.
     btnAbrir.addEventListener('click', () => {
         formulario.reset();
+        actualizarCamilla();
         mostrarMensaje('');
         // Usamos el mismo método que ya utiliza modalNuevoTraslado.js.
         modal.style.display = 'flex';
@@ -28,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cerrarModal = () => {
         modal.style.display = 'none';
         formulario.reset();
+        actualizarCamilla();
         mostrarMensaje('');
     };
 
@@ -58,7 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
             modelo: datosFormulario.get('modelo').trim(),
             capacidad: datosFormulario.get('capacidad'),
             tipo_vehiculo: datosFormulario.get('tipo_vehiculo'),
-            camilla: datosFormulario.get('camilla')
+
+            // Una ambulancia siempre se registra con camilla.
+            camilla: tipoVehiculo.value === 'ambulancia'
+                ? '1'
+                : datosFormulario.get('camilla')
         };
 
         // Validación adicional en el navegador; el servidor vuelve a validar todo.
