@@ -101,6 +101,7 @@ CREATE TABLE traslado (
     matricula VARCHAR(15) NOT NULL,
     id_destino VARCHAR(50) NOT NULL,
     fecha_traslado DATE NOT NULL,
+    fecha_llegada DATE,
     hora_salida TIME,
     hora_llegada TIME,
     lugar_origen VARCHAR(50) NOT NULL,

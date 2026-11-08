@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -103,18 +104,24 @@ try {
             $datos = json_decode(file_get_contents('php://input'), true);
 
             if (
-                empty($datos['id_traslado']) ||
-                empty($datos['ci_chofer']) ||
-                empty($datos['matricula']) ||
-                empty($datos['ci_admin']) ||
-                empty($datos['id_destino'])
+                !isset($datos['numero_notificacion']) ||
+                !filter_var(
+                    $datos['numero_notificacion'],
+                    FILTER_VALIDATE_INT
+                ) ||
+                (int)$datos['numero_notificacion'] <= 0
             ) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Faltan identificadores de la notificación']);
+                echo json_encode(['error' => 'Identificador de notificación inválido']);
                 exit;
             }
 
-            if ($notificacion->marcarComoLeida($datos, $ciUsuario)) {
+            if (
+                $notificacion->marcarComoLeida(
+                    (int)$datos['numero_notificacion'],
+                    $ciUsuario
+                )
+            ) {
                 echo json_encode(['mensaje' => 'Notificación marcada como leída']);
             } else {
                 http_response_code(500);
@@ -132,13 +139,25 @@ try {
 
             $datos = json_decode(file_get_contents('php://input'), true);
 
-            if (!$datos) {
+            if (
+                !isset($datos['numero_notificacion']) ||
+                !filter_var(
+                    $datos['numero_notificacion'],
+                    FILTER_VALIDATE_INT
+                ) ||
+                (int)$datos['numero_notificacion'] <= 0
+            ) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Faltan los datos de la notificación']);
+                echo json_encode(['error' => 'Identificador de notificación inválido']);
                 exit;
             }
 
-            if ($notificacion->eliminar($datos, $ciUsuario)) {
+            if (
+                $notificacion->eliminar(
+                    (int)$datos['numero_notificacion'],
+                    $ciUsuario
+                )
+            ) {
                 echo json_encode(['mensaje' => 'Notificación eliminada']);
             } else {
                 http_response_code(500);

@@ -1,3 +1,4 @@
+
 <?php
 require_once __DIR__ . '/../config/Database.php';
 
@@ -13,9 +14,10 @@ class Notificacion
     // ======================================================
     // OBTENER NOTIFICACIONES DE UN USUARIO
     // ======================================================
-    public function obtenerPorUsuario(string $ciReceptor): array {
-
+    public function obtenerPorUsuario(string $ciReceptor): array
+    {
         $sql = "SELECT
+                    numero_notificacion,
                     id_traslado,
                     ci_chofer,
                     matricula,
@@ -29,7 +31,7 @@ class Notificacion
                     leido
                 FROM notifica
                 WHERE ci_receptor = :ci
-                ORDER BY fecha_envio DESC";
+                ORDER BY fecha_envio DESC, numero_notificacion DESC";
 
         $sentencia = $this->conexion->prepare($sql);
         $sentencia->bindValue(':ci', $ciReceptor);
@@ -57,6 +59,9 @@ class Notificacion
         $descripcion = mb_substr($descripcion, 0, 255);
 
         /*
+         * numero_notificacion se genera automáticamente
+         * mediante AUTO_INCREMENT en MySQL.
+         *
          * ci_admin representa la relación con administrativo.
          * Utilizamos la CI del receptor, ya que tanto empleados
          * como administradores pertenecen a esa entidad.
@@ -170,26 +175,24 @@ class Notificacion
     // ======================================================
     // MARCAR UNA NOTIFICACIÓN COMO LEÍDA
     // ======================================================
-    public function marcarComoLeida(array $datos, string $ciReceptor): bool {
+    public function marcarComoLeida(
+        int $numeroNotificacion,
+        string $ciReceptor
+    ): bool {
 
         $sql = "UPDATE notifica
                 SET leido = TRUE
-                WHERE id_traslado = :id_traslado
-                AND ci_chofer = :ci_chofer
-                AND matricula = :matricula
-                AND id_destino = :id_destino
-                AND ci_admin = :ci_admin
+                WHERE numero_notificacion = :numero_notificacion
                 AND ci_receptor = :ci_receptor";
 
         $sentencia = $this->conexion->prepare($sql);
 
-        $sentencia->bindValue(':id_traslado', $datos['id_traslado']);
-        $sentencia->bindValue(':ci_chofer', $datos['ci_chofer']);
-        $sentencia->bindValue(':matricula', $datos['matricula']);
-        $sentencia->bindValue(':id_destino', $datos['id_destino']);
+        $sentencia->bindValue(
+            ':numero_notificacion',
+            $numeroNotificacion,
+            PDO::PARAM_INT
+        );
 
-        // El usuario solamente puede modificar sus propias notificaciones.
-        $sentencia->bindValue(':ci_admin', $datos['ci_admin']);
         $sentencia->bindValue(':ci_receptor', $ciReceptor);
 
         return $sentencia->execute();
@@ -198,23 +201,23 @@ class Notificacion
     // ======================================================
     // ELIMINAR UNA NOTIFICACIÓN
     // ======================================================
-    public function eliminar(array $datos, string $ciReceptor): bool {
+    public function eliminar(
+        int $numeroNotificacion,
+        string $ciReceptor
+    ): bool {
 
         $sql = "DELETE FROM notifica
-                WHERE id_traslado = :id_traslado
-                AND ci_chofer = :ci_chofer
-                AND matricula = :matricula
-                AND id_destino = :id_destino
-                AND ci_admin = :ci_admin
+                WHERE numero_notificacion = :numero_notificacion
                 AND ci_receptor = :ci_receptor";
 
         $sentencia = $this->conexion->prepare($sql);
 
-        $sentencia->bindValue(':id_traslado', $datos['id_traslado']);
-        $sentencia->bindValue(':ci_chofer', $datos['ci_chofer']);
-        $sentencia->bindValue(':matricula', $datos['matricula']);
-        $sentencia->bindValue(':id_destino', $datos['id_destino']);
-        $sentencia->bindValue(':ci_admin', $ciReceptor);
+        $sentencia->bindValue(
+            ':numero_notificacion',
+            $numeroNotificacion,
+            PDO::PARAM_INT
+        );
+
         $sentencia->bindValue(':ci_receptor', $ciReceptor);
 
         return $sentencia->execute();

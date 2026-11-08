@@ -1,8 +1,10 @@
+
 let intervaloNotificaciones = null;
 let consultaEnCurso = false;
 
 // Iniciar cuando el documento esté preparado.
 document.addEventListener('DOMContentLoaded', () => {
+
     // La barra lateral se carga mediante fetch().
     document.addEventListener('sidebarCargada', () => {
         iniciarPollingNotificaciones();
@@ -17,7 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4000);
 });
 
+// ======================================================
+// CONSULTAR NOTIFICACIONES
+// ======================================================
+
 async function iniciarPollingNotificaciones() {
+
     // Evitar que se acumulen consultas simultáneas.
     if (consultaEnCurso) {
         return;
@@ -26,6 +33,7 @@ async function iniciarPollingNotificaciones() {
     consultaEnCurso = true;
 
     try {
+
         const response = await fetch(
             '/kgade/KGA-Development-Studio/API/notificaciones/notificaciones.php',
             {
@@ -62,18 +70,19 @@ async function iniciarPollingNotificaciones() {
         actualizarBadgeContador(noLeidas);
 
         // Renderizar únicamente en la página de notificaciones.
-        if (
-            window.location.pathname.includes('notificaciones.html')
-        ) {
+        if (window.location.pathname.includes('notificaciones.html')) {
             renderizarNotificaciones(notificaciones);
         }
 
     } catch (error) {
+
         console.error(
             'Error al consultar las notificaciones:',
             error
         );
+
     } finally {
+
         consultaEnCurso = false;
     }
 }
@@ -90,13 +99,20 @@ function actualizarBadgeContador(cantidad) {
     if (!badge) return;
 
     if (cantidad > 0) {
+
         badge.textContent = cantidad > 9 ? '+9' : cantidad;
         badge.style.display = 'inline-block';
+
     } else {
+
         badge.textContent = '';
         badge.style.display = 'none';
     }
 }
+
+// ======================================================
+// MOSTRAR NOTIFICACIONES
+// ======================================================
 
 function renderizarNotificaciones(lista) {
 
@@ -150,45 +166,43 @@ function renderizarNotificaciones(lista) {
         fecha.textContent = formatearFecha(item.fecha_envio);
 
         // Botón para marcar la notificación como leída.
-const botonLeido = document.createElement('button');
-botonLeido.className = 'btn-leido';
-botonLeido.type = 'button';
+        const botonLeido = document.createElement('button');
+        botonLeido.className = 'btn-leido';
+        botonLeido.type = 'button';
 
-if (Number(item.leido) === 1) {
+        if (Number(item.leido) === 1) {
 
-    botonLeido.textContent = 'Leída';
-    botonLeido.disabled = true;
+            botonLeido.textContent = 'Leída';
+            botonLeido.disabled = true;
 
-} else {
+        } else {
 
-    botonLeido.textContent = 'Marcar como leído';
+            botonLeido.textContent = 'Marcar como leído';
 
-    botonLeido.addEventListener('click', () => {
-        marcarNotificacionLeida(item);
-    });
+            botonLeido.addEventListener('click', () => {
+                marcarNotificacionLeida(item);
+            });
+        }
 
-}
+        // Botón para eliminar la notificación.
+        const botonEliminar = document.createElement('button');
+        botonEliminar.className = 'btn-eliminar-notificacion';
+        botonEliminar.type = 'button';
+        botonEliminar.textContent = 'Eliminar';
 
-    // Botón para eliminar la notificación.
-    const botonEliminar = document.createElement('button');
-    botonEliminar.className = 'btn-eliminar-notificacion';
-    botonEliminar.type = 'button';
-    botonEliminar.textContent = 'Eliminar';
+        botonEliminar.addEventListener('click', () => {
+            eliminarNotificacion(item);
+        });
 
-    botonEliminar.addEventListener('click', () => {
-        eliminarNotificacion(item);
-    });
-
-    card.append(
-        tituloCard,
-        descripcion,
-        fecha,
-        botonLeido,
-        botonEliminar
-    );
+        card.append(
+            tituloCard,
+            descripcion,
+            fecha,
+            botonLeido,
+            botonEliminar
+        );
 
         contenedor.appendChild(card);
-
     });
 }
 
@@ -204,20 +218,16 @@ async function marcarNotificacionLeida(item) {
             '/kgade/KGA-Development-Studio/API/notificaciones/notificaciones.php',
             {
                 method: 'PUT',
-
                 credentials: 'same-origin',
 
                 headers: {
                     'Content-Type': 'application/json'
                 },
 
-            body: JSON.stringify({
-                id_traslado: item.id_traslado,
-                ci_chofer: item.ci_chofer,
-                matricula: item.matricula,
-                id_destino: item.id_destino,
-                ci_admin: item.ci_admin
-            })
+                // Identificamos la notificación mediante su nuevo ID.
+                body: JSON.stringify({
+                    numero_notificacion: item.numero_notificacion
+                })
             }
         );
 
@@ -233,7 +243,6 @@ async function marcarNotificacionLeida(item) {
     } catch (error) {
 
         console.error('Error al marcar como leída:', error);
-
     }
 }
 
@@ -259,13 +268,9 @@ async function eliminarNotificacion(item) {
                     'Content-Type': 'application/json'
                 },
 
-                // Enviamos los identificadores que utiliza la tabla notifica.
+                // Enviamos únicamente el identificador de la notificación.
                 body: JSON.stringify({
-                    id_traslado: item.id_traslado,
-                    ci_chofer: item.ci_chofer,
-                    matricula: item.matricula,
-                    id_destino: item.id_destino,
-                    ci_admin: item.ci_admin
+                    numero_notificacion: item.numero_notificacion
                 })
             }
         );
@@ -288,11 +293,15 @@ async function eliminarNotificacion(item) {
         console.error('Error al eliminar la notificación:', error);
 
         alert('No se pudo eliminar la notificación.');
-
     }
 }
 
+// ======================================================
+// FORMATEAR FECHA
+// ======================================================
+
 function formatearFecha(fechaStr) {
+
     if (!fechaStr) {
         return '';
     }
