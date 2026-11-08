@@ -11,16 +11,15 @@ class Respuesta
         $this->conexion = Database::getInstancia()->getConexion();
     }
 
-    // ======================================================
-    // CREAR UNA RESPUESTA
-    // ======================================================
+        // ======================================================
+        // CREAR UNA RESPUESTA
+        // ======================================================
 
-    public function crear(
+        public function crear(
         string $idRespuesta,
         string $idPregunta,
         string $tituloEncuesta,
         string $idCategoria,
-        string $nombreCategoria,
         ?string $informacion,
         string $tipo
     ): bool {
@@ -30,7 +29,6 @@ class Respuesta
                     id_pregunta,
                     titulo_enc,
                     id_categoria,
-                    nombre_cat,
                     informacion,
                     tipo
                 )
@@ -39,7 +37,6 @@ class Respuesta
                     :id_pregunta,
                     :titulo_enc,
                     :id_categoria,
-                    :nombre_cat,
                     :informacion,
                     :tipo
                 )";
@@ -50,7 +47,6 @@ class Respuesta
         $sentencia->bindValue(':id_pregunta', $idPregunta);
         $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
-        $sentencia->bindValue(':nombre_cat', $nombreCategoria);
         $sentencia->bindValue(':informacion', $informacion);
         $sentencia->bindValue(':tipo', $tipo);
 
