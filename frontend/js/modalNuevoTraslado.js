@@ -8,6 +8,8 @@ let vehiculosDisponibles = [];
 let enfermerosDisponibles = [];
 let destinosDisponibles = [];
 let pacientesDisponibles = [];
+let elementosDisponibles = [];
+let elementoSeleccionado = null;
 
 let esAdministrador = false;
 let filtroSolicitud = 'pendiente';
@@ -112,6 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     buscarEnfermeros();
     buscarDestinos();
     buscarPacientes();
+    buscarElementos();
 
     await cargarTraslados();
 
@@ -285,6 +288,12 @@ async function guardarTraslado(cerrarModal) {
         'tipoTransportable'
     ).value;
 
+    // Comprobar que el elemento provenga de las sugerencias.
+    if (tipoTransportable === 'organo' && !elementoSeleccionado) {
+        alert('Debe seleccionar un elemento de la lista de sugerencias.');
+        return;
+    }
+
     const ciPaciente = document.getElementById('ciPaciente')?.value.trim();
     const nombrePaciente = document.getElementById('paciente')?.value.trim();
 
@@ -333,7 +342,7 @@ async function guardarTraslado(cerrarModal) {
             : '',
 
         descripcion_elemento: tipoTransportable === 'organo'
-            ? document.getElementById('descripcionElemento').value.trim()
+            ? elementoSeleccionado.descripcion_elemento
             : ''
     };
 
@@ -510,6 +519,10 @@ async function cargarOpcionesFormulario() {
         destinosDisponibles = listas.destinos || [];
         pacientesDisponibles = listas.pacientes || [];
 
+        // Guardamos únicamente los elementos de tipo órgano.
+        elementosDisponibles = (listas.elementos || []).filter(elemento =>
+            elemento.tipo_elemento === 'organo'
+        );
         console.log('Opciones cargadas correctamente:', {
             choferes: choferesDisponibles.length,
             vehiculos: vehiculosDisponibles.length,
@@ -864,6 +877,75 @@ function buscarPacientes() {
         }
     });
 }
+
+
+
+// ======================================================
+// BUSCADOR DE ELEMENTOS
+// ======================================================
+
+function buscarElementos() {
+    const input = document.getElementById('nombreElemento');
+    const sugerencias = document.getElementById('sugerenciasElemento');
+
+    if (!input || !sugerencias) return;
+
+    input.addEventListener('input', () => {
+        const texto = input.value.toLowerCase().trim();
+
+        // Si cambia el texto, invalidamos la selección anterior.
+        elementoSeleccionado = null;
+        sugerencias.innerHTML = '';
+
+        if (!texto) return;
+
+        // Buscar elementos cuyo nombre coincida con lo escrito.
+        const resultados = elementosDisponibles.filter(elemento =>
+            String(elemento.nombre_elemento || '')
+                .toLowerCase()
+                .includes(texto)
+        );
+
+        resultados.forEach(elemento => {
+            const opcion = document.createElement('button');
+
+            opcion.type = 'button';
+            opcion.className = 'opcion-ambulancia';
+            opcion.textContent = elemento.nombre_elemento;
+
+            opcion.addEventListener('click', () => {
+                input.value = elemento.nombre_elemento;
+
+                // Guardamos el registro completo seleccionado.
+                elementoSeleccionado = elemento;
+
+                sugerencias.innerHTML = '';
+            });
+
+            sugerencias.appendChild(opcion);
+        });
+
+        if (resultados.length === 0) {
+            const mensaje = document.createElement('p');
+
+            mensaje.textContent = 'No se encontraron elementos registrados.';
+            mensaje.className = 'sin-resultados-ambulancia';
+
+            sugerencias.appendChild(mensaje);
+        }
+    });
+
+    // Cerrar las sugerencias al hacer clic fuera del buscador.
+    document.addEventListener('click', evento => {
+        if (
+            !input.contains(evento.target) &&
+            !sugerencias.contains(evento.target)
+        ) {
+            sugerencias.innerHTML = '';
+        }
+    });
+}
+
 
 
 // ======================================================
@@ -1354,6 +1436,12 @@ async function editarTraslado(idTraslado, idTransportable) {
 
     document.getElementById('nombreElemento').value =
         traslado.nombre_elemento || '';
+
+    // Recuperar el elemento seleccionado al editar.
+    elementoSeleccionado = elementosDisponibles.find(elemento =>
+        elemento.nombre_elemento === traslado.nombre_elemento &&
+        elemento.descripcion_elemento === traslado.descripcion_elemento
+    ) || null;        
 
     document.getElementById('descripcionElemento').value =
         traslado.descripcion_elemento || '';
