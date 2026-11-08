@@ -376,13 +376,23 @@ class Traslado
         $sentencia->execute();
         $pacientes = $sentencia->fetchAll(PDO::FETCH_ASSOC);
 
+        // Obtener elementos registrados para el autocompletado.
+        $sql = "SELECT nombre_elemento, descripcion_elemento, tipo_elemento
+        FROM elemento
+        ORDER BY nombre_elemento";
+
+        $sentencia = $this->conexion->prepare($sql);
+        $sentencia->execute();
+        $elementos = $sentencia->fetchAll(PDO::FETCH_ASSOC);
+
         // Devolver todas las listas que utiliza el formulario.
         return [
             'vehiculos' => $vehiculos ?: [],
             'choferes' => $choferes ?: [],
             'enfermeros' => $enfermeros ?: [],
             'destinos' => $destinos ?: [],
-            'pacientes' => $pacientes ?: []
+            'pacientes' => $pacientes ?: [],
+            'elementos' => $elementos ?: []
         ];
     }
 

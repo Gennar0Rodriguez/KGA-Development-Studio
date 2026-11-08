@@ -167,26 +167,22 @@
 
                     <!-- Datos correspondientes a un órgano -->
 
-                    <div id="camposOrgano" style="display: none;">
+                    <label for="nombreElemento">Nombre del elemento</label>
 
-                        <label for="nombreElemento">Nombre del elemento</label>
+                    <div class="campo-busqueda-ambulancia">
 
                         <input
                             type="text"
                             id="nombreElemento"
                             maxlength="50"
-                            placeholder="Ej: Riñón para trasplante"
+                            placeholder="Escriba el nombre del elemento..."
+                            autocomplete="off"
                         >
 
-                        <label for="descripcionElemento">
-                            Descripción del elemento
-                        </label>
-
-                        <textarea
-                            id="descripcionElemento"
-                            maxlength="50"
-                            placeholder="Descripción del órgano"
-                        ></textarea>
+                        <div
+                            id="sugerenciasElemento"
+                            class="sugerencias-ambulancia">
+                        </div>
 
                     </div>
 
