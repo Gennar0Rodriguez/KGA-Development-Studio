@@ -101,7 +101,6 @@ class Pregunta
         return $sentencia->execute();
     }
 
-
     // Modificar el texto de una pregunta existente.
     public function editarPregunta(
         string $idPregunta,
