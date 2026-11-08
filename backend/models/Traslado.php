@@ -335,6 +335,7 @@ private function recursosDisponibles(
         $sql = "SELECT
                     t.id_traslado,
                     t.matricula,
+                    v.tipo_vehiculo,
                     t.fecha_traslado,
                     t.fecha_llegada,
                     t.hora_salida,
@@ -363,6 +364,8 @@ private function recursosDisponibles(
                     el.descripcion_elemento,
                     el.tipo_elemento
                 FROM traslado t
+                LEFT JOIN vehiculo v
+                    ON t.matricula = v.matricula
                 LEFT JOIN destino d
                     ON t.id_destino = d.id_destino
                 LEFT JOIN chofer ch

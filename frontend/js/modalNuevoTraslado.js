@@ -974,6 +974,9 @@ function buscarElementos() {
 // ======================================================
 // CARGAR TRASLADOS DESDE LA BASE DE DATOS
 // ======================================================
+// ======================================================
+// CARGAR TRASLADOS DESDE LA BASE DE DATOS
+// ======================================================
 
 async function cargarTraslados() {
     try {
@@ -981,12 +984,17 @@ async function cargarTraslados() {
             '/kgade/KGA-Development-Studio/API/traslados/traslados.php'
         );
 
+        // Leer la respuesta para poder identificar errores del servidor.
+        const respuesta = await response.text();
+
         if (!response.ok) {
-            console.error('No se pudieron cargar los traslados.');
+            console.error('Error al cargar los traslados:');
+            console.error('Código HTTP:', response.status);
+            console.error('Respuesta del servidor:', respuesta);
             return;
         }
 
-        todosLosTraslados = await response.json();
+        todosLosTraslados = JSON.parse(respuesta);
 
         filtrarTraslados();
 
@@ -1023,6 +1031,13 @@ function renderizarTarjetasTraslado(lista) {
 
         const esOrgano = item.tipo_transportable === 'organo';
 
+        // Seleccionar la imagen según el tipo de vehículo del traslado.
+        const imagenVehiculo = item.tipo_vehiculo === 'auto'
+            ? '../img/auto.png'
+            : item.tipo_vehiculo === 'ambulancia'
+                ? '../img/ambulanciaIMGG.png'
+                : '../img/ambulanciaIMGG.png';
+
         const descripcionTransportable = esOrgano
             ? `
                 <p><strong>Órgano:</strong> ${item.nombre_elemento || 'Sin nombre'}</p>
@@ -1048,7 +1063,10 @@ function renderizarTarjetasTraslado(lista) {
         card.innerHTML = `
             <h3>Matrícula: ${item.matricula || 'Sin matrícula'}</h3>
 
-            <img src="../img/ambulanciaIMGG.png" alt="Vehículo">
+            <img
+            src="${imagenVehiculo}"
+            alt="${item.tipo_vehiculo || 'Vehículo'}"
+        >
 
             <div class="info-principal">
                 <p><strong>Tipo:</strong> Traslado</p>
