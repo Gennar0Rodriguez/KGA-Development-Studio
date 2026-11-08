@@ -15,20 +15,17 @@ class Encuesta
     public function crear(
         string $tituloEncuesta,
         string $idCategoria,
-        string $nombreCategoria,
         ?string $descripcion
     ): bool {
 
         $sql = "INSERT INTO encuesta (
                     titulo_enc,
                     id_categoria,
-                    nombre_cat,
                     descripcion_enc
                 )
                 VALUES (
                     :titulo_enc,
                     :id_categoria,
-                    :nombre_cat,
                     :descripcion_enc
                 )";
 
@@ -37,7 +34,6 @@ class Encuesta
         return $sentencia->execute([
             ':titulo_enc' => $tituloEncuesta,
             ':id_categoria' => $idCategoria,
-            ':nombre_cat' => $nombreCategoria,
             ':descripcion_enc' => $descripcion
         ]);
     }
@@ -50,7 +46,7 @@ class Encuesta
         $sql = "SELECT
                     e.titulo_enc,
                     e.id_categoria,
-                    e.nombre_cat,
+                    c.nombre_cat,
                     e.descripcion_enc,
                     c.estado_cat
 
@@ -58,7 +54,6 @@ class Encuesta
 
                 INNER JOIN categoria c
                     ON e.id_categoria = c.id_categoria
-                    AND e.nombre_cat = c.nombre_cat
 
                 WHERE c.tipo_cat = 'encuestas'
 
@@ -80,14 +75,13 @@ class Encuesta
         $sql = "SELECT
                     e.titulo_enc,
                     e.id_categoria,
-                    e.nombre_cat,
+                    c.nombre_cat,
                     e.descripcion_enc
 
                 FROM encuesta e
 
                 INNER JOIN categoria c
                     ON e.id_categoria = c.id_categoria
-                    AND e.nombre_cat = c.nombre_cat
 
                 WHERE c.tipo_cat = 'encuestas'
                 AND c.estado_cat = 'activa'
@@ -109,10 +103,19 @@ class Encuesta
         string $idCategoria
     ): ?array {
 
-        $sql = "SELECT *
-                FROM encuesta
-                WHERE titulo_enc = :titulo_enc
-                AND id_categoria = :id_categoria";
+        $sql = "SELECT
+                    e.titulo_enc,
+                    e.id_categoria,
+                    e.descripcion_enc,
+                    c.nombre_cat
+
+                FROM encuesta e
+
+                INNER JOIN categoria c
+                    ON e.id_categoria = c.id_categoria
+
+                WHERE e.titulo_enc = :titulo_enc
+                AND e.id_categoria = :id_categoria";
 
         $sentencia = $this->conexion->prepare($sql);
 
@@ -128,10 +131,20 @@ class Encuesta
     // Obtener todas las encuestas de una categoría.
     public function obtenerPorCategoria(string $idCategoria): array
     {
-        $sql = "SELECT *
-                FROM encuesta
-                WHERE id_categoria = :id_categoria
-                ORDER BY titulo_enc ASC";
+        $sql = "SELECT
+                    e.titulo_enc,
+                    e.id_categoria,
+                    e.descripcion_enc,
+                    c.nombre_cat
+
+                FROM encuesta e
+
+                INNER JOIN categoria c
+                    ON e.id_categoria = c.id_categoria
+
+                WHERE e.id_categoria = :id_categoria
+
+                ORDER BY e.titulo_enc ASC";
 
         $sentencia = $this->conexion->prepare($sql);
 
@@ -149,14 +162,13 @@ class Encuesta
         $sql = "SELECT
                     e.titulo_enc,
                     e.id_categoria,
-                    e.nombre_cat,
+                    c.nombre_cat,
                     e.descripcion_enc
 
                 FROM encuesta e
 
                 INNER JOIN categoria c
                     ON e.id_categoria = c.id_categoria
-                    AND e.nombre_cat = c.nombre_cat
 
                 WHERE c.tipo_cat = 'encuestas'
                 AND c.estado_cat = 'activa'

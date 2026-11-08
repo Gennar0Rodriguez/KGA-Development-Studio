@@ -308,11 +308,10 @@ try {
             }
 
 
-            // Crear la encuesta utilizando los datos reales del MER.
+            // Crear la encuesta asociada a la categoría seleccionada.
             $encuestaModelo->crear(
                 $tituloEncuesta,
                 $idCategoria,
-                $categoria['nombre_cat'],
                 $descripcion !== '' ? $descripcion : null
             );
 
