@@ -1484,8 +1484,15 @@ async function editarTraslado(idTraslado, idTransportable) {
         elemento.descripcion_elemento === traslado.descripcion_elemento
     ) || null;        
 
-    document.getElementById('descripcionElemento').value =
-        traslado.descripcion_elemento || '';
+        // Recuperar la descripción si el campo existe en el formulario.
+        const campoDescripcionElemento = document.getElementById(
+            'descripcionElemento'
+        );
+
+        if (campoDescripcionElemento) {
+            campoDescripcionElemento.value =
+                traslado.descripcion_elemento || '';
+        }
 
     const chofer = choferesDisponibles.find(item =>
         String(item.ci_chofer) === String(traslado.ci_chofer)
