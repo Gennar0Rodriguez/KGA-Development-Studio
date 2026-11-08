@@ -1,3 +1,4 @@
+
 <?php
 require_once __DIR__ . '/../config/Database.php';
 
@@ -17,8 +18,9 @@ class Respuesta
     public function crear(
         string $idRespuesta,
         string $idPregunta,
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria,
+        string $nombreCategoria,
         ?string $informacion,
         string $tipo
     ): bool {
@@ -26,16 +28,18 @@ class Respuesta
         $sql = "INSERT INTO respuesta (
                     id_respuesta,
                     id_pregunta,
-                    id_encuesta,
+                    titulo_enc,
                     id_categoria,
+                    nombre_cat,
                     informacion,
                     tipo
                 )
                 VALUES (
                     :id_respuesta,
                     :id_pregunta,
-                    :id_encuesta,
+                    :titulo_enc,
                     :id_categoria,
+                    :nombre_cat,
                     :informacion,
                     :tipo
                 )";
@@ -44,8 +48,9 @@ class Respuesta
 
         $sentencia->bindValue(':id_respuesta', $idRespuesta);
         $sentencia->bindValue(':id_pregunta', $idPregunta);
-        $sentencia->bindValue(':id_encuesta', $idEncuesta);
+        $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
+        $sentencia->bindValue(':nombre_cat', $nombreCategoria);
         $sentencia->bindValue(':informacion', $informacion);
         $sentencia->bindValue(':tipo', $tipo);
 
@@ -75,7 +80,7 @@ class Respuesta
     public function obtenerPorId(
         string $idRespuesta,
         string $idPregunta,
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria
     ): ?array {
 
@@ -83,14 +88,14 @@ class Respuesta
                 FROM respuesta
                 WHERE id_respuesta = :id_respuesta
                 AND id_pregunta = :id_pregunta
-                AND id_encuesta = :id_encuesta
+                AND titulo_enc = :titulo_enc
                 AND id_categoria = :id_categoria";
 
         $sentencia = $this->conexion->prepare($sql);
 
         $sentencia->bindValue(':id_respuesta', $idRespuesta);
         $sentencia->bindValue(':id_pregunta', $idPregunta);
-        $sentencia->bindValue(':id_encuesta', $idEncuesta);
+        $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
 
         $sentencia->execute();
@@ -105,20 +110,20 @@ class Respuesta
 
     public function obtenerPorPregunta(
         string $idPregunta,
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria
     ): array {
 
         $sql = "SELECT *
                 FROM respuesta
                 WHERE id_pregunta = :id_pregunta
-                AND id_encuesta = :id_encuesta
+                AND titulo_enc = :titulo_enc
                 AND id_categoria = :id_categoria";
 
         $sentencia = $this->conexion->prepare($sql);
 
         $sentencia->bindValue(':id_pregunta', $idPregunta);
-        $sentencia->bindValue(':id_encuesta', $idEncuesta);
+        $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
 
         $sentencia->execute();
@@ -134,7 +139,7 @@ class Respuesta
     public function editarRespuesta(
         string $idRespuesta,
         string $idPregunta,
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria,
         ?string $informacion,
         string $tipo
@@ -145,14 +150,14 @@ class Respuesta
                     tipo = :tipo
                 WHERE id_respuesta = :id_respuesta
                 AND id_pregunta = :id_pregunta
-                AND id_encuesta = :id_encuesta
+                AND titulo_enc = :titulo_enc
                 AND id_categoria = :id_categoria";
 
         $sentencia = $this->conexion->prepare($sql);
 
         $sentencia->bindValue(':id_respuesta', $idRespuesta);
         $sentencia->bindValue(':id_pregunta', $idPregunta);
-        $sentencia->bindValue(':id_encuesta', $idEncuesta);
+        $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
         $sentencia->bindValue(':informacion', $informacion);
         $sentencia->bindValue(':tipo', $tipo);
@@ -168,21 +173,21 @@ class Respuesta
     public function eliminar(
         string $idRespuesta,
         string $idPregunta,
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria
     ): bool {
 
         $sql = "DELETE FROM respuesta
                 WHERE id_respuesta = :id_respuesta
                 AND id_pregunta = :id_pregunta
-                AND id_encuesta = :id_encuesta
+                AND titulo_enc = :titulo_enc
                 AND id_categoria = :id_categoria";
 
         $sentencia = $this->conexion->prepare($sql);
 
         $sentencia->bindValue(':id_respuesta', $idRespuesta);
         $sentencia->bindValue(':id_pregunta', $idPregunta);
-        $sentencia->bindValue(':id_encuesta', $idEncuesta);
+        $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
 
         return $sentencia->execute();
@@ -194,28 +199,28 @@ class Respuesta
     // ======================================================
 
     public function obtenerEstadisticasPorEncuesta(
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria
     ): array {
 
         // --------------------------------------------------
         // PROMEDIO GENERAL
         // --------------------------------------------------
-        // Conservamos esta consulta porque el panel actual
-        // todavía muestra el promedio general de la encuesta.
 
         $sqlGeneral = "SELECT
                             AVG(CAST(informacion AS DECIMAL(3,1))) AS promedio_general,
                             COUNT(*) AS total_respuestas
+
                        FROM respuesta
-                       WHERE id_encuesta = :id_encuesta
+
+                       WHERE titulo_enc = :titulo_enc
                        AND id_categoria = :id_categoria
                        AND tipo = 'opcion multiple'
                        AND informacion REGEXP '^[1-5]$'";
 
         $stmtGeneral = $this->conexion->prepare($sqlGeneral);
 
-        $stmtGeneral->bindValue(':id_encuesta', $idEncuesta);
+        $stmtGeneral->bindValue(':titulo_enc', $tituloEncuesta);
         $stmtGeneral->bindValue(':id_categoria', $idCategoria);
 
         $stmtGeneral->execute();
@@ -226,12 +231,6 @@ class Respuesta
         // --------------------------------------------------
         // PROMEDIO INDIVIDUAL DE CADA PREGUNTA
         // --------------------------------------------------
-        // Partimos de pregunta para que aparezcan también
-        // las preguntas que todavía no tienen respuestas.
-        //
-        // Los filtros de respuesta están dentro del ON.
-        // Si estuvieran en el WHERE, perderíamos las
-        // preguntas que no tienen coincidencias.
 
         $sqlPorPregunta = "SELECT
                                 p.id_pregunta,
@@ -247,12 +246,12 @@ class Respuesta
 
                            LEFT JOIN respuesta r
                                 ON p.id_pregunta = r.id_pregunta
-                                AND p.id_encuesta = r.id_encuesta
+                                AND p.titulo_enc = r.titulo_enc
                                 AND p.id_categoria = r.id_categoria
                                 AND r.tipo = 'opcion multiple'
                                 AND r.informacion REGEXP '^[1-5]$'
 
-                           WHERE p.id_encuesta = :id_encuesta
+                           WHERE p.titulo_enc = :titulo_enc
                            AND p.id_categoria = :id_categoria
 
                            GROUP BY
@@ -263,7 +262,7 @@ class Respuesta
 
         $stmtPregunta = $this->conexion->prepare($sqlPorPregunta);
 
-        $stmtPregunta->bindValue(':id_encuesta', $idEncuesta);
+        $stmtPregunta->bindValue(':titulo_enc', $tituloEncuesta);
         $stmtPregunta->bindValue(':id_categoria', $idCategoria);
 
         $stmtPregunta->execute();
@@ -274,9 +273,6 @@ class Respuesta
         // --------------------------------------------------
         // DEVOLVER LOS RESULTADOS
         // --------------------------------------------------
-        // Si no hay respuestas, AVG devuelve NULL y COUNT
-        // devuelve 0. No convertimos NULL en cero porque
-        // "Sin respuestas" no es lo mismo que un promedio 0.
 
         return [
 

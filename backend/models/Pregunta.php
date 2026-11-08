@@ -1,3 +1,4 @@
+
 <?php
 require_once __DIR__ . '/../config/database.php';
 
@@ -12,19 +13,19 @@ class Pregunta
 
     // Obtener todas las preguntas de una encuesta.
     public function obtenerPorEncuesta(
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria
     ): array {
 
         $sql = "SELECT *
                 FROM pregunta
-                WHERE id_encuesta = :id_encuesta
+                WHERE titulo_enc = :titulo_enc
                 AND id_categoria = :id_categoria
                 ORDER BY id_pregunta";
 
         $sentencia = $this->conexion->prepare($sql);
 
-        $sentencia->bindValue(':id_encuesta', $idEncuesta);
+        $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
 
         $sentencia->execute();
@@ -32,23 +33,24 @@ class Pregunta
         return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
 
+
     // Buscar una pregunta por sus identificadores.
     public function obtenerPorId(
         string $idPregunta,
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria
     ): ?array {
 
         $sql = "SELECT *
                 FROM pregunta
                 WHERE id_pregunta = :id_pregunta
-                AND id_encuesta = :id_encuesta
+                AND titulo_enc = :titulo_enc
                 AND id_categoria = :id_categoria";
 
         $sentencia = $this->conexion->prepare($sql);
 
         $sentencia->bindValue(':id_pregunta', $idPregunta);
-        $sentencia->bindValue(':id_encuesta', $idEncuesta);
+        $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
 
         $sentencia->execute();
@@ -56,25 +58,29 @@ class Pregunta
         return $sentencia->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+
     // Crear una pregunta nueva.
     public function crear(
         string $idPregunta,
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria,
+        string $nombreCategoria,
         string $nombrePregunta
     ): bool {
 
         $sql = "INSERT INTO pregunta (
                     id_pregunta,
-                    id_encuesta,
+                    titulo_enc,
                     id_categoria,
+                    nombre_cat,
                     nombre_pregunta,
                     tipo
                 )
                 VALUES (
                     :id_pregunta,
-                    :id_encuesta,
+                    :titulo_enc,
                     :id_categoria,
+                    :nombre_cat,
                     :nombre_pregunta,
                     'opcion multiple'
                 )";
@@ -82,17 +88,19 @@ class Pregunta
         $sentencia = $this->conexion->prepare($sql);
 
         $sentencia->bindValue(':id_pregunta', $idPregunta);
-        $sentencia->bindValue(':id_encuesta', $idEncuesta);
+        $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
+        $sentencia->bindValue(':nombre_cat', $nombreCategoria);
         $sentencia->bindValue(':nombre_pregunta', $nombrePregunta);
 
         return $sentencia->execute();
     }
 
+
     // Modificar el texto de una pregunta existente.
     public function editarPregunta(
         string $idPregunta,
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria,
         string $nombrePregunta
     ): bool {
@@ -100,54 +108,56 @@ class Pregunta
         $sql = "UPDATE pregunta
                 SET nombre_pregunta = :nombre_pregunta
                 WHERE id_pregunta = :id_pregunta
-                AND id_encuesta = :id_encuesta
+                AND titulo_enc = :titulo_enc
                 AND id_categoria = :id_categoria";
 
         $sentencia = $this->conexion->prepare($sql);
 
         $sentencia->bindValue(':id_pregunta', $idPregunta);
-        $sentencia->bindValue(':id_encuesta', $idEncuesta);
+        $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
         $sentencia->bindValue(':nombre_pregunta', $nombrePregunta);
 
         return $sentencia->execute();
     }
 
+
     // Eliminar primero las respuestas y después la pregunta.
-        public function eliminar(
-            string $idPregunta,
-            string $idEncuesta,
-            string $idCategoria
-        ): bool {
+    public function eliminar(
+        string $idPregunta,
+        string $tituloEncuesta,
+        string $idCategoria
+    ): bool {
 
-            // Primero eliminamos las respuestas asociadas.
-            $sqlRespuestas = "DELETE FROM respuesta
-                            WHERE id_pregunta = :id_pregunta
-                            AND id_encuesta = :id_encuesta
-                            AND id_categoria = :id_categoria";
+        // Primero eliminamos las respuestas asociadas.
+        $sqlRespuestas = "DELETE FROM respuesta
+                          WHERE id_pregunta = :id_pregunta
+                          AND titulo_enc = :titulo_enc
+                          AND id_categoria = :id_categoria";
 
-            $sentenciaRespuestas = $this->conexion->prepare($sqlRespuestas);
+        $sentenciaRespuestas = $this->conexion->prepare($sqlRespuestas);
 
-            $sentenciaRespuestas->execute([
-                ':id_pregunta' => $idPregunta,
-                ':id_encuesta' => $idEncuesta,
-                ':id_categoria' => $idCategoria
-            ]);
+        $sentenciaRespuestas->execute([
+            ':id_pregunta' => $idPregunta,
+            ':titulo_enc' => $tituloEncuesta,
+            ':id_categoria' => $idCategoria
+        ]);
 
-            // Después eliminamos la pregunta.
-            $sqlPregunta = "DELETE FROM pregunta
-                            WHERE id_pregunta = :id_pregunta
-                            AND id_encuesta = :id_encuesta
-                            AND id_categoria = :id_categoria";
 
-            $sentenciaPregunta = $this->conexion->prepare($sqlPregunta);
+        // Después eliminamos la pregunta.
+        $sqlPregunta = "DELETE FROM pregunta
+                        WHERE id_pregunta = :id_pregunta
+                        AND titulo_enc = :titulo_enc
+                        AND id_categoria = :id_categoria";
 
-            $sentenciaPregunta->execute([
-                ':id_pregunta' => $idPregunta,
-                ':id_encuesta' => $idEncuesta,
-                ':id_categoria' => $idCategoria
-            ]);
+        $sentenciaPregunta = $this->conexion->prepare($sqlPregunta);
 
-            return $sentenciaPregunta->rowCount() > 0;
-        }
+        $sentenciaPregunta->execute([
+            ':id_pregunta' => $idPregunta,
+            ':titulo_enc' => $tituloEncuesta,
+            ':id_categoria' => $idCategoria
+        ]);
+
+        return $sentenciaPregunta->rowCount() > 0;
     }
+}

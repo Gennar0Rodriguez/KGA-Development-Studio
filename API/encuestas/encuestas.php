@@ -8,6 +8,7 @@ require_once __DIR__ . '/../../backend/models/Categoria.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+
 // Comprobar que el usuario tenga una sesión de administrador.
 function verificarAdministrador(): bool
 {
@@ -16,6 +17,7 @@ function verificarAdministrador(): bool
     return isset($usuario['cargo'])
         && strtolower(trim($usuario['cargo'])) === 'administrador';
 }
+
 
 // Responder un error en formato JSON.
 function responderError(string $mensaje, int $codigo): void
@@ -29,6 +31,7 @@ function responderError(string $mensaje, int $codigo): void
     exit;
 }
 
+
 try {
 
     $accion = $_GET['accion'] ?? '';
@@ -38,7 +41,9 @@ try {
 
     $conexion = Database::getInstancia()->getConexion();
 
+
     switch ($accion) {
+
 
         // ==========================================
         // OBTENER TODAS LAS ENCUESTAS (ADMIN)
@@ -51,6 +56,7 @@ try {
             }
 
             echo json_encode($encuestaModelo->obtenerTodos());
+
             exit;
 
 
@@ -61,6 +67,27 @@ try {
         case 'obtenerActivas':
 
             echo json_encode($encuestaModelo->obtenerActivas());
+
+            exit;
+
+
+        // ==========================================
+        // BUSCAR ENCUESTAS POR TÍTULO
+        // ==========================================
+
+        case 'buscarPorTitulo':
+
+            $titulo = trim($_GET['titulo'] ?? '');
+
+            if ($titulo === '') {
+                echo json_encode([]);
+                exit;
+            }
+
+            echo json_encode(
+                $encuestaModelo->buscarPorTitulo($titulo)
+            );
+
             exit;
 
 
@@ -82,7 +109,7 @@ try {
 
 
         // ==========================================
-        // CREAR CATEGORÍA Y SU ENCUESTA
+        // CREAR UNA CATEGORÍA
         // ==========================================
 
         case 'crearCategoria':
@@ -111,7 +138,8 @@ try {
                 responderError('El nombre no puede superar los 50 caracteres', 400);
             }
 
-            // Bloquear operaciones simultáneas sobre el límite de categorías.
+
+            // Bloquear operaciones simultáneas sobre el límite.
             $bloqueo = $conexion->query(
                 "SELECT GET_LOCK('sigsm_categorias_encuestas', 5)"
             )->fetchColumn();
@@ -120,15 +148,16 @@ try {
                 responderError('No se pudo reservar la operación. Intente nuevamente', 503);
             }
 
+
             try {
 
                 $conexion->beginTransaction();
 
-                // Comprobar que no exista otra categoría con el mismo nombre.
+
+                // Comprobar que no exista otra categoría con ese nombre.
                 $sqlDuplicada = "SELECT COUNT(*)
                                  FROM categoria
-                                 WHERE tipo_cat = 'encuestas'
-                                 AND LOWER(nombre_cat) = LOWER(:nombre)";
+                                 WHERE LOWER(nombre_cat) = LOWER(:nombre)";
 
                 $sentenciaDuplicada = $conexion->prepare($sqlDuplicada);
 
@@ -137,47 +166,43 @@ try {
                 ]);
 
                 if ((int) $sentenciaDuplicada->fetchColumn() > 0) {
+
                     throw new DomainException(
                         'Ya existe una categoría con ese nombre'
                     );
                 }
 
-                // Determinar si la nueva categoría puede quedar activa.
+
+                // Determinar si puede quedar activa.
                 $cantidadActivas = $categoriaModelo->contarActivas();
 
                 $estado = $cantidadActivas < 6
                     ? 'activa'
                     : 'deshabilitada';
 
-                // Generar identificadores únicos.
-                $idCategoria = 'CAT' . bin2hex(random_bytes(8));
-                $idEncuesta = 'ENC' . bin2hex(random_bytes(8));
 
-                // Crear la categoría.
+                // Generar el identificador de la categoría.
+                $idCategoria = 'CAT' . bin2hex(random_bytes(8));
+
+
+                // Crear solamente la categoría.
                 $categoriaModelo->crear(
                     $idCategoria,
                     $nombre,
                     $estado
                 );
 
-                // Crear automáticamente su encuesta.
-                $encuestaModelo->crear(
-                    $idEncuesta,
-                    $idCategoria,
-                    $nombre,
-                    null
-                );
 
                 $conexion->commit();
+
 
                 echo json_encode([
                     'exito' => true,
                     'mensaje' => $estado === 'activa'
-                        ? 'La categoría y su encuesta fueron creadas correctamente'
+                        ? 'La categoría fue creada correctamente'
                         : 'La categoría fue creada deshabilitada porque ya hay seis activas',
                     'estado_cat' => $estado,
-                    'id_categoria' => $idCategoria,
-                    'id_encuesta' => $idEncuesta
+                    'id_categoria' => $idCategoria
                 ]);
 
             } catch (DomainException $e) {
@@ -206,6 +231,152 @@ try {
                     "SELECT RELEASE_LOCK('sigsm_categorias_encuestas')"
                 );
             }
+
+            exit;
+
+
+        // ==========================================
+        // CREAR UNA ENCUESTA
+        // ==========================================
+
+        case 'crearEncuesta':
+
+            if (!verificarAdministrador()) {
+                responderError('No tiene permisos para crear encuestas', 403);
+            }
+
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                responderError('Método no permitido', 405);
+            }
+
+            $datos = json_decode(file_get_contents('php://input'), true);
+
+            if (!is_array($datos)) {
+                responderError('Los datos enviados no son válidos', 400);
+            }
+
+            $tituloEncuesta = trim($datos['titulo_enc'] ?? '');
+            $idCategoria = trim($datos['id_categoria'] ?? '');
+            $descripcion = trim($datos['descripcion_enc'] ?? '');
+
+            if ($tituloEncuesta === '' || $idCategoria === '') {
+                responderError('Debe ingresar un título y seleccionar una categoría', 400);
+            }
+
+            if (mb_strlen($tituloEncuesta) > 50) {
+                responderError('El título no puede superar los 50 caracteres', 400);
+            }
+
+            if (mb_strlen($descripcion) > 50) {
+                responderError('La descripción no puede superar los 50 caracteres', 400);
+            }
+
+
+            // Obtener la categoría seleccionada.
+            $sqlCategoria = "SELECT id_categoria, nombre_cat, estado_cat
+                             FROM categoria
+                             WHERE id_categoria = :id_categoria
+                             AND tipo_cat = 'encuestas'";
+
+            $sentenciaCategoria = $conexion->prepare($sqlCategoria);
+
+            $sentenciaCategoria->execute([
+                ':id_categoria' => $idCategoria
+            ]);
+
+            $categoria = $sentenciaCategoria->fetch(PDO::FETCH_ASSOC);
+
+            if (!$categoria) {
+                responderError('La categoría seleccionada no existe', 404);
+            }
+
+
+            // El MER referencia titulo_enc individualmente.
+            // Por eso evitamos repetir títulos entre categorías.
+            $sqlDuplicada = "SELECT COUNT(*)
+                             FROM encuesta
+                             WHERE LOWER(titulo_enc) = LOWER(:titulo_enc)";
+
+            $sentenciaDuplicada = $conexion->prepare($sqlDuplicada);
+
+            $sentenciaDuplicada->execute([
+                ':titulo_enc' => $tituloEncuesta
+            ]);
+
+            if ((int) $sentenciaDuplicada->fetchColumn() > 0) {
+                responderError('Ya existe una encuesta con ese título', 409);
+            }
+
+
+            // Crear la encuesta utilizando los datos reales del MER.
+            $encuestaModelo->crear(
+                $tituloEncuesta,
+                $idCategoria,
+                $categoria['nombre_cat'],
+                $descripcion !== '' ? $descripcion : null
+            );
+
+
+            echo json_encode([
+                'exito' => true,
+                'mensaje' => 'La encuesta fue creada correctamente',
+                'titulo_enc' => $tituloEncuesta,
+                'id_categoria' => $idCategoria,
+                'nombre_cat' => $categoria['nombre_cat']
+            ]);
+
+            exit;
+
+
+        // ==========================================
+        // ELIMINAR UNA ENCUESTA
+        // ==========================================
+
+        case 'eliminarEncuesta':
+
+            if (!verificarAdministrador()) {
+                responderError('No tiene permisos para eliminar encuestas', 403);
+            }
+
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                responderError('Método no permitido', 405);
+            }
+
+            $datos = json_decode(file_get_contents('php://input'), true);
+
+            if (!is_array($datos)) {
+                responderError('Los datos enviados no son válidos', 400);
+            }
+
+            $tituloEncuesta = trim($datos['titulo_enc'] ?? '');
+            $idCategoria = trim($datos['id_categoria'] ?? '');
+
+            if ($tituloEncuesta === '' || $idCategoria === '') {
+                responderError('Falta identificar la encuesta', 400);
+            }
+
+            $encuesta = $encuestaModelo->obtenerPorId(
+                $tituloEncuesta,
+                $idCategoria
+            );
+
+            if (!$encuesta) {
+                responderError('La encuesta seleccionada no existe', 404);
+            }
+
+            $eliminada = $encuestaModelo->eliminar(
+                $tituloEncuesta,
+                $idCategoria
+            );
+
+            if (!$eliminada) {
+                responderError('No se pudo eliminar la encuesta', 500);
+            }
+
+            echo json_encode([
+                'exito' => true,
+                'mensaje' => 'La encuesta y sus preguntas fueron eliminadas correctamente'
+            ]);
 
             exit;
 
@@ -240,6 +411,7 @@ try {
                 responderError('Los datos enviados no son válidos', 400);
             }
 
+
             $bloqueo = $conexion->query(
                 "SELECT GET_LOCK('sigsm_categorias_encuestas', 5)"
             )->fetchColumn();
@@ -248,11 +420,13 @@ try {
                 responderError('No se pudo reservar la operación. Intente nuevamente', 503);
             }
 
+
             try {
 
                 $conexion->beginTransaction();
 
-                // Verificar que la categoría exista y sea de encuestas.
+
+                // Verificar que la categoría exista.
                 $sqlCategoria = "SELECT estado_cat
                                  FROM categoria
                                  WHERE id_categoria = :id_categoria
@@ -272,6 +446,7 @@ try {
                     );
                 }
 
+
                 // Comprobar el límite antes de habilitar.
                 if (
                     $nuevoEstado === 'activa' &&
@@ -283,12 +458,15 @@ try {
                     );
                 }
 
+
                 $categoriaModelo->cambiarEstado(
                     $idCategoria,
                     $nuevoEstado
                 );
 
+
                 $conexion->commit();
+
 
                 echo json_encode([
                     'exito' => true,

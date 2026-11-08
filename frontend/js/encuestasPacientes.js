@@ -1,34 +1,73 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // ==========================================
+    // ELEMENTOS DEL PANEL PÚBLICO
+    // ==========================================
+
     const comboCategoria = document.getElementById('categoriaEncuesta');
+    const buscadorEncuestas = document.getElementById('buscarEncuesta');
+
+    const listaEncuestas = document.getElementById('listaEncuestas');
+
+    const formulario = document.getElementById('formEncuesta');
     const tituloEncuesta = document.getElementById('tituloEncuesta');
     const listaPreguntas = document.getElementById('listaPreguntas');
-    const formulario = document.getElementById('formEncuesta');
+
     const mensaje = document.getElementById('mensajeEncuesta');
 
     const botonEnviar = formulario.querySelector('button[type="submit"]');
+    const botonVolver = document.getElementById('btnVolverEncuestas');
+
+    const panelBusqueda = document.querySelector('.busqueda-encuestas');
 
     const rutaAPI = '/kgade/KGA-Development-Studio/API';
 
+
+    // ==========================================
+    // VARIABLES
+    // ==========================================
+
     let encuestas = [];
 
-    // Cargar únicamente las encuestas habilitadas.
+    let encuestaSeleccionada = null;
+
+
+    // ==========================================
+    // INICIALIZACIÓN
+    // ==========================================
+
     cargarEncuestas();
 
-    // Cuando se selecciona otra categoría, cargar sus preguntas.
+
+    // ==========================================
+    // EVENTOS DE BÚSQUEDA
+    // ==========================================
+
+    // Buscar por título.
+    buscadorEncuestas.addEventListener('input', () => {
+        renderizarEncuestas();
+    });
+
+
+    // Filtrar por categoría.
     comboCategoria.addEventListener('change', () => {
+        renderizarEncuestas();
+    });
 
-        const valorSeleccionado = comboCategoria.value;
 
-        if (valorSeleccionado) {
-            cargarPreguntas(valorSeleccionado);
-        } else {
-            tituloEncuesta.innerHTML = '';
-            listaPreguntas.innerHTML =
-                '<p>Seleccione una categoría para comenzar.</p>';
-        }
+    // Volver a la lista de encuestas.
+    botonVolver.addEventListener('click', () => {
 
+        formulario.hidden = true;
+
+        panelBusqueda.hidden = false;
+
+        formulario.reset();
+
+        encuestaSeleccionada = null;
+
+        mensaje.textContent = '';
     });
 
 
@@ -46,72 +85,180 @@ document.addEventListener('DOMContentLoaded', () => {
 
             encuestas = await leerJSON(respuesta);
 
-            comboCategoria.innerHTML =
-                '<option value="">Seleccione una categoría</option>';
 
-            // Si no existen categorías activas, informar al paciente.
+            // Cargar las categorías disponibles.
+            cargarCategorias();
+
+
+            // Mostrar todas las encuestas inicialmente.
+            renderizarEncuestas();
+
+
             if (encuestas.length === 0) {
 
-                comboCategoria.innerHTML =
-                    '<option value="">No hay encuestas disponibles</option>';
-
-                tituloEncuesta.innerHTML = '';
-
-                listaPreguntas.innerHTML =
+                listaEncuestas.innerHTML =
                     '<p>Actualmente no hay encuestas habilitadas.</p>';
-
-                botonEnviar.disabled = true;
-
-                return;
             }
-
-            botonEnviar.disabled = false;
-
-            encuestas.forEach(encuesta => {
-
-                const opcion = document.createElement('option');
-
-                // Guardar ambos identificadores.
-                opcion.value =
-                    `${encuesta.id_encuesta}|${encuesta.id_categoria}`;
-
-                opcion.textContent = encuesta.nombre_cat;
-
-                comboCategoria.appendChild(opcion);
-
-            });
 
         } catch (error) {
 
             console.error('Error al cargar encuestas:', error);
 
-            comboCategoria.innerHTML =
-                '<option value="">No se pudieron cargar las categorías</option>';
-
-            listaPreguntas.innerHTML =
+            listaEncuestas.innerHTML =
                 '<p>No se pudieron cargar las encuestas.</p>';
-
-            botonEnviar.disabled = true;
         }
     }
 
 
     // ==========================================
-    // CARGAR PREGUNTAS
+    // CARGAR CATEGORÍAS
     // ==========================================
 
-    async function cargarPreguntas(valorSeleccionado) {
+    function cargarCategorias() {
 
-        const [idEncuesta, idCategoria] = valorSeleccionado.split('|');
+        comboCategoria.innerHTML =
+            '<option value="">Todas las categorías</option>';
 
-        const encuesta = encuestas.find(item =>
-            item.id_encuesta === idEncuesta &&
-            item.id_categoria === idCategoria
-        );
+        // Obtener categorías sin repetirlas.
+        const categorias = new Map();
 
-        if (!encuesta) return;
+        encuestas.forEach(encuesta => {
+
+            categorias.set(
+                encuesta.id_categoria,
+                encuesta.nombre_cat
+            );
+        });
+
+
+        categorias.forEach((nombre, idCategoria) => {
+
+            const opcion = document.createElement('option');
+
+            opcion.value = idCategoria;
+            opcion.textContent = nombre;
+
+            comboCategoria.appendChild(opcion);
+        });
+    }
+
+
+    // ==========================================
+    // FILTRAR Y MOSTRAR ENCUESTAS
+    // ==========================================
+
+    function renderizarEncuestas() {
+
+        listaEncuestas.innerHTML = '';
+
+        const textoBusqueda = buscadorEncuestas.value
+            .trim()
+            .toLowerCase();
+
+        const categoriaSeleccionada = comboCategoria.value;
+
+
+        // Filtrar por título y categoría.
+        const encuestasFiltradas = encuestas.filter(encuesta => {
+
+            const coincideTitulo = encuesta.titulo_enc
+                .toLowerCase()
+                .includes(textoBusqueda);
+
+            const coincideCategoria = !categoriaSeleccionada ||
+                encuesta.id_categoria === categoriaSeleccionada;
+
+            return coincideTitulo && coincideCategoria;
+        });
+
+
+        if (encuestasFiltradas.length === 0) {
+
+            const mensajeVacio = document.createElement('p');
+
+            mensajeVacio.textContent =
+                'No se encontraron encuestas con esos criterios.';
+
+            listaEncuestas.appendChild(mensajeVacio);
+
+            return;
+        }
+
+
+        // Mostrar las encuestas encontradas.
+        encuestasFiltradas.forEach(encuesta => {
+
+            const tarjeta = document.createElement('article');
+
+            tarjeta.classList.add('encuesta-opcion');
+
+
+            const informacion = document.createElement('div');
+
+            informacion.classList.add('encuesta-opcion-info');
+
+
+            const titulo = document.createElement('h4');
+
+            titulo.textContent = encuesta.titulo_enc;
+
+
+            const categoria = document.createElement('span');
+
+            categoria.textContent = encuesta.nombre_cat;
+
+
+            const descripcion = document.createElement('p');
+
+            descripcion.textContent = encuesta.descripcion_enc ||
+                'Encuesta de opinión del Hospital de Clínicas.';
+
+
+            informacion.appendChild(titulo);
+            informacion.appendChild(categoria);
+            informacion.appendChild(descripcion);
+
+
+            const boton = document.createElement('button');
+
+            boton.type = 'button';
+            boton.classList.add('btn-seleccionar-encuesta');
+
+            boton.textContent = 'Responder';
+
+            boton.addEventListener('click', () => {
+                seleccionarEncuesta(encuesta);
+            });
+
+
+            tarjeta.appendChild(informacion);
+            tarjeta.appendChild(boton);
+
+            listaEncuestas.appendChild(tarjeta);
+        });
+    }
+
+
+    // ==========================================
+    // SELECCIONAR UNA ENCUESTA
+    // ==========================================
+
+    async function seleccionarEncuesta(encuesta) {
+
+        encuestaSeleccionada = encuesta;
+
+        mensaje.textContent = '';
+
+        formulario.reset();
+
+
+        panelBusqueda.hidden = true;
+
+        formulario.hidden = false;
+
 
         tituloEncuesta.innerHTML = '';
+
 
         const titulo = document.createElement('h3');
 
@@ -119,19 +266,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tituloEncuesta.appendChild(titulo);
 
-        listaPreguntas.innerHTML = '<p>Cargando preguntas...</p>';
 
-        mensaje.textContent = '';
+        const categoria = document.createElement('p');
+
+        categoria.textContent = encuesta.nombre_cat;
+
+        tituloEncuesta.appendChild(categoria);
+
+
+        listaPreguntas.innerHTML =
+            '<p>Cargando preguntas...</p>';
+
+        botonEnviar.disabled = true;
+
 
         try {
 
+            const parametros = new URLSearchParams({
+                accion: 'obtenerPorEncuesta',
+                titulo_enc: encuesta.titulo_enc,
+                id_categoria: encuesta.id_categoria
+            });
+
+
             const respuesta = await fetch(
-                `${rutaAPI}/preguntas/preguntas.php?accion=obtenerPorEncuesta&id_encuesta=${encodeURIComponent(idEncuesta)}&id_categoria=${encodeURIComponent(idCategoria)}`
+                `${rutaAPI}/preguntas/preguntas.php?${parametros}`
             );
 
             const preguntas = await leerJSON(respuesta);
 
+
             renderizarPreguntas(preguntas);
+
+
+            if (preguntas.length === 0) {
+
+                mensaje.textContent =
+                    'Esta encuesta todavía no tiene preguntas.';
+
+                botonEnviar.disabled = true;
+
+            } else {
+
+                botonEnviar.disabled = false;
+            }
+
 
         } catch (error) {
 
@@ -139,6 +318,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             listaPreguntas.innerHTML =
                 '<p>No se pudieron cargar las preguntas.</p>';
+
+            botonEnviar.disabled = true;
         }
     }
 
@@ -159,11 +340,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+
         preguntas.forEach((pregunta, index) => {
 
             const contenedor = document.createElement('div');
 
             contenedor.classList.add('pregunta');
+
 
             const texto = document.createElement('label');
 
@@ -172,9 +355,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             contenedor.appendChild(texto);
 
+
             const escala = document.createElement('div');
 
             escala.classList.add('escala');
+
 
             for (let numero = 1; numero <= 5; numero++) {
 
@@ -185,16 +370,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 input.type = 'radio';
                 input.name = `pregunta_${pregunta.id_pregunta}`;
                 input.value = numero;
+                input.required = true;
+
 
                 const circulo = document.createElement('span');
 
                 circulo.textContent = numero;
+
 
                 opcion.appendChild(input);
                 opcion.appendChild(circulo);
 
                 escala.appendChild(opcion);
             }
+
 
             contenedor.appendChild(escala);
 
@@ -211,21 +400,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         evento.preventDefault();
 
-        const valorSeleccionado = comboCategoria.value;
 
-        if (!valorSeleccionado) {
+        if (!encuestaSeleccionada) {
 
-            mensaje.textContent = 'Seleccione una categoría.';
+            mensaje.textContent = 'Seleccione una encuesta.';
 
             return;
         }
 
-        const [idEncuesta, idCategoria] = valorSeleccionado.split('|');
 
         const respuestas = [];
 
         const opcionesSeleccionadas =
             listaPreguntas.querySelectorAll('input[type="radio"]:checked');
+
 
         opcionesSeleccionadas.forEach(opcion => {
 
@@ -236,13 +424,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         });
 
-        if (respuestas.length === 0) {
+
+        const cantidadPreguntas =
+            listaPreguntas.querySelectorAll('.pregunta').length;
+
+
+        // Comprobar que todas las preguntas estén respondidas.
+        if (respuestas.length !== cantidadPreguntas) {
 
             mensaje.textContent =
-                'Seleccione al menos una respuesta para enviar la encuesta.';
+                'Debe responder todas las preguntas antes de enviar.';
 
             return;
         }
+
+
+        botonEnviar.disabled = true;
+
+        mensaje.textContent = 'Enviando respuestas...';
+
 
         try {
 
@@ -256,12 +456,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
 
                     body: JSON.stringify({
-                        id_encuesta: idEncuesta,
-                        id_categoria: idCategoria,
+                        titulo_enc: encuestaSeleccionada.titulo_enc,
+                        id_categoria: encuestaSeleccionada.id_categoria,
                         respuestas: respuestas
                     })
                 }
             );
+
 
             const resultado = await leerJSON(respuesta);
 
@@ -269,12 +470,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             formulario.reset();
 
+            botonEnviar.disabled = true;
+
+
         } catch (error) {
 
             console.error('Error al enviar encuesta:', error);
 
             mensaje.textContent =
                 error.message || 'No se pudo enviar la encuesta.';
+
+            botonEnviar.disabled = false;
         }
     });
 
@@ -299,6 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'El servidor devolvió una respuesta inválida.'
             );
         }
+
 
         if (!respuesta.ok) {
 

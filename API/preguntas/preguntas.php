@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 
@@ -6,6 +7,7 @@ require_once __DIR__ . '/../../backend/models/Encuesta.php';
 require_once __DIR__ . '/../../backend/config/database.php';
 
 header('Content-Type: application/json; charset=utf-8');
+
 
 // Comprobar que la persona tenga una sesión de administrador.
 function verificarAdministrador(): bool
@@ -16,6 +18,7 @@ function verificarAdministrador(): bool
         && strtolower(trim($usuario['cargo'])) === 'administrador';
 }
 
+
 try {
 
     $accion = $_GET['accion'] ?? '';
@@ -23,26 +26,34 @@ try {
     $preguntaModelo = new Pregunta();
     $encuestaModelo = new Encuesta();
 
+
     switch ($accion) {
+
+
+        // ==========================================
+        // OBTENER PREGUNTAS DE UNA ENCUESTA
+        // ==========================================
 
         case 'obtenerPorEncuesta':
 
-            $idEncuesta = $_GET['id_encuesta'] ?? '';
+            $tituloEncuesta = $_GET['titulo_enc'] ?? '';
             $idCategoria = $_GET['id_categoria'] ?? '';
 
-            if ($idEncuesta === '' || $idCategoria === '') {
+            if ($tituloEncuesta === '' || $idCategoria === '') {
+
                 http_response_code(400);
 
                 echo json_encode([
-                    'error' => 'Falta el identificador de la encuesta o categoría'
+                    'error' => 'Falta el título de la encuesta o su categoría'
                 ]);
 
                 exit;
             }
 
+
             echo json_encode(
                 $preguntaModelo->obtenerPorEncuesta(
-                    $idEncuesta,
+                    $tituloEncuesta,
                     $idCategoria
                 )
             );
@@ -50,10 +61,14 @@ try {
             exit;
 
 
+        // ==========================================
+        // GUARDAR PREGUNTAS
+        // ==========================================
+
         case 'guardarLote':
 
-            // Solo un administrador puede modificar las preguntas.
             if (!verificarAdministrador()) {
+
                 http_response_code(403);
 
                 echo json_encode([
@@ -63,7 +78,9 @@ try {
                 exit;
             }
 
+
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+
                 http_response_code(405);
 
                 echo json_encode([
@@ -73,15 +90,17 @@ try {
                 exit;
             }
 
+
             $datos = json_decode(file_get_contents('php://input'), true);
 
             if (
                 !is_array($datos) ||
-                empty($datos['id_encuesta']) ||
+                empty($datos['titulo_enc']) ||
                 empty($datos['id_categoria']) ||
                 !isset($datos['preguntas']) ||
                 !is_array($datos['preguntas'])
             ) {
+
                 http_response_code(400);
 
                 echo json_encode([
@@ -92,17 +111,20 @@ try {
                 exit;
             }
 
-            $idEncuesta = $datos['id_encuesta'];
-            $idCategoria = $datos['id_categoria'];
+
+            $tituloEncuesta = trim($datos['titulo_enc']);
+            $idCategoria = trim($datos['id_categoria']);
             $preguntasNuevas = $datos['preguntas'];
 
-            // Comprobar que la encuesta realmente exista.
+
+            // Comprobar que la encuesta exista.
             $encuesta = $encuestaModelo->obtenerPorId(
-                $idEncuesta,
+                $tituloEncuesta,
                 $idCategoria
             );
 
             if (!$encuesta) {
+
                 http_response_code(404);
 
                 echo json_encode([
@@ -113,9 +135,10 @@ try {
                 exit;
             }
 
+
             // Obtener las preguntas que ya existen.
             $preguntasActuales = $preguntaModelo->obtenerPorEncuesta(
-                $idEncuesta,
+                $tituloEncuesta,
                 $idCategoria
             );
 
@@ -126,24 +149,55 @@ try {
 
             $idsRecibidos = [];
 
-            // Validar todos los textos antes de modificar la base.
+
+            // Obtener la conexión a la base de datos.
+            $conexion = Database::getInstancia()->getConexion();
+
+
+            // Comprobar que los identificadores nuevos no existan
+            // en otra encuesta, ya que el MER referencia id_pregunta individualmente.
+            $sqlIdExistente = "SELECT COUNT(*)
+                               FROM pregunta
+                               WHERE id_pregunta = :id_pregunta";
+
+            $sentenciaIdExistente = $conexion->prepare($sqlIdExistente);
+
+
+            // Validar todos los textos e identificadores antes de modificar la base.
             foreach ($preguntasNuevas as $pregunta) {
 
-                $idPregunta = trim($pregunta['id_pregunta'] ?? '');
-                $nombrePregunta = trim($pregunta['nombre_pregunta'] ?? '');
+                if (!is_array($pregunta)) {
 
-                if ($idPregunta === '' || $nombrePregunta === '') {
                     http_response_code(400);
 
                     echo json_encode([
                         'exito' => false,
-                        'mensaje' => 'Todas las preguntas deben tener un texto'
+                        'mensaje' => 'El formato de una pregunta no es válido'
                     ]);
 
                     exit;
                 }
 
+
+                $idPregunta = trim($pregunta['id_pregunta'] ?? '');
+                $nombrePregunta = trim($pregunta['nombre_pregunta'] ?? '');
+
+
+                if ($idPregunta === '' || $nombrePregunta === '') {
+
+                    http_response_code(400);
+
+                    echo json_encode([
+                        'exito' => false,
+                        'mensaje' => 'Todas las preguntas deben tener un identificador y un texto'
+                    ]);
+
+                    exit;
+                }
+
+
                 if (mb_strlen($nombrePregunta) > 50) {
+
                     http_response_code(400);
 
                     echo json_encode([
@@ -154,7 +208,9 @@ try {
                     exit;
                 }
 
+
                 if (in_array($idPregunta, $idsRecibidos, true)) {
+
                     http_response_code(400);
 
                     echo json_encode([
@@ -165,27 +221,50 @@ try {
                     exit;
                 }
 
+
+                // Si no pertenece a las preguntas actuales,
+                // comprobamos que el ID no esté utilizado en otra encuesta.
+                if (!in_array($idPregunta, $idsActuales, true)) {
+
+                    $sentenciaIdExistente->execute([
+                        ':id_pregunta' => $idPregunta
+                    ]);
+
+                    if ((int) $sentenciaIdExistente->fetchColumn() > 0) {
+
+                        http_response_code(409);
+
+                        echo json_encode([
+                            'exito' => false,
+                            'mensaje' => 'El identificador de una pregunta ya está siendo utilizado'
+                        ]);
+
+                        exit;
+                    }
+                }
+
+
                 $idsRecibidos[] = $idPregunta;
             }
 
-            // Guardar todo dentro de una transacción.
-            $conexion = Database::getInstancia()->getConexion();
 
+            // Guardar todo dentro de una transacción.
             $conexion->beginTransaction();
 
             try {
 
                 foreach ($preguntasNuevas as $pregunta) {
 
-                    $idPregunta = $pregunta['id_pregunta'];
+                    $idPregunta = trim($pregunta['id_pregunta']);
                     $nombrePregunta = trim($pregunta['nombre_pregunta']);
+
 
                     if (in_array($idPregunta, $idsActuales, true)) {
 
                         // Si existe, modificamos su texto.
                         $preguntaModelo->editarPregunta(
                             $idPregunta,
-                            $idEncuesta,
+                            $tituloEncuesta,
                             $idCategoria,
                             $nombrePregunta
                         );
@@ -195,12 +274,14 @@ try {
                         // Si no existe, creamos una pregunta nueva.
                         $preguntaModelo->crear(
                             $idPregunta,
-                            $idEncuesta,
+                            $tituloEncuesta,
                             $idCategoria,
+                            $encuesta['nombre_cat'],
                             $nombrePregunta
                         );
                     }
                 }
+
 
                 // Eliminar las preguntas que el administrador quitó.
                 foreach ($idsActuales as $idActual) {
@@ -209,13 +290,15 @@ try {
 
                         $preguntaModelo->eliminar(
                             $idActual,
-                            $idEncuesta,
+                            $tituloEncuesta,
                             $idCategoria
                         );
                     }
                 }
 
+
                 $conexion->commit();
+
 
                 echo json_encode([
                     'exito' => true,

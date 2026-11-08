@@ -430,3 +430,249 @@ textarea {
         padding: 15px;
     }
 }
+
+
+/* ==========================================
+   BUSCADOR DE ENCUESTAS
+========================================== */
+
+.busqueda-encuestas {
+    max-width: 850px;
+    background: var(--capa-2);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 22px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+}
+
+.busqueda-encabezado {
+    margin-bottom: 20px;
+}
+
+.busqueda-encabezado h3 {
+    font-size: 17px;
+    margin-bottom: 6px;
+}
+
+.busqueda-encabezado p {
+    font-size: 13px;
+    color: #718096;
+}
+
+
+/* ==========================================
+   CAMPO DE BÚSQUEDA
+========================================== */
+
+.buscador-encuestas {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 13px;
+    border: 1px solid #d5dce5;
+    border-radius: 9px;
+    background: var(--capa-3);
+    margin-bottom: 18px;
+}
+
+.buscador-encuestas i {
+    color: #718096;
+}
+
+.buscador-encuestas input {
+    width: 100%;
+    padding: 12px 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #344256;
+    font-size: 14px;
+}
+
+
+/* ==========================================
+   FILTRO DE CATEGORÍAS
+========================================== */
+
+.seleccion-categoria {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 22px;
+}
+
+.seleccion-categoria label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.seleccion-categoria select {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #d5dce5;
+    border-radius: 8px;
+    background: var(--capa-3);
+    color: #344256;
+    font-size: 14px;
+    outline: none;
+}
+
+
+/* ==========================================
+   LISTA DE ENCUESTAS
+========================================== */
+
+.lista-encuestas {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.lista-encuestas > p {
+    color: #718096;
+    font-size: 13px;
+}
+
+.encuesta-opcion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 17px;
+    border: 1px solid #e1e8ef;
+    border-radius: 11px;
+    background: var(--capa-3);
+    transition: 0.2s;
+}
+
+.encuesta-opcion:hover {
+    border-color: #159ed0;
+    transform: translateY(-2px);
+}
+
+.encuesta-opcion-info {
+    min-width: 0;
+}
+
+.encuesta-opcion-info h4 {
+    font-size: 15px;
+    margin-bottom: 5px;
+    color: #263445;
+}
+
+.encuesta-opcion-info span {
+    display: inline-block;
+    font-size: 11px;
+    color: #087eaf;
+    background: #e1f3fc;
+    padding: 5px 9px;
+    border-radius: 15px;
+    margin-bottom: 8px;
+}
+
+.encuesta-opcion-info p {
+    font-size: 12px;
+    color: #718096;
+    line-height: 1.5;
+}
+
+.btn-seleccionar-encuesta {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    background: #159ed0;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-seleccionar-encuesta:hover {
+    background: #087eaf;
+}
+
+
+/* ==========================================
+   ENCUESTA SELECCIONADA
+========================================== */
+
+.encuesta-card[hidden],
+.busqueda-encuestas[hidden] {
+    display: none !important;
+}
+
+.encuesta-seleccionada {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#tituloEncuesta h3 {
+    color: #0786bd;
+    text-align: left;
+    font-size: 19px;
+    margin-bottom: 6px;
+}
+
+#tituloEncuesta p {
+    color: #718096;
+    font-size: 13px;
+}
+
+.btn-volver-encuestas {
+    align-self: flex-start;
+    padding: 9px 12px;
+    border: none;
+    border-radius: 8px;
+    background: #e1f3fc;
+    color: #087eaf;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.btn-volver-encuestas:hover {
+    background: #c5e8f8;
+}
+
+
+/* ==========================================
+   BOTONES Y MENSAJES
+========================================== */
+
+.btn-enviar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#mensajeEncuesta {
+    min-height: 18px;
+}
+
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 600px) {
+
+    .busqueda-encuestas {
+        padding: 17px;
+    }
+
+    .encuesta-opcion {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .btn-seleccionar-encuesta {
+        width: 100%;
+    }
+
+    .encuesta-card {
+        padding: 18px;
+    }
+}

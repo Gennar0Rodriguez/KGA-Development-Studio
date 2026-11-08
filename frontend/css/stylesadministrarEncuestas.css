@@ -733,3 +733,94 @@ main {
         padding: 15px;
     }
 }
+
+
+/* ==========================================
+   ACCIONES DEL ENCABEZADO
+========================================== */
+
+.acciones-encuestas {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-nueva-encuesta {
+    background: #087eaf;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    padding: 12px 17px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+    white-space: nowrap;
+}
+
+.btn-nueva-encuesta:hover {
+    background: #05658e;
+}
+
+.btn-nueva-encuesta:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+/* ==========================================
+   MODAL DE NUEVA ENCUESTA
+========================================== */
+
+#modalEncuesta {
+    width: min(450px, calc(100% - 30px));
+}
+
+#modalEncuesta form {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+#modalEncuesta label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+#modalEncuesta input,
+#modalEncuesta select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d5dce5;
+    border-radius: 8px;
+    outline: none;
+    font-size: 13px;
+    background: var(--capa-3);
+    color: #344256;
+}
+
+#modalEncuesta input:focus,
+#modalEncuesta select:focus {
+    border-color: #159ed0;
+}
+
+#guardarEncuesta {
+    background: #159ed0;
+    color: white;
+}
+
+#guardarEncuesta:hover {
+    background: #087eaf;
+}
+
+@media (max-width: 700px) {
+
+    .acciones-encuestas {
+        width: 100%;
+    }
+
+    .acciones-encuestas button {
+        flex: 1;
+    }
+}

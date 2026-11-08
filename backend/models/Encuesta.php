@@ -1,3 +1,4 @@
+
 <?php
 require_once __DIR__ . '/../config/database.php';
 
@@ -12,54 +13,88 @@ class Encuesta
 
     // Crear una encuesta asociada a una categoría.
     public function crear(
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria,
-        string $titulo,
+        string $nombreCategoria,
         ?string $descripcion
     ): bool {
-        $sql = "INSERT INTO encuesta
-                    (id_encuesta, id_categoria, titulo_enc, descripcion_enc)
-                VALUES
-                    (:id_encuesta, :id_categoria, :titulo_enc, :descripcion_enc)";
+
+        $sql = "INSERT INTO encuesta (
+                    titulo_enc,
+                    id_categoria,
+                    nombre_cat,
+                    descripcion_enc
+                )
+                VALUES (
+                    :titulo_enc,
+                    :id_categoria,
+                    :nombre_cat,
+                    :descripcion_enc
+                )";
 
         $sentencia = $this->conexion->prepare($sql);
 
         return $sentencia->execute([
-            ':id_encuesta' => $idEncuesta,
+            ':titulo_enc' => $tituloEncuesta,
             ':id_categoria' => $idCategoria,
-            ':titulo_enc' => $titulo,
+            ':nombre_cat' => $nombreCategoria,
             ':descripcion_enc' => $descripcion
         ]);
     }
 
-    // Obtener todas las encuestas de categorías de tipo encuestas.
+
+    // Obtener todas las encuestas de tipo encuestas.
     // Se utiliza desde el panel administrativo.
     public function obtenerTodos(): array
     {
-        $sql = "SELECT e.*, c.nombre_cat, c.estado_cat
+        $sql = "SELECT
+                    e.titulo_enc,
+                    e.id_categoria,
+                    e.nombre_cat,
+                    e.descripcion_enc,
+                    c.estado_cat
+
                 FROM encuesta e
+
                 INNER JOIN categoria c
                     ON e.id_categoria = c.id_categoria
+                    AND e.nombre_cat = c.nombre_cat
+
                 WHERE c.tipo_cat = 'encuestas'
-                ORDER BY c.nombre_cat ASC";
+
+                ORDER BY
+                    c.nombre_cat ASC,
+                    e.titulo_enc ASC";
 
         $sentencia = $this->conexion->prepare($sql);
         $sentencia->execute();
 
         return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
+
 
     // Obtener solamente las encuestas de categorías activas.
     // Se utiliza desde el panel público de pacientes.
     public function obtenerActivas(): array
     {
-        $sql = "SELECT e.*, c.nombre_cat
+        $sql = "SELECT
+                    e.titulo_enc,
+                    e.id_categoria,
+                    e.nombre_cat,
+                    e.descripcion_enc
+
                 FROM encuesta e
+
                 INNER JOIN categoria c
                     ON e.id_categoria = c.id_categoria
+                    AND e.nombre_cat = c.nombre_cat
+
                 WHERE c.tipo_cat = 'encuestas'
                 AND c.estado_cat = 'activa'
-                ORDER BY c.nombre_cat ASC";
+
+                ORDER BY
+                    c.nombre_cat ASC,
+                    e.titulo_enc ASC";
 
         $sentencia = $this->conexion->prepare($sql);
         $sentencia->execute();
@@ -67,32 +102,36 @@ class Encuesta
         return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Buscar una encuesta por sus identificadores.
+
+    // Buscar una encuesta por su título y categoría.
     public function obtenerPorId(
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria
     ): ?array {
+
         $sql = "SELECT *
                 FROM encuesta
-                WHERE id_encuesta = :id_encuesta
+                WHERE titulo_enc = :titulo_enc
                 AND id_categoria = :id_categoria";
 
         $sentencia = $this->conexion->prepare($sql);
 
         $sentencia->execute([
-            ':id_encuesta' => $idEncuesta,
+            ':titulo_enc' => $tituloEncuesta,
             ':id_categoria' => $idCategoria
         ]);
 
         return $sentencia->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    // Obtener las encuestas de una categoría.
+
+    // Obtener todas las encuestas de una categoría.
     public function obtenerPorCategoria(string $idCategoria): array
     {
         $sql = "SELECT *
                 FROM encuesta
-                WHERE id_categoria = :id_categoria";
+                WHERE id_categoria = :id_categoria
+                ORDER BY titulo_enc ASC";
 
         $sentencia = $this->conexion->prepare($sql);
 
@@ -103,43 +142,100 @@ class Encuesta
         return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Modificar el título y la descripción de una encuesta.
-    public function editarEncuesta(
-        string $idEncuesta,
-        string $idCategoria,
-        string $titulo,
-        ?string $descripcion
-    ): bool {
-        $sql = "UPDATE encuesta
-                SET titulo_enc = :titulo_enc,
-                    descripcion_enc = :descripcion_enc
-                WHERE id_encuesta = :id_encuesta
-                AND id_categoria = :id_categoria";
+
+    // Buscar encuestas por su título.
+    public function buscarPorTitulo(string $titulo): array
+    {
+        $sql = "SELECT
+                    e.titulo_enc,
+                    e.id_categoria,
+                    e.nombre_cat,
+                    e.descripcion_enc
+
+                FROM encuesta e
+
+                INNER JOIN categoria c
+                    ON e.id_categoria = c.id_categoria
+                    AND e.nombre_cat = c.nombre_cat
+
+                WHERE c.tipo_cat = 'encuestas'
+                AND c.estado_cat = 'activa'
+                AND e.titulo_enc LIKE :titulo
+
+                ORDER BY e.titulo_enc ASC";
 
         $sentencia = $this->conexion->prepare($sql);
 
-        return $sentencia->execute([
-            ':id_encuesta' => $idEncuesta,
-            ':id_categoria' => $idCategoria,
-            ':titulo_enc' => $titulo,
-            ':descripcion_enc' => $descripcion
+        $sentencia->execute([
+            ':titulo' => '%' . $titulo . '%'
         ]);
+
+        return $sentencia->fetchAll(PDO::FETCH_ASSOC);
     }
 
+
     // Eliminar una encuesta.
+    // Primero se eliminan sus respuestas y preguntas.
     public function eliminar(
-        string $idEncuesta,
+        string $tituloEncuesta,
         string $idCategoria
     ): bool {
-        $sql = "DELETE FROM encuesta
-                WHERE id_encuesta = :id_encuesta
-                AND id_categoria = :id_categoria";
 
-        $sentencia = $this->conexion->prepare($sql);
+        $this->conexion->beginTransaction();
 
-        return $sentencia->execute([
-            ':id_encuesta' => $idEncuesta,
-            ':id_categoria' => $idCategoria
-        ]);
+        try {
+
+            // Primero eliminamos las respuestas asociadas.
+            $sqlRespuestas = "DELETE FROM respuesta
+                              WHERE titulo_enc = :titulo_enc
+                              AND id_categoria = :id_categoria";
+
+            $sentenciaRespuestas = $this->conexion->prepare($sqlRespuestas);
+
+            $sentenciaRespuestas->execute([
+                ':titulo_enc' => $tituloEncuesta,
+                ':id_categoria' => $idCategoria
+            ]);
+
+
+            // Después eliminamos las preguntas.
+            $sqlPreguntas = "DELETE FROM pregunta
+                             WHERE titulo_enc = :titulo_enc
+                             AND id_categoria = :id_categoria";
+
+            $sentenciaPreguntas = $this->conexion->prepare($sqlPreguntas);
+
+            $sentenciaPreguntas->execute([
+                ':titulo_enc' => $tituloEncuesta,
+                ':id_categoria' => $idCategoria
+            ]);
+
+
+            // Finalmente eliminamos la encuesta.
+            $sqlEncuesta = "DELETE FROM encuesta
+                            WHERE titulo_enc = :titulo_enc
+                            AND id_categoria = :id_categoria";
+
+            $sentenciaEncuesta = $this->conexion->prepare($sqlEncuesta);
+
+            $sentenciaEncuesta->execute([
+                ':titulo_enc' => $tituloEncuesta,
+                ':id_categoria' => $idCategoria
+            ]);
+
+            $eliminada = $sentenciaEncuesta->rowCount() > 0;
+
+            $this->conexion->commit();
+
+            return $eliminada;
+
+        } catch (Throwable $e) {
+
+            if ($this->conexion->inTransaction()) {
+                $this->conexion->rollBack();
+            }
+
+            throw $e;
+        }
     }
 }

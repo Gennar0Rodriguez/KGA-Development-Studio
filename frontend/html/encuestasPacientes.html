@@ -48,21 +48,26 @@
             </nav>
 
             <div class="usuario">
+
                 <img src="../img/invitado.png" alt="Usuario invitado">
 
                 <div>
                     <strong>Invitado</strong>
                     <p>Hospital de Clínicas</p>
                 </div>
+
             </div>
 
             <!-- Botón para cerrar la sesión -->
             <button id="btnLogout" class="btn-logout" type="button">
+
                 <i class="fa-solid fa-right-from-bracket"></i>
                 Cerrar Sesión
+
             </button>
 
         </aside>
+
 
         <main>
 
@@ -77,29 +82,92 @@
 
             </div>
 
-            <form class="encuesta-card" id="formEncuesta">
 
+            <!-- Buscador y selección de encuestas -->
+            <section class="busqueda-encuestas">
+
+                <div class="busqueda-encabezado">
+
+                    <h3>Encuestas disponibles</h3>
+
+                    <p>
+                        Busque una encuesta por su título o seleccione una categoría.
+                    </p>
+
+                </div>
+
+
+                <!-- Buscar por título -->
+                <div class="buscador-encuestas">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input
+                        type="search"
+                        id="buscarEncuesta"
+                        placeholder="Buscar encuesta..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <!-- Filtrar por categoría -->
                 <div class="seleccion-categoria">
 
                     <label for="categoriaEncuesta">
-                        Seleccione una categoría
+                        Filtrar por categoría
                     </label>
 
-                    <select id="categoriaEncuesta" required>
-                        <option value="">Cargando categorías...</option>
+                    <select id="categoriaEncuesta">
+
+                        <option value="">
+                            Todas las categorías
+                        </option>
+
                     </select>
 
                 </div>
 
-                <div id="tituloEncuesta"></div>
 
-                <div id="listaPreguntas">
+                <!-- Resultados de búsqueda -->
+                <div class="lista-encuestas" id="listaEncuestas">
 
-                    <p>Seleccione una categoría para comenzar.</p>
+                    <p>Cargando encuestas...</p>
 
                 </div>
 
+            </section>
+
+
+            <!-- Formulario de la encuesta seleccionada -->
+            <form class="encuesta-card" id="formEncuesta" hidden>
+
+                <div class="encuesta-seleccionada">
+
+                    <div id="tituloEncuesta"></div>
+
+                    <button
+                        type="button"
+                        id="btnVolverEncuestas"
+                        class="btn-volver-encuestas"
+                    >
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Volver a las encuestas
+                    </button>
+
+                </div>
+
+
+                <div id="listaPreguntas">
+
+                    <!-- Las preguntas se cargan desde JavaScript. -->
+
+                </div>
+
+
                 <p id="mensajeEncuesta" role="status"></p>
+
 
                 <button type="submit" class="btn-enviar">
 
@@ -113,6 +181,7 @@
         </main>
 
     </div>
+
 
     <script src="../js/logout.js"></script>
     <script src="../js/encuestasPacientes.js"></script>

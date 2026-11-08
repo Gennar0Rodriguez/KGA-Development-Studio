@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../backend/config/database.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+
 try {
 
     $accion = $_GET['accion'] ?? '';
@@ -15,7 +16,9 @@ try {
 
     $conexion = Database::getInstancia()->getConexion();
 
+
     switch ($accion) {
+
 
         // ==========================================
         // OBTENER ESTADÍSTICAS
@@ -23,22 +26,23 @@ try {
 
         case 'obtenerEstadisticas':
 
-            $idEncuesta = $_GET['id_encuesta'] ?? '';
+            $tituloEncuesta = $_GET['titulo_enc'] ?? '';
             $idCategoria = $_GET['id_categoria'] ?? '';
 
-            if ($idEncuesta === '' || $idCategoria === '') {
+            if ($tituloEncuesta === '' || $idCategoria === '') {
 
                 http_response_code(400);
 
                 echo json_encode([
-                    'error' => 'Falta el identificador de la encuesta o categoría'
+                    'error' => 'Falta el título de la encuesta o su categoría'
                 ]);
 
                 exit;
             }
 
+
             $estadisticas = $respuestaModelo->obtenerEstadisticasPorEncuesta(
-                $idEncuesta,
+                $tituloEncuesta,
                 $idCategoria
             );
 
@@ -64,11 +68,12 @@ try {
                 exit;
             }
 
+
             $datos = json_decode(file_get_contents('php://input'), true);
 
             if (
                 !is_array($datos) ||
-                empty($datos['id_encuesta']) ||
+                empty($datos['titulo_enc']) ||
                 empty($datos['id_categoria']) ||
                 !isset($datos['respuestas']) ||
                 !is_array($datos['respuestas'])
@@ -83,9 +88,11 @@ try {
                 exit;
             }
 
-            $idEncuesta = $datos['id_encuesta'];
-            $idCategoria = $datos['id_categoria'];
+
+            $tituloEncuesta = trim($datos['titulo_enc']);
+            $idCategoria = trim($datos['id_categoria']);
             $respuestas = $datos['respuestas'];
+
 
             if (count($respuestas) === 0) {
 
@@ -98,12 +105,20 @@ try {
                 exit;
             }
 
-            // Comprobar que la encuesta exista y su categoría siga activa.
-            $sqlEncuesta = "SELECT e.id_encuesta
+
+            // Comprobar que la encuesta exista y esté activa.
+            $sqlEncuesta = "SELECT
+                                e.titulo_enc,
+                                e.id_categoria,
+                                e.nombre_cat
+
                             FROM encuesta e
+
                             INNER JOIN categoria c
                                 ON e.id_categoria = c.id_categoria
-                            WHERE e.id_encuesta = :id_encuesta
+                                AND e.nombre_cat = c.nombre_cat
+
+                            WHERE e.titulo_enc = :titulo_enc
                             AND e.id_categoria = :id_categoria
                             AND c.tipo_cat = 'encuestas'
                             AND c.estado_cat = 'activa'";
@@ -111,11 +126,14 @@ try {
             $stmtEncuesta = $conexion->prepare($sqlEncuesta);
 
             $stmtEncuesta->execute([
-                ':id_encuesta' => $idEncuesta,
+                ':titulo_enc' => $tituloEncuesta,
                 ':id_categoria' => $idCategoria
             ]);
 
-            if (!$stmtEncuesta->fetch()) {
+            $encuesta = $stmtEncuesta->fetch(PDO::FETCH_ASSOC);
+
+
+            if (!$encuesta) {
 
                 http_response_code(404);
 
@@ -126,15 +144,20 @@ try {
                 exit;
             }
 
+
             // Obtener las preguntas reales de la encuesta.
             $preguntas = $preguntaModelo->obtenerPorEncuesta(
-                $idEncuesta,
+                $tituloEncuesta,
                 $idCategoria
             );
 
-            $idsValidos = array_column($preguntas, 'id_pregunta');
+            $idsValidos = array_column(
+                $preguntas,
+                'id_pregunta'
+            );
 
             $idsRecibidos = [];
+
 
             // Validar que cada respuesta corresponda a una pregunta real.
             foreach ($respuestas as $respuesta) {
@@ -145,6 +168,7 @@ try {
                     $respuesta['valor'] ?? null,
                     FILTER_VALIDATE_INT
                 );
+
 
                 if (
                     $idPregunta === '' ||
@@ -167,6 +191,7 @@ try {
                 $idsRecibidos[] = $idPregunta;
             }
 
+
             // Guardar todas las respuestas en una única transacción.
             $conexion->beginTransaction();
 
@@ -179,14 +204,17 @@ try {
                     $respuestaModelo->crear(
                         $idRespuesta,
                         $respuesta['id_pregunta'],
-                        $idEncuesta,
+                        $tituloEncuesta,
                         $idCategoria,
+                        $encuesta['nombre_cat'],
                         (string) $respuesta['valor'],
                         'opcion multiple'
                     );
                 }
 
+
                 $conexion->commit();
+
 
                 echo json_encode([
                     'exito' => true,
