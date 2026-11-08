@@ -87,7 +87,7 @@ class Notificacion
                     :id_destino,
                     :ci_admin,
                     :ci_emisor,
-                    CURDATE(),
+                    DATE_SUB(UTC_TIMESTAMP(), INTERVAL 3 HOUR),
                     FALSE,
                     :titulo,
                     :descripcion,

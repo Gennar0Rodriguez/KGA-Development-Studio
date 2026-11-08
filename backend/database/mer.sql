@@ -123,7 +123,7 @@ CREATE TABLE notifica (
     id_destino VARCHAR(50) NOT NULL,
     ci_admin VARCHAR(8),
     ci_emisor VARCHAR(8) NOT NULL,
-    fecha_envio DATE NOT NULL,
+    fecha_envio DATETIME NOT NULL,
     leido BOOLEAN,
     titulo_not VARCHAR(100) NOT NULL,
     descripcion_not VARCHAR(255) NOT NULL,

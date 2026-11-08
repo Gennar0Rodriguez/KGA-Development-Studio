@@ -296,6 +296,7 @@ async function eliminarNotificacion(item) {
     }
 }
 
+
 // ======================================================
 // FORMATEAR FECHA
 // ======================================================
@@ -306,7 +307,38 @@ function formatearFecha(fechaStr) {
         return '';
     }
 
-    const fecha = new Date(fechaStr);
+    /*
+     * MySQL devuelve DATETIME sin información de zona horaria.
+     * Separamos sus componentes para interpretarlos como
+     * hora local del navegador y evitar el desfase de 3 horas.
+     */
+
+    const coincidencia = fechaStr.match(
+        /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/
+    );
+
+    if (!coincidencia) {
+        return fechaStr;
+    }
+
+    const [
+        ,
+        anio,
+        mes,
+        dia,
+        hora,
+        minuto,
+        segundo
+    ] = coincidencia;
+
+    const fecha = new Date(
+        Number(anio),
+        Number(mes) - 1,
+        Number(dia),
+        Number(hora),
+        Number(minuto),
+        Number(segundo)
+    );
 
     if (Number.isNaN(fecha.getTime())) {
         return fechaStr;
