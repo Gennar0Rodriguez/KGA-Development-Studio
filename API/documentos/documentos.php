@@ -30,10 +30,6 @@ function responderJson(array $datos, int $codigo = 200): void
     exit;
 }
 
-// ======================================================
-// VERIFICAR ADMINISTRADOR
-// ======================================================
-
 function verificarAdministrador(): bool
 {
     $usuario = $_SESSION['usuario'] ?? [];
@@ -42,26 +38,15 @@ function verificarAdministrador(): bool
         && strtolower(trim($usuario['cargo'])) === 'administrador';
 }
 
-// ======================================================
-// RESOLVER RUTA SEGURA DEL ARCHIVO
-// ======================================================
 
 function resolverRutaArchivo(
     string $rutaRelativa,
     string $raizProyecto
 ): ?string {
-    $raizUploads = realpath(
-        $raizProyecto . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'documentos'
-    );
-
-    if ($raizUploads === false) {
-        return null;
-    }
-
     $rutaRelativa = str_replace(
         ['\\', '/'],
         DIRECTORY_SEPARATOR,
-        $rutaRelativa
+        ltrim($rutaRelativa, '\\/')
     );
 
     $rutaFisica = realpath(
@@ -72,13 +57,31 @@ function resolverRutaArchivo(
         return null;
     }
 
-    $prefijo = $raizUploads . DIRECTORY_SEPARATOR;
+    $raicesUploads = [
+        realpath(
+            $raizProyecto . DIRECTORY_SEPARATOR . 'API'
+            . DIRECTORY_SEPARATOR . 'uploads'
+            . DIRECTORY_SEPARATOR . 'documentos'
+        ),
+        realpath(
+            $raizProyecto . DIRECTORY_SEPARATOR . 'uploads'
+            . DIRECTORY_SEPARATOR . 'documentos'
+        )
+    ];
 
-    if (strpos($rutaFisica, $prefijo) !== 0) {
-        return null;
+    foreach ($raicesUploads as $raizUploads) {
+        if (
+            $raizUploads !== false &&
+            strpos(
+                $rutaFisica,
+                $raizUploads . DIRECTORY_SEPARATOR
+            ) === 0
+        ) {
+            return $rutaFisica;
+        }
     }
 
-    return $rutaFisica;
+    return null;
 }
 
 // ======================================================
@@ -300,13 +303,11 @@ if (($_POST['accion'] ?? '') === 'editar') {
         // el archivo anterior antes de actualizar la base de datos.
         $nombreServidor = 'DOC' . bin2hex(random_bytes(6)) . '.pdf';
 
-        $carpetaRelativa = 'uploads/documentos';
+        $carpetaRelativa = 'API/uploads/documentos';
 
         $carpetaFisica = $raizProyecto
             . DIRECTORY_SEPARATOR
-            . 'uploads'
-            . DIRECTORY_SEPARATOR
-            . 'documentos';
+            . str_replace('/', DIRECTORY_SEPARATOR, $carpetaRelativa);
 
         if (!is_dir($carpetaFisica)) {
             responderJson([
@@ -500,7 +501,7 @@ if (($_POST['accion'] ?? '') === 'editar') {
 
         $nombreServidor = $idDocumento . '.pdf';
 
-        $carpetaRelativa = 'uploads/documentos';
+        $carpetaRelativa = 'API/uploads/documentos';
 
         $carpetaFisica = $raizProyecto
             . DIRECTORY_SEPARATOR
