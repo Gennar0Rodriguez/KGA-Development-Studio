@@ -100,7 +100,6 @@ CREATE TABLE traslado (
     ci_chofer VARCHAR(8) NOT NULL,
     matricula VARCHAR(15) NOT NULL,
     id_destino VARCHAR(50) NOT NULL,
-    fecha_llegada DATE,
     fecha_traslado DATE NOT NULL,
     fecha_llegada DATE,
     hora_salida TIME,
