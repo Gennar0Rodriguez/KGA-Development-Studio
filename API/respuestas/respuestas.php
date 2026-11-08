@@ -107,16 +107,16 @@ try {
 
 
             // Comprobar que la encuesta exista y esté activa.
+            // El nombre de la categoría se obtiene desde categoria,
+            // ya que encuesta solamente guarda id_categoria.
             $sqlEncuesta = "SELECT
                                 e.titulo_enc,
-                                e.id_categoria,
-                                e.nombre_cat
+                                e.id_categoria
 
                             FROM encuesta e
 
                             INNER JOIN categoria c
                                 ON e.id_categoria = c.id_categoria
-                                AND e.nombre_cat = c.nombre_cat
 
                             WHERE e.titulo_enc = :titulo_enc
                             AND e.id_categoria = :id_categoria
@@ -206,7 +206,6 @@ try {
                         $respuesta['id_pregunta'],
                         $tituloEncuesta,
                         $idCategoria,
-                        $encuesta['nombre_cat'],
                         (string) $respuesta['valor'],
                         'opcion multiple'
                     );

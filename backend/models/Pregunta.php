@@ -59,36 +59,44 @@ class Pregunta
     }
 
 
-    // Crear una pregunta nueva.
-    // Se utilizan únicamente las columnas existentes en el MER.
+    // ======================================================
+    // CREAR UNA RESPUESTA
+    // ======================================================
+
     public function crear(
+        string $idRespuesta,
         string $idPregunta,
         string $tituloEncuesta,
         string $idCategoria,
-        string $nombrePregunta
+        ?string $informacion,
+        string $tipo
     ): bool {
 
-        $sql = "INSERT INTO pregunta (
+        $sql = "INSERT INTO respuesta (
+                    id_respuesta,
                     id_pregunta,
                     titulo_enc,
                     id_categoria,
-                    nombre_pregunta,
+                    informacion,
                     tipo
                 )
                 VALUES (
+                    :id_respuesta,
                     :id_pregunta,
                     :titulo_enc,
                     :id_categoria,
-                    :nombre_pregunta,
-                    'opcion multiple'
+                    :informacion,
+                    :tipo
                 )";
 
         $sentencia = $this->conexion->prepare($sql);
 
+        $sentencia->bindValue(':id_respuesta', $idRespuesta);
         $sentencia->bindValue(':id_pregunta', $idPregunta);
         $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
-        $sentencia->bindValue(':nombre_pregunta', $nombrePregunta);
+        $sentencia->bindValue(':informacion', $informacion);
+        $sentencia->bindValue(':tipo', $tipo);
 
         return $sentencia->execute();
     }
