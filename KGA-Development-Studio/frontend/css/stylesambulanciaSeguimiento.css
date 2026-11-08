@@ -1,0 +1,106 @@
+/* ==========================================================
+   CAPAS DE TRANSPARENCIA
+   capa-1: directamente sobre el fondo (la más transparente)
+   capa-2: sobre una capa-1
+   capa-3: sobre una capa-2
+   capa-4: sobre una capa-3 (la más opaca)
+   Si querés cambiar las opacidades, hacelo igual en todos los
+   archivos css que tengan este bloque.
+========================================================== */
+:root {
+    --capa-1: rgba(255, 255, 255, 0.72);
+    --capa-2: rgba(255, 255, 255, 0.82);
+    --capa-3: rgba(255, 255, 255, 0.91);
+    --capa-4: rgba(255, 255, 255, 0.97);
+    --capa-blur: blur(8px);
+}
+
+.seguimiento-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 25px auto;
+    background: var(--capa-2);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+}
+
+.seguimiento-container h2 {
+    margin-bottom: 25px;
+    font-size: 23px;
+    color: #263445;
+    text-align: left;
+}
+
+.info-ambulancia {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 30px;
+    font-size: 13px;
+    color: #344256;
+}
+
+.info-ambulancia h3 {
+    margin-bottom: 10px;
+    font-size: 17px;
+    color: #263445;
+}
+
+.progreso-container {
+    margin-bottom: 30px;
+    font-size: 13px;
+    color: #526579;
+}
+
+.barra-progreso {
+    width: 100%;
+    height: 14px;
+    background: #e8edf2;
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 15px 0;
+}
+
+.progreso {
+    width: 80%;
+    height: 100%;
+    background: #159ed0;
+    border-radius: 20px;
+}
+
+.estados-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.estados-container p {
+    padding: 14px 17px;
+    border: 1px solid #e1e8ef;
+    border-radius: 11px;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.completado {
+    background: #e4f7ec;
+    color: #16804a;
+}
+
+.activo {
+    background: #e1f3fc;
+    color: #087eaf;
+}
+
+.pendiente {
+    background: #f3f6f9;
+    color: #718096;
+}
+
+@media (max-width: 700px) {
+    .seguimiento-container {
+        padding: 16px;
+    }
+}

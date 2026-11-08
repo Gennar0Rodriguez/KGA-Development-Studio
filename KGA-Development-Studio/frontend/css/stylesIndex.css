@@ -1,0 +1,138 @@
+/* Fuente de todos los h1 y h2 */
+h1,
+h2 {
+    font-family: "Inconsolata", monospace;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+
+body {
+    font-family:"Lexend", sans-serif;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("../img/clinicas.jpg");
+    background-position: center 30%;
+    margin: 0;
+    padding: 0;
+    background-color: #1f2d3a;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+header img {
+    width: 300px;
+    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));
+}
+
+.login-title {
+    font-family: "Inconsolata", monospace;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.login-container {
+    width: 400px;
+    padding: 25px 30px;
+    background-color: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login-container p {
+    color: #333333;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}   
+
+input {
+    padding: 10px;
+    font-family: "Lexend", sans-serif;
+    border: 1px solid #ccc;
+    border-radius: 60px;
+}
+
+button {
+    display: inline-block;
+    padding: 12px;
+    margin-top: 10px;
+    background-color: #2563EB;
+    color: rgb(255, 255, 255);
+    text-decoration: none;
+    text-align: center;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: "Lexend", sans-serif;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+button:hover {
+    background-color: #1d4ed8;
+}
+
+.notAdmin-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    color: #01AEF0;
+}
+
+.notAdmin-container p { 
+    color: #ffffff;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+.invitado-container {
+    width: 400px;
+    padding: 14px 20px;
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 12px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.invitado-container a {
+    text-decoration: none;
+    font-weight: bold;
+    color: #01AEF0;
+}
+
+.invitado-container a:hover {
+    text-decoration: underline;
+}

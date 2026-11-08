@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Ambulancias | SIGSM</title>
+
+    <link rel="icon" href="../logo/hospital de clinicaslogo.png">
+    <link rel="stylesheet" href="../css/stylesgestionAmbulancias.css">
+    <link rel="stylesheet" href="../css/stylesnotificaciones.css">
+    <link rel="stylesheet" href="../css/modalNuevoTraslado.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/header.css">
+</head>
+
+<body data-titulo="Gestión de Ambulancias">
+
+    <div id="header"></div>
+    <hr>
+
+    <div class="layout">
+
+        <div id="sidebar"></div>
+
+        <main>
+
+            <section class="btn-principal">
+
+                <button type="button" class="btn-agregar" id="btnAbrirModalTraslado">
+                    <i class="fa-solid fa-plus"></i> Añadir un traslado
+                </button>
+
+                <button type="button" class="btn-agregar" id="btnAbrirModalAmbulancia">
+                    <i class="fa-solid fa-ambulance"></i> Añadir un Vehículo
+                </button>
+
+                <input
+                    type="text"
+                    class="buscador"
+                    placeholder="Buscar por matrícula o cédula del paciente..."
+                >
+
+                <button type="button" class="btn-buscar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+
+            </section>
+
+            <!-- Las tarjetas se generan desde modalNuevoTraslado.js -->
+            <section class="contenedor-ambulancias"></section>
+
+        </main>
+
+
+        <!-- ==========================================
+             MODAL PARA CREAR O EDITAR UN TRASLADO
+        =========================================== -->
+
+        <div id="modalNuevoTraslado" class="modal-traslado">
+
+            <div class="modal-traslado-contenido">
+
+                <div class="modal-traslado-header">
+
+                    <h2>Nuevo Traslado</h2>
+
+                    <button
+                        type="button"
+                        id="btnCerrarModalTraslado"
+                        class="btn-cerrar-traslado">
+                        &times;
+                    </button>
+
+                </div>
+
+
+                <form id="formNuevoTraslado">
+
+                    <!-- Vehículo asignado al traslado -->
+
+                    <label for="ambulancia">Matrícula del vehículo</label>
+
+                    <div class="campo-busqueda-ambulancia">
+
+                        <input
+                            type="text"
+                            id="ambulancia"
+                            placeholder="Escriba una matrícula..."
+                            autocomplete="off"
+                            required
+                        >
+
+                        <div
+                            id="sugerenciasAmbulancia"
+                            class="sugerencias-ambulancia">
+                        </div>
+
+                    </div>
+
+
+                    <!-- Tipo de elemento que se transporta -->
+
+                    <label for="tipoTransportable">
+                        ¿Qué se va a trasladar?
+                    </label>
+
+                    <select id="tipoTransportable" required>
+
+                        <option value="paciente">Paciente</option>
+                        <option value="organo">Elemento</option>
+
+                    </select>
+
+
+                                <!-- Datos correspondientes a un paciente -->
+
+            <div id="camposPaciente">
+
+                <!-- La búsqueda se realiza mediante la cédula. -->
+                <label for="ciPaciente">Cédula del paciente</label>
+
+                <div class="campo-busqueda-ambulancia">
+
+                    <input
+                        type="text"
+                        id="ciPaciente"
+                        maxlength="8"
+                        inputmode="numeric"
+                        placeholder="Escriba la CI del paciente..."
+                        autocomplete="off"
+                        required
+                    >
+
+                    <div
+                        id="sugerenciasPaciente"
+                        class="sugerencias-ambulancia">
+                    </div>
+
+                </div>
+
+                <!-- El nombre se completa al seleccionar una CI. -->
+                <label for="paciente">Nombre del paciente</label>
+
+                <input
+                    type="text"
+                    id="paciente"
+                    maxlength="50"
+                    placeholder="Se completará al seleccionar la CI"
+                    readonly
+                    required
+                >
+
+                <label for="oxigeno">¿Necesita oxígeno?</label>
+
+                <select id="oxigeno">
+
+                    <option value="No">No</option>
+                    <option value="Si">Sí</option>
+
+                </select>
+
+            </div>
+
+
+                    <!-- Datos correspondientes a un órgano -->
+
+
+            <div id="camposOrgano" style="display: none;">
+
+                <label for="nombreElemento">Nombre del elemento</label>
+
+                <div class="campo-busqueda-ambulancia">
+
+                    <input
+                        type="text"
+                        id="nombreElemento"
+                        maxlength="50"
+                        placeholder="Escriba el nombre del elemento..."
+                        autocomplete="off"
+                    >
+
+                    <div
+                        id="sugerenciasElemento"
+                        class="sugerencias-ambulancia">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+                    <!-- Conductor -->
+
+                    <label for="buscadorConductor">Conductor</label>
+
+                    <div class="campo-busqueda-ambulancia">
+
+                        <input
+                            type="text"
+                            id="buscadorConductor"
+                            placeholder="Escriba un nombre o CI..."
+                            autocomplete="off"
+                            required
+                        >
+
+                        <div
+                            id="sugerenciasConductor"
+                            class="sugerencias-ambulancia">
+                        </div>
+
+                        <input type="hidden" id="conductor">
+
+                    </div>
+
+
+                    <!-- Enfermero obligatorio para ambos tipos -->
+
+                    <!-- Buscador de enfermeros responsables -->
+
+                    <label for="buscadorEnfermero">Enfermero responsable</label>
+
+                    <div class="campo-busqueda-ambulancia">
+
+                        <input
+                            type="text"
+                            id="buscadorEnfermero"
+                            placeholder="Escriba un nombre, apellido o CI..."
+                            autocomplete="off"
+                            required
+                        >
+
+                        <!-- Aquí aparecen las sugerencias encontradas. -->
+                        <div
+                            id="sugerenciasEnfermero"
+                            class="sugerencias-ambulancia">
+                        </div>
+
+                        <!-- Guardamos la CI del enfermero seleccionado. -->
+                        <input type="hidden" id="enfermero">
+
+                    </div>
+
+
+                    <!-- Destino -->
+
+                <label for="buscadorDestino">Destino</label>
+
+                <div class="campo-busqueda-ambulancia">
+
+                    <input
+                        type="text"
+                        id="buscadorDestino"
+                        placeholder="Escriba el nombre del destino..."
+                        autocomplete="off"
+                        required
+                    >
+
+                    <div
+                        id="sugerenciasDestino"
+                        class="sugerencias-ambulancia">
+                    </div>
+
+                    <!-- Se guarda el identificador del destino seleccionado. -->
+                    <input type="hidden" id="destino">
+
+                </div>
+
+
+                    <!-- Fecha y hora -->
+
+                    <label for="fecha">Fecha</label>
+
+                    <input
+                        type="date"
+                        id="fecha"
+                        required
+                    >
+
+                    <label for="hora">Hora de salida</label>
+
+                    <input
+                        type="time"
+                        id="hora"
+                        required
+                    >
+
+
+                    <!-- Información compartida -->
+
+                    <label for="observaciones">Observaciones</label>
+
+                    <textarea
+                        id="observaciones"
+                        maxlength="100"
+                        placeholder="Observaciones del traslado..."
+                    ></textarea>
+
+                    <!-- Botones -->
+
+                    <div class="acciones-formulario">
+
+                        <button
+                            type="button"
+                            id="btnCancelarModalTraslado"
+                            class="btn-cancelar">
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn-guardar">
+                            Guardar
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==========================================
+             MODAL PARA REGISTRAR UN VEHÍCULO
+        =========================================== -->
+
+        <div id="modalNuevaAmbulancia" class="modal-traslado">
+
+            <div class="modal-traslado-contenido">
+
+                <div class="modal-traslado-header">
+
+                    <h2>Añadir una ambulancia</h2>
+
+                    <button
+                        type="button"
+                        id="btnCerrarModalAmbulancia"
+                        class="btn-cerrar-traslado">
+                        &times;
+                    </button>
+
+                </div>
+
+                <form id="formNuevaAmbulancia">
+
+                    <label for="matriculaVehiculo">Matrícula</label>
+
+                    <input
+                        type="text"
+                        id="matriculaVehiculo"
+                        name="matricula"
+                        maxlength="15"
+                        placeholder="Ej: SCA1234"
+                        required
+                    >
+
+                    <label for="modeloVehiculo">Modelo</label>
+
+                    <input
+                        type="text"
+                        id="modeloVehiculo"
+                        name="modelo"
+                        maxlength="50"
+                        placeholder="Ej: Mercedes Sprinter"
+                        required
+                    >
+
+                    <label for="capacidadVehiculo">Capacidad</label>
+
+                    <input
+                        type="number"
+                        id="capacidadVehiculo"
+                        name="capacidad"
+                        min="1"
+                        placeholder="Cantidad de personas"
+                        required
+                    >
+
+                    <label for="tipoVehiculo">Tipo de vehículo</label>
+
+                    <select id="tipoVehiculo" name="tipo_vehiculo" required>
+
+                        <option value="">Seleccione un tipo</option>
+                        <option value="ambulancia">Ambulancia</option>
+                        <option value="auto">Auto</option>
+                        <option value="otro">Otro</option>
+
+                    </select>
+
+                    <label for="camillaVehiculo">¿Dispone de camilla?</label>
+
+                    <select id="camillaVehiculo" name="camilla" required>
+
+                        <option value="">Seleccione una opción</option>
+                        <option value="1">Sí</option>
+                        <option value="0">No</option>
+
+                    </select>
+
+                    <div class="acciones-formulario">
+
+                        <button
+                            type="button"
+                            id="btnCancelarModalAmbulancia"
+                            class="btn-cancelar">
+                            Cancelar
+                        </button>
+
+                        <button type="submit" class="btn-guardar">
+                            Guardar vehículo
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+    
+    
+        <div id="modalHoraTraslado" class="modal-traslado">
+            <div class="modal-traslado-contenido" style="max-width: 420px;">
+                <div class="modal-traslado-header">
+                    <h2 id="tituloModalHora">Registrar hora</h2>
+                    <button type="button" id="btnCerrarModalHora" class="btn-cerrar-traslado">&times;</button>
+                </div>
+
+                <form id="formHoraTraslado">
+                    <label id="labelHoraTraslado" for="inputHoraTraslado">Hora</label>
+                    <input type="time" id="inputHoraTraslado" required>
+
+                    <div class="acciones-formulario">
+                        <button type="button" id="btnCancelarHora" class="btn-cancelar">Cancelar</button>
+                        <button type="submit" class="btn-guardar">Guardar hora</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+
+    <script src="../js/modalNuevoTraslado.js"></script>
+    <script src="../js/logout.js"></script>
+    <script src="../js/sidebarEmpleado.js"></script>
+    <script src="../js/notificaciones.js"></script>
+    <script src="../js/gestionAmbulancias.js"></script>
+
+</body>
+</html>

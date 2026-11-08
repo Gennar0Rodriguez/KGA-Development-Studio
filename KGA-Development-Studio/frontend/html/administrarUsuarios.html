@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar Usuarios | SIGSM</title>
+    <link rel="icon" href="../logo/hospital de clinicaslogo.png">
+    <link rel="stylesheet" href="../css/stylesadministrarUsuarios.css">
+    <link rel="stylesheet" href="../css/stylesnotificaciones.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <header>
+        <img src="../logo/hospital de clinicaslogo.png" alt="Logo">
+        <h1>Administración de Usuarios</h1>
+        <div></div>
+    </header>
+
+    <hr>
+
+    <div class="layout">
+        <div id="sidebar"></div>
+
+        <main>
+
+            <div class="topbar">
+                <input
+                    type="text"
+                    id="inputBuscar"
+                    placeholder="Buscar usuario por CI, nombre o apellido...">
+
+            </div>
+
+            <div class="contenido">
+
+                <section class="usuarios">
+                    <h2>Usuarios Registrados</h2>
+
+                    <table class="tabla-usuarios">
+                        <thead>
+                            <tr>
+                                <th>CI</th>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Cargo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaUsuariosBody">
+                        </tbody>
+                    </table>
+                </section>
+
+        <aside class="panel-agregar">
+        <h2 id="label-User">Agregar Usuario</h2>
+
+        <form id="formAgregarUsuario">
+            <input type="text" name="ci" id="ci" placeholder="Cédula (8 dígitos)" maxlength="8" required>
+            <input type="text" name="nombre" id="nombre" placeholder="Nombre" required>
+            <input type="text" name="apellido" id="apellido" placeholder="Apellido" required>
+            <input type="password" name="pass" id="pass" placeholder="Contraseña" required>
+            
+            <select name="rol" id="rol" required>
+                <option value="" disabled selected>Seleccione un cargo</option>
+                <option value="administrador">Administrador</option>
+                <option value="empleado">Empleado</option>
+            </select>
+
+            <!-- Contenedor flexible para los botones -->
+            <div style="display: flex; gap: 8px; width: 100%;">
+                <button type="submit" class="btn-agregar" id="btn-agregar" style="flex: 1;">
+                    <i class="fa-solid fa-user-plus"></i>
+                    Agregar Usuario
+                </button>
+                
+                <!-- Botón con la X para limpiar/cancelar edición (Oculto por defecto) -->
+                <button type="button" id="btn-cancelar" style="display: none; background-color: #ef4444; color: white; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-size: 1rem;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </form>
+
+        <p id="msgResultado" style="margin-top: 15px; font-weight: bold; text-align: center;"></p>
+    </aside>
+
+            </div>
+
+        </main>
+        
+    </div>
+
+    <script src="../js/administrarUsuarios.js"></script>
+    <script src="../js/sidebarAdmin.js"></script>
+    <script src="../js/logout.js"></script>
+    <script src="../js/notificaciones.js"></script>
+    
+    
+</body>
+</html>

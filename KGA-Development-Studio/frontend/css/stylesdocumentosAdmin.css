@@ -1,0 +1,251 @@
+:root {
+    --capa-1: rgba(255, 255, 255, 0.72);
+    --capa-2: rgba(255, 255, 255, 0.82);
+    --capa-3: rgba(255, 255, 255, 0.91);
+    --capa-4: rgba(255, 255, 255, 0.97);
+    --capa-blur: blur(8px);
+}
+
+hr {
+    height: 10px;
+}
+
+.documentos-container {
+    width: 100%;
+    margin: 0;
+    padding: 25px;
+    background: var(--capa-1);
+    border-radius: 15px;
+    min-height: calc(100vh - 150px);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-auto-rows: min-content;
+    align-items: center;
+    column-gap: 15px;
+    backdrop-filter: var(--capa-blur);
+    -webkit-backdrop-filter: var(--capa-blur);
+}
+
+.documentos-container h2 {
+    font-size: 23px;
+    color: #263445;
+}
+
+.btn-subir {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #159ed0;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    padding: 12px 17px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-subir:hover {
+    background: #087eaf;
+}
+
+.documentos-container > .btn-subir {
+    margin: 0;
+    padding: 12px 17px;
+    font-size: 14px;
+}
+
+.busqueda-documentos {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin-top: 25px;
+    background: var(--capa-2);
+    border-radius: 15px;
+    padding: 15px 23px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+}
+
+.busqueda-documentos .buscador {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 11px 13px;
+    border: 1px solid #d5dce5;
+    border-radius: 8px;
+    background: var(--capa-3);
+    color: #344256;
+    font-size: 14px;
+    outline: none;
+}
+
+.busqueda-documentos .buscador:focus {
+    border-color: #159ed0;
+}
+
+.busqueda-documentos .btn-buscar {
+    width: 50px;
+    height: auto;
+    padding: 0;
+    background: #159ed0;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.busqueda-documentos .btn-buscar:hover {
+    background: #087eaf;
+}
+
+.tabla-responsive {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 25px;
+    background: var(--capa-2);
+    border-radius: 15px;
+    padding: 15px 23px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+    overflow-x: auto;
+}
+
+.tabla-documentos {
+    width: 100%;
+    min-width: 550px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.tabla-documentos th,
+.tabla-documentos td {
+    padding: 13px 15px;
+    border-bottom: 1px solid #e8edf2;
+    font-size: 13px;
+}
+
+.tabla-documentos th {
+    color: #718096;
+    font-weight: 600;
+    background: var(--capa-3);
+}
+
+.tabla-documentos td {
+    color: #344256;
+}
+
+.tabla-documentos tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.tabla-documentos tbody tr:hover {
+    background: rgba(21, 158, 208, 0.10);
+}
+
+.btn-eliminar-doc {
+    background: #fee8e7;
+    color: #c03939;
+    border: none;
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.visor-documento {
+    margin-top: 25px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.82);
+    border-radius: 15px;
+}
+
+.visor-documento h2 {
+    margin-bottom: 15px;
+    font-size: 19px;
+    color: #263445;
+}
+
+.visor-documento iframe {
+    display: block;
+    width: 100%;
+    height: 650px;
+    border: 1px solid #d5dce5;
+    border-radius: 10px;
+    background: white;
+}
+
+.btn-ver-doc {
+    margin-right: 8px;
+    background: #e1f3fc;
+    color: #087eaf;
+    border: none;
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.visor-documento iframe[hidden] {
+    display: none;
+}
+
+.btn-eliminar-doc:hover {
+    background: #fbd0ce;
+}
+
+@media (max-width: 768px) {
+    .documentos-container {
+        padding: 15px;
+    }
+
+    .busqueda-documentos {
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .busqueda-documentos .btn-buscar {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .tabla-responsive {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .documentos-container {
+        grid-template-columns: 1fr;
+        row-gap: 15px;
+    }
+
+    .documentos-container > .btn-subir {
+        justify-self: start;
+    }
+}
+
+/* Botón para editar documentos. */
+.btn-editar-doc {
+    margin-right: 8px;
+    background: #fff3d6;
+    color: #a66a00;
+    border: none;
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-editar-doc:hover {
+    background: #ffe5ad;
+}

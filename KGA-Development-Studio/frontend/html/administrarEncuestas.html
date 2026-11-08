@@ -1,0 +1,357 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Editar Encuestas | SIGSM</title>
+    
+    <link rel="icon" href="../logo/hospital de clinicaslogo.png">
+    <link rel="stylesheet" href="../css/stylesadministrarEncuestas.css">
+    <link rel="stylesheet" href="../css/header.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body data-titulo="Editar Encuestas">
+
+    <header>
+        <img src="../logo/hospital de clinicaslogo.png" alt="Logo Hospital">
+        <h1>Administración de Encuestas</h1>
+    </header>
+
+    <div id="header"></div>
+
+    <hr>
+
+    <div class="layout">
+
+        <div id="sidebar"></div>
+
+        <main>
+
+            <section class="contenido">
+
+                <!-- Encabezado de la página -->
+                <div class="encabezado-contenido">
+
+                    <div>
+                        <h2>Editar encuestas</h2>
+
+                        <p>
+                            Administra las categorías, preguntas y estadísticas.
+                        </p>
+                    </div>
+
+                    <div class="acciones-encuestas">
+
+                        <button
+                            class="btn-agregar-encuesta"
+                            id="btnNuevaCategoria"
+                            type="button"
+                        >
+                            <i class="fa-solid fa-folder-plus"></i>
+                            Nueva categoría
+                        </button>
+
+                        <button
+                            class="btn-nueva-encuesta"
+                            id="btnNuevaEncuesta"
+                            type="button"
+                        >
+                            <i class="fa-solid fa-plus"></i>
+                            Nueva encuesta
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Administración de categorías -->
+                <section class="panel-categorias">
+
+                    <div class="titulo-categorias">
+
+                        <div>
+                            <h3>Categorías de encuestas</h3>
+
+                            <p>
+                                Administrá las categorías disponibles para los pacientes.
+                            </p>
+                        </div>
+
+                        <span id="contadorCategorias">0 de 6 activas</span>
+
+                    </div>
+
+                    <div class="tabla-contenedor">
+
+                        <table class="tabla-categorias">
+
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tablaCategorias">
+
+                                <tr>
+                                    <td colspan="3">
+                                        Cargando categorías...
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </section>
+
+
+                <!-- Panel original de preguntas y estadísticas -->
+                <div class="panel-principal">
+
+                    <section class="panel-preguntas">
+
+                        <div class="seleccion-encuesta">
+
+                            <label for="encuesta">
+                                Seleccionar encuesta
+                            </label>
+
+                            <select id="encuesta">
+                                <option value="">Cargando encuestas...</option>
+                            </select>
+
+                        </div>
+
+                        <div class="titulo-preguntas">
+
+                            <h3>Preguntas de la encuesta</h3>
+
+                            <span>0 preguntas</span>
+
+                        </div>
+
+                        <div class="lista-preguntas">
+
+                            <!-- Las preguntas se cargan desde JavaScript. -->
+
+                        </div>
+
+                        <button class="btn-agregar-pregunta" type="button">
+
+                            <i class="fa-solid fa-plus"></i>
+                            Agregar pregunta
+
+                        </button>
+
+                        <button class="btn-guardar" type="button">
+
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            Guardar cambios
+
+                        </button>
+
+                    </section>
+
+
+                    <aside class="panel-estadisticas">
+
+                        <div class="estadisticas-titulo">
+
+                            <i class="fa-solid fa-chart-column"></i>
+
+                            <h3>Estadísticas</h3>
+
+                        </div>
+
+                        <div class="promedio">
+
+                            <span>Promedio general</span>
+
+                            <strong>
+                                0.0 <small>/ 5</small>
+                            </strong>
+
+                        </div>
+
+                        <div class="resultados">
+
+                            <h4>Promedio por pregunta</h4>
+
+                        </div>
+
+                        <div class="cantidad-respuestas">
+
+                            <i class="fa-solid fa-users"></i>
+
+                            <div>
+
+                                <strong>0</strong>
+
+                                <span>Respuestas recibidas</span>
+
+                            </div>
+
+                        </div>
+
+                    </aside>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <!-- Modal para crear una categoría -->
+    <dialog id="modalCategoria" class="modal-categoria">
+
+        <form id="formCategoria">
+
+            <div class="modal-categoria-encabezado">
+
+                <h3>Nueva categoría</h3>
+
+                <button
+                    type="button"
+                    id="cerrarModalCategoria"
+                    class="btn-cerrar-modal"
+                    aria-label="Cerrar"
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+            <p>
+                La categoría podrá contener varias encuestas.
+            </p>
+
+            <label for="nombreCategoria">
+                Nombre de la categoría
+            </label>
+
+            <input
+                type="text"
+                id="nombreCategoria"
+                maxlength="50"
+                placeholder="Ej. Enfermería"
+                required
+            >
+
+            <div class="modal-categoria-acciones">
+
+                <button type="button" id="cancelarCategoria">
+                    Cancelar
+                </button>
+
+                <button type="submit" id="guardarCategoria">
+                    Crear categoría
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <!-- Modal para crear una encuesta -->
+    <dialog id="modalEncuesta" class="modal-categoria">
+
+        <form id="formEncuesta">
+
+            <div class="modal-categoria-encabezado">
+
+                <h3>Nueva encuesta</h3>
+
+                <button
+                    type="button"
+                    id="cerrarModalEncuesta"
+                    class="btn-cerrar-modal"
+                    aria-label="Cerrar"
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+            </div>
+
+            <p>
+                Seleccioná una categoría existente y asignale un título a la encuesta.
+            </p>
+
+            <label for="categoriaNuevaEncuesta">
+                Categoría
+            </label>
+
+            <select id="categoriaNuevaEncuesta" required>
+                <option value="">Cargando categorías...</option>
+            </select>
+
+            <label for="tituloNuevaEncuesta">
+                Título de la encuesta
+            </label>
+
+            <input
+                type="text"
+                id="tituloNuevaEncuesta"
+                maxlength="50"
+                placeholder="Ej. Enfermería Higiene"
+                required
+            >
+
+            <label for="descripcionNuevaEncuesta">
+                Descripción
+            </label>
+
+            <input
+                type="text"
+                id="descripcionNuevaEncuesta"
+                maxlength="50"
+                placeholder="Descripción breve de la encuesta"
+            >
+
+            <div class="modal-categoria-acciones">
+
+                <button type="button" id="cancelarEncuesta">
+                    Cancelar
+                </button>
+
+                <button type="submit" id="guardarEncuesta">
+                    Crear encuesta
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+
+    <!-- Cargar logout directamente porque la sidebar se inserta dinámicamente -->
+    <script src="../js/logout.js"></script>
+
+    <script src="../js/sidebarAdmin.js"></script>
+    <script src="../js/administrarEncuestas.js"></script>
+
+</body>
+
+</html>

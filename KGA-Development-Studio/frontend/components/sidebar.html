@@ -1,0 +1,58 @@
+<aside class="sidebar">
+    <div class="logo">
+        <h2>Hospital De Clínicas</h2>
+    </div>
+
+    <nav>
+        <a href="gestionAmbulancias.html">
+            <i class="fa-solid fa-truck-medical"></i>
+            <span>Ambulancias</span>
+        </a>
+
+        <a href="documentosAdmin.html" id="navDocumentos">
+            <i class="fa-solid fa-file-lines"></i>
+            <span>Documentación</span>
+        </a>
+
+        <a href="notificaciones.html">
+                    <div class="icono-notificacion">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="badgeNotificaciones" class="badge-notificacion" style="display: none;"></span>
+                    </div>
+                    <span>Notificaciones</span>
+                </a>
+
+        <a href="administrarUsuarios.html" id="navUsuarios">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Administrar Usuarios</span>
+        </a>
+
+        <a href="administrarEntidades.html" id="navEntidades">
+            <i class="fa-solid fa-database"></i>
+            <span>Administrar Entidades</span>
+        </a>
+
+        <a href="administrarEncuestas.html" id="navEncuesta">
+            <i class="fa-solid fa-clipboard-list"></i>
+            <span>Administrar Encuestas</span>
+        </a>
+    </nav>
+
+    <div class="usuario">
+        <img src="../img/fotopfp.jpg" alt="Usuario">
+
+        <div>
+            <strong id="lblRolUsuario">Cargando...</strong>
+            <p id="lblNombreUsuario">Hospital de Clínicas</p>
+        </div>
+    </div>
+
+    <button id="btnLogout" class="btn-logout">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Cerrar Sesión
+    </button>
+</aside>
+
+
+
+<script src="../js/logout.js"></script>

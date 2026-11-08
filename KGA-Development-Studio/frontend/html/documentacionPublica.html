@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Documentación Pública | SIGSM</title>
+
+    <link rel="icon" href="../logo/hospital de clinicaslogo.png">
+
+    <link rel="stylesheet" href="../css/stylesdocumentacionPublica.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <header>
+
+        <img
+            src="../logo/hospital de clinicaslogo.png"
+            alt="Logo de SIGSM"
+        >
+
+        <h1>Documentación Pública</h1>
+
+    </header>
+
+    <hr>
+
+    <div class="layout">
+
+        <aside class="sidebar">
+
+            <div class="logo">
+                <img src="../logo/hospital de clinicaslogo.png" alt="Logo">
+            </div>
+
+            <nav>
+
+                <a href="documentacionPublica.html" class="active">
+                    <i class="fa-solid fa-file-medical"></i>
+                    Documentación
+                </a>
+
+                <a href="encuestasPacientes.html">
+                    <i class="fa-solid fa-clipboard-question"></i>
+                    Encuestas
+                </a>
+
+            </nav>
+
+            <div class="usuario">
+
+                <img src="../img/invitado.png" alt="Usuario invitado">
+
+                <div>
+                    <strong>Invitado</strong>
+                    <p>Hospital de Clínicas</p>
+                </div>
+
+            </div>
+
+            <button id="btnLogout" class="btn-logout">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Cerrar Sesión
+            </button>
+
+        </aside>
+
+        <main>
+
+            <h2>
+                Acceda a la información del Hospital de Clínicas
+                de forma digital
+            </h2>
+
+            <div class="buscador">
+
+                <input
+                    type="text"
+                    id="inputBuscarPublico"
+                    placeholder="Buscar documento por título o descripción..."
+                >
+
+            </div>
+
+            <h3>Categorías</h3>
+
+            <!-- Las categorías se generan desde la base de datos. -->
+            <div
+                class="categorias"
+                id="contenedorCategorias"
+            >
+                <button class="btn-categoria active" data-cat="todas">
+                    Todas
+                </button>
+            </div>
+
+            <!-- Las tarjetas también se generan desde la base de datos. -->
+            <section class="contenedor-documentos">
+                <p>Cargando documentos...</p>
+            </section>
+            <section class="visor-documento">
+                <h2>Vista previa del documento</h2>
+                <iframe id="visorPDF" title="Vista previa del documento PDF" hidden></iframe>
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="../js/modalSubirDocumento.js"></script>
+    <script src="../js/logout.js"></script>
+
+</body>
+
+</html>

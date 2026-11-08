@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Encuestas Públicas | SIGSM</title>
+
+    <link rel="icon" href="../logo/hospital de clinicaslogo.png">
+    <link rel="stylesheet" href="../css/stylesencuestasPaciente.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <header>
+        <img src="../logo/hospital de clinicaslogo.png" alt="Logo del Hospital">
+        <h1>Encuestas Públicas</h1>
+    </header>
+
+    <hr>
+
+    <div class="layout">
+
+        <aside class="sidebar">
+
+            <nav>
+
+                <a href="documentacionPublica.html">
+                    <i class="fa-solid fa-file-medical"></i>
+                    Documentación
+                </a>
+
+                <a href="encuestasPacientes.html" class="active">
+                    <i class="fa-solid fa-clipboard-question"></i>
+                    Encuestas
+                </a>
+
+            </nav>
+
+            <div class="usuario">
+
+                <img src="../img/invitado.png" alt="Usuario invitado">
+
+                <div>
+                    <strong>Invitado</strong>
+                    <p>Hospital de Clínicas</p>
+                </div>
+
+            </div>
+
+            <!-- Botón para cerrar la sesión -->
+            <button id="btnLogout" class="btn-logout" type="button">
+
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Cerrar Sesión
+
+            </button>
+
+        </aside>
+
+
+        <main>
+
+            <div class="titulo">
+
+                <h2>Ayúdenos a mejorar</h2>
+
+                <p>
+                    Su opinión nos ayuda a mejorar nuestros servicios.
+                    La encuesta es anónima.
+                </p>
+
+            </div>
+
+
+            <!-- Buscador y selección de encuestas -->
+            <section class="busqueda-encuestas">
+
+                <div class="busqueda-encabezado">
+
+                    <h3>Encuestas disponibles</h3>
+
+                    <p>
+                        Busque una encuesta por su título o seleccione una categoría.
+                    </p>
+
+                </div>
+
+
+                <!-- Buscar por título -->
+                <div class="buscador-encuestas">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input
+                        type="search"
+                        id="buscarEncuesta"
+                        placeholder="Buscar encuesta..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <!-- Filtrar por categoría -->
+                <div class="seleccion-categoria">
+
+                    <label for="categoriaEncuesta">
+                        Filtrar por categoría
+                    </label>
+
+                    <select id="categoriaEncuesta">
+
+                        <option value="">
+                            Todas las categorías
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Resultados de búsqueda -->
+                <div class="lista-encuestas" id="listaEncuestas">
+
+                    <p>Cargando encuestas...</p>
+
+                </div>
+
+            </section>
+
+
+            <!-- Formulario de la encuesta seleccionada -->
+            <form class="encuesta-card" id="formEncuesta" hidden>
+
+                <div class="encuesta-seleccionada">
+
+                    <div id="tituloEncuesta"></div>
+
+                    <button
+                        type="button"
+                        id="btnVolverEncuestas"
+                        class="btn-volver-encuestas"
+                    >
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Volver a las encuestas
+                    </button>
+
+                </div>
+
+
+                <div id="listaPreguntas">
+
+                    <!-- Las preguntas se cargan desde JavaScript. -->
+
+                </div>
+
+
+                <p id="mensajeEncuesta" role="status"></p>
+
+
+                <button type="submit" class="btn-enviar">
+
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Enviar Encuesta
+
+                </button>
+
+            </form>
+
+        </main>
+
+    </div>
+
+
+    <script src="../js/logout.js"></script>
+    <script src="../js/encuestasPacientes.js"></script>
+
+</body>
+
+</html>

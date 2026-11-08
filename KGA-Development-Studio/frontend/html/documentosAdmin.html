@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Administración de Documentos | SIGSM</title>
+
+    <link rel="icon" href="../logo/hospital de clinicaslogo.png">
+
+    <link rel="stylesheet" href="../css/stylesgestionAmbulancias.css">
+    <link rel="stylesheet" href="../css/stylesnotificaciones.css">
+    <link rel="stylesheet" href="../css/stylesdocumentosAdmin.css">
+    <link rel="stylesheet" href="../css/modalSubirDocumento.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <header>
+        <img src="../logo/hospital de clinicaslogo.png" alt="Logo de SIGSM">
+        <h1>Administración de Documentos</h1>
+    </header>
+
+    <hr>
+
+    <div class="layout">
+
+        <div id="sidebar"></div>
+
+        <main>
+
+            <section class="documentos-container">
+
+                <h2>Administración de Documentación</h2>
+
+                <button type="button" class="btn-subir" id="btnAbrirModal">
+                    <i class="fa-solid fa-upload"></i>
+                    Subir documento
+                </button>
+
+                <section class="busqueda-documentos">
+                    <input
+                        type="text"
+                        class="buscador"
+                        id="inputBuscarAdmin"
+                        placeholder="Buscar documento..."
+                    >
+
+                    <button type="button" class="btn-buscar" aria-label="Buscar">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </section>
+
+                <section class="visor-documento">
+                    <h2>Vista previa del documento</h2>
+                    <iframe id="visorPDF" title="Vista previa del documento PDF" hidden></iframe>
+                </section>
+
+                <div class="tabla-responsive">
+
+                    <table class="tabla-documentos">
+
+                        <thead>
+                            <tr>
+                                <th>Documento</th>
+                                <th>Categoría</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td colspan="4">Cargando documentos...</td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        </main>
+
+        <!-- Modal de administración de documentos -->
+        <div id="modalSubirDocumento" class="modal">
+
+            <div class="modal-contenido">
+
+                <div class="modal-header">
+
+                    <h2>Administrar documentos</h2>
+
+                    <button
+                        type="button"
+                        id="btnCerrarModal"
+                        class="btn-cerrar"
+                        aria-label="Cerrar"
+                    >
+                        &times;
+                    </button>
+
+                </div>
+
+                <!-- ======================================
+                     ADMINISTRACIÓN DE CATEGORÍAS
+                ======================================= -->
+
+                <section class="gestion-categorias">
+
+                    <h3>Administrar categorías</h3>
+
+                    <p>
+                        Creá nuevas categorías o cambiá el estado
+                        de las existentes.
+                    </p>
+
+                    <div class="crear-categoria">
+
+                        <input
+                            type="text"
+                            id="inputNuevaCategoria"
+                            maxlength="50"
+                            placeholder="Nombre de la nueva categoría"
+                        >
+
+                        <button
+                            type="button"
+                            id="btnCrearCategoria"
+                        >
+                            Crear categoría
+                        </button>
+
+                    </div>
+
+                    <ul id="listaCategoriasAdmin" class="lista-categorias-admin">
+                        <li>Cargando categorías...</li>
+                    </ul>
+
+                </section>
+
+                <hr>
+
+                <!-- ======================================
+                     FORMULARIO PARA SUBIR DOCUMENTOS
+                ======================================= -->
+
+                <form id="formSubirDocumento" enctype="multipart/form-data">
+
+                    <h3>Subir nuevo documento</h3>
+
+                    <label for="documentTitle">
+                        Título del documento:
+                    </label>
+
+                    <input
+                        type="text"
+                        id="documentTitle"
+                        name="documentTitle"
+                        maxlength="50"
+                        required
+                    >
+
+                    <label for="documentDescription">
+                        Descripción del documento:
+                    </label>
+
+                    <textarea
+                        id="documentDescription"
+                        name="documentDescription"
+                        maxlength="50"
+                        required
+                    ></textarea>
+
+                    <label for="categorySearch">
+                        Categoría:
+                    </label>
+
+                    <div class="autocomplete-categoria">
+
+                        <input
+                            type="text"
+                            id="categorySearch"
+                            placeholder="Buscar una categoría..."
+                            autocomplete="off"
+                            required
+                        >
+
+                        <!-- El ID real se envía al backend. -->
+                        <input
+                            type="hidden"
+                            id="id_categoria"
+                            name="id_categoria"
+                        >
+
+                        <ul
+                            id="sugerenciasCategorias"
+                            class="sugerencias-categorias"
+                        ></ul>
+
+                    </div>
+
+                    <label for="documentFile">
+                        Seleccionar archivo PDF:
+                    </label>
+
+                    <input
+                        type="file"
+                        id="documentFile"
+                        name="documentFile"
+                        accept="application/pdf,.pdf"
+                        required
+                    >
+
+                    <div class="modal-acciones">
+
+                        <button
+                            type="button"
+                            id="btnCancelarModal"
+                            class="btn-cancelar"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn-subir"
+                        >
+                            <i class="fa-solid fa-upload"></i>
+                            Subir documento
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="../js/logout.js"></script>
+    <script src="../js/sidebarAdmin.js"></script>
+    <script src="../js/modalSubirDocumento.js"></script>
+    <script src="../js/notificaciones.js"></script>
+
+</body>
+
+</html>
