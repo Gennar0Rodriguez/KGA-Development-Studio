@@ -11,11 +11,11 @@ CREATE TABLE administrativo (
 );
 
 CREATE TABLE categoria (
-    id_categoria VARCHAR(50) NOT NULL,
+    id_categoria VARCHAR(50) PRIMARY KEY NOT NULL,
     nombre_cat VARCHAR(50) NOT NULL,
     tipo_cat ENUM ('docs', 'encuestas'),
-    estado_cat ENUM('activa', 'deshabilitada') NOT NULL DEFAULT 'activa',
-    PRIMARY KEY (id_categoria, nombre_cat)
+    estado_cat ENUM('activa', 'deshabilitada') NOT NULL DEFAULT 'activa'
+    CONSTRAINT UNIQUE_nombre_cat UNIQUE (nombre_cat)
 );
 
 CREATE TABLE documentos (
@@ -38,7 +38,7 @@ CREATE TABLE encuesta (
     id_categoria VARCHAR(50) NOT NULL,
     nombre_cat VARCHAR(50) NOT NULL,
     descripcion_enc VARCHAR(50),
-    PRIMARY KEY (titulo_enc, id_categoria, nombre_cat),
+    PRIMARY KEY (titulo_enc, id_categoria),
     FOREIGN KEY (id_categoria, nombre_cat) REFERENCES categoria(id_categoria, nombre_cat)
 );
  
@@ -49,7 +49,7 @@ CREATE TABLE pregunta (
     nombre_cat VARCHAR(50) NOT NULL,
     nombre_pregunta VARCHAR(50) NOT NULL,
     tipo ENUM('opcion multiple', 'texto') NOT NULL,
-    PRIMARY KEY (id_pregunta, titulo_enc, id_categoria, nombre_cat),
+    PRIMARY KEY (id_pregunta, titulo_enc),
     FOREIGN KEY (titulo_enc) REFERENCES encuesta(titulo_enc),
     FOREIGN KEY (id_categoria, nombre_cat) REFERENCES categoria(id_categoria, nombre_cat)
 );
