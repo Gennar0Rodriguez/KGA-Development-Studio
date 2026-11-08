@@ -60,11 +60,11 @@ class Pregunta
 
 
     // Crear una pregunta nueva.
+    // Se utilizan únicamente las columnas existentes en el MER.
     public function crear(
         string $idPregunta,
         string $tituloEncuesta,
         string $idCategoria,
-        string $nombreCategoria,
         string $nombrePregunta
     ): bool {
 
@@ -72,7 +72,6 @@ class Pregunta
                     id_pregunta,
                     titulo_enc,
                     id_categoria,
-                    nombre_cat,
                     nombre_pregunta,
                     tipo
                 )
@@ -80,7 +79,6 @@ class Pregunta
                     :id_pregunta,
                     :titulo_enc,
                     :id_categoria,
-                    :nombre_cat,
                     :nombre_pregunta,
                     'opcion multiple'
                 )";
@@ -90,7 +88,6 @@ class Pregunta
         $sentencia->bindValue(':id_pregunta', $idPregunta);
         $sentencia->bindValue(':titulo_enc', $tituloEncuesta);
         $sentencia->bindValue(':id_categoria', $idCategoria);
-        $sentencia->bindValue(':nombre_cat', $nombreCategoria);
         $sentencia->bindValue(':nombre_pregunta', $nombrePregunta);
 
         return $sentencia->execute();

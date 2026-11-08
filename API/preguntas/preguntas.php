@@ -271,14 +271,13 @@ try {
 
                     } else {
 
-                        // Si no existe, creamos una pregunta nueva.
-                        $preguntaModelo->crear(
-                            $idPregunta,
-                            $tituloEncuesta,
-                            $idCategoria,
-                            $encuesta['nombre_cat'],
-                            $nombrePregunta
-                        );
+                    // Si no existe, creamos una pregunta nueva.
+                    $preguntaModelo->crear(
+                        $idPregunta,
+                        $tituloEncuesta,
+                        $idCategoria,
+                        $nombrePregunta
+                    );
                     }
                 }
 
