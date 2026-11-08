@@ -14,7 +14,7 @@ CREATE TABLE categoria (
     id_categoria VARCHAR(50) PRIMARY KEY NOT NULL,
     nombre_cat VARCHAR(50) NOT NULL,
     tipo_cat ENUM ('docs', 'encuestas'),
-    estado_cat ENUM('activa', 'deshabilitada') NOT NULL DEFAULT 'activa'
+    estado_cat ENUM('activa', 'deshabilitada') NOT NULL DEFAULT 'activa',
     CONSTRAINT UNIQUE_nombre_cat UNIQUE (nombre_cat)
 );
 
