@@ -54,8 +54,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             modoEdicion = false;
             trasladoEditando = null;
 
-            formulario.reset();
-            actualizarCamposTransportable();
+        formulario.reset();
+
+        // Al crear un traslado nuevo, comenzar siempre con Paciente.
+        document.getElementById('tipoTransportable').value = 'paciente';
+
+        elementoSeleccionado = null;
+
+        actualizarCamposTransportable();
 
             const titulo = document.querySelector(
                 '.modal-traslado-header h2'
@@ -177,9 +183,12 @@ function configurarTipoTransportable() {
     actualizarCamposTransportable();
 }
 
-
 function actualizarCamposTransportable() {
-    const tipo = document.getElementById('tipoTransportable')?.value;
+    const selector = document.getElementById('tipoTransportable');
+
+    if (!selector) return;
+
+    const tipo = selector.value.toLowerCase().trim();
 
     const camposPaciente = document.getElementById('camposPaciente');
     const camposOrgano = document.getElementById('camposOrgano');
@@ -194,13 +203,15 @@ function actualizarCamposTransportable() {
     );
 
     const esPaciente = tipo === 'paciente';
+    const esOrgano = tipo === 'organo';
 
+    // Mostrar solamente los campos correspondientes al tipo elegido.
     if (camposPaciente) {
         camposPaciente.style.display = esPaciente ? 'block' : 'none';
     }
 
     if (camposOrgano) {
-        camposOrgano.style.display = esPaciente ? 'none' : 'block';
+        camposOrgano.style.display = esOrgano ? 'block' : 'none';
     }
 
     // Los campos ocultos no deben ser obligatorios.
@@ -218,11 +229,23 @@ function actualizarCamposTransportable() {
     }
 
     if (nombreElemento) {
-        nombreElemento.required = !esPaciente;
+        nombreElemento.required = esOrgano;
     }
 
     if (descripcionElemento) {
-        descripcionElemento.required = !esPaciente;
+        descripcionElemento.required = false;
+    }
+
+    // Si cambiamos a Paciente, descartamos el órgano seleccionado.
+    if (esPaciente) {
+        elementoSeleccionado = null;
+
+        if (nombreElemento) nombreElemento.value = '';
+        if (descripcionElemento) descripcionElemento.value = '';
+
+        const sugerencias = document.getElementById('sugerenciasElemento');
+
+        if (sugerencias) sugerencias.innerHTML = '';
     }
 }
 

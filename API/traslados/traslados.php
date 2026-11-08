@@ -38,6 +38,29 @@ try {
     $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     $traslado = new Traslado();
 
+    // ======================================================
+    // RESPONDER ERRORES DE DISPONIBILIDAD
+    // ======================================================
+
+    function responderErrorDisponibilidad(Traslado $traslado): void
+    {
+        $error = $traslado->obtenerErrorDisponibilidad();
+
+        http_response_code(409);
+
+        if ($error !== null) {
+            echo json_encode($error);
+            return;
+        }
+
+        // Mantener un mensaje general para errores que no sean
+        // conflictos de disponibilidad.
+        echo json_encode([
+            'codigo' => 'OPERACION_NO_REALIZADA',
+            'error' => 'No se pudo realizar la operación. Compruebe los datos e inténtelo nuevamente.'
+        ]);
+    }
+
     switch ($metodo) {
 
         // ======================================================
@@ -98,8 +121,21 @@ try {
                 )) {
                     echo json_encode(['mensaje' => 'Estado del traslado actualizado correctamente']);
                 } else {
-                    http_response_code(409);
-                    echo json_encode(['error' => 'No se pudo realizar el cambio de estado. Compruebe la etapa actual y las horas registradas.']);
+
+                    if ($traslado->obtenerErrorDisponibilidad() !== null) {
+
+                        responderErrorDisponibilidad($traslado);
+
+                    } else {
+
+                        http_response_code(409);
+
+                        echo json_encode([
+                            'codigo' => 'ERROR_ESTADO_TRASLADO',
+                            'error' => 'No se pudo realizar el cambio de estado. Compruebe la etapa actual y las horas registradas.'
+                        ]);
+
+                    }
                 }
 
                 exit;
@@ -133,8 +169,7 @@ try {
 
                 } else {
 
-                    http_response_code(409);
-                    echo json_encode(['error' => 'La solicitud ya fue resuelta o no existe']);
+                    responderErrorDisponibilidad($traslado);
 
                 }
 
@@ -156,8 +191,20 @@ try {
 
             } else {
 
-                http_response_code(500);
-                echo json_encode(['error' => 'No se pudo guardar el traslado en la base de datos']);
+                if ($traslado->obtenerErrorDisponibilidad() !== null) {
+
+                    responderErrorDisponibilidad($traslado);
+
+                } else {
+
+                    http_response_code(500);
+
+                    echo json_encode([
+                        'codigo' => 'ERROR_CREAR_TRASLADO',
+                        'error' => 'No se pudo guardar el traslado. Compruebe los datos ingresados.'
+                    ]);
+
+                }
 
             }
 
@@ -191,11 +238,22 @@ try {
 
             } else {
 
-                http_response_code(500);
-                echo json_encode(['error' => 'No se pudo actualizar el traslado']);
+                if ($traslado->obtenerErrorDisponibilidad() !== null) {
+
+                    responderErrorDisponibilidad($traslado);
+
+                } else {
+
+                    http_response_code(500);
+
+                    echo json_encode([
+                        'codigo' => 'ERROR_ACTUALIZAR_TRASLADO',
+                        'error' => 'No se pudo actualizar el traslado. Compruebe los datos ingresados.'
+                    ]);
+
+                }
 
             }
-
             exit;
 
 

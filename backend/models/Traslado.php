@@ -5,10 +5,20 @@ require_once __DIR__ . '/../config/Database.php';
 class Traslado
 {
     private PDO $conexion;
-
+    // Guardar el error específico cuando un recurso está ocupado. tuve q implementar esto si o si pq si no no se diferenciaban los errores.
+private ?array $errorDisponibilidad = null;
     public function __construct()
     {
         $this->conexion = Database::getInstancia()->getConexion();
+    }
+
+    // ======================================================
+    // OBTENER ERROR DE DISPONIBILIDAD
+    // ======================================================
+
+    public function obtenerErrorDisponibilidad(): ?array
+    {
+        return $this->errorDisponibilidad;
     }
 
     // ======================================================
@@ -209,60 +219,112 @@ class Traslado
     // COMPROBAR DISPONIBILIDAD DE LOS RECURSOS
     // ======================================================
 
-    private function recursosDisponibles(
-        string $ciChofer,
-        string $ciEnfermero,
-        string $matricula,
-        ?string $idExcluir = null
-    ): bool {
+    
+private function recursosDisponibles(
+    string $ciChofer,
+    string $ciEnfermero,
+    string $matricula,
+    ?string $idExcluir = null
+): bool {
 
-        /*
-         * Un recurso está ocupado cuando aparece en otro
-         * traslado aprobado que todavía está aprobado
-         * o en proceso.
-         *
-         * Los traslados pendientes no ocupan recursos.
-         * Los finalizados y denegados tampoco.
-         *
-         * No se consideran fechas ni horarios: mientras
-         * el traslado siga activo, sus recursos están ocupados.
-         */
+    /*
+     * Un recurso está ocupado si pertenece a otro traslado
+     * aprobado que todavía está aprobado o en proceso.
+     *
+     * Los pendientes, finalizados y denegados no ocupan recursos.
+     * No se comparan fechas ni horarios.
+     */
 
-        $sql = "SELECT COUNT(DISTINCT t.id_traslado)
-                FROM traslado t
-                INNER JOIN transporta tr
-                    ON tr.id_traslado = t.id_traslado
-                INNER JOIN transportable tb
-                    ON tb.id_transportable = tr.id_transportable
-                WHERE t.estado_solicitud = 'aprobado'
-                AND t.estado_traslado IN ('aprobado', 'en proceso')
-                AND (
-                    t.ci_chofer = :ci_chofer
-                    OR tb.ci_enfermero = :ci_enfermero
-                    OR t.matricula = :matricula
-                )";
+    $this->errorDisponibilidad = null;
 
-        // Si estamos modificando un traslado, no debemos
-        // compararlo contra sí mismo.
-        if ($idExcluir !== null) {
-            $sql .= " AND t.id_traslado <> :id_excluir";
-        }
+    // Condición común para los traslados que ocupan recursos.
+    $condicion = "t.estado_solicitud = 'aprobado'
+                  AND t.estado_traslado IN ('aprobado', 'en proceso')";
 
-        $sentencia = $this->conexion->prepare($sql);
-
-        $sentencia->bindValue(':ci_chofer', $ciChofer);
-        $sentencia->bindValue(':ci_enfermero', $ciEnfermero);
-        $sentencia->bindValue(':matricula', $matricula);
-
-        if ($idExcluir !== null) {
-            $sentencia->bindValue(':id_excluir', $idExcluir);
-        }
-
-        $sentencia->execute();
-
-        // Si el resultado es cero, los tres recursos están libres.
-        return (int) $sentencia->fetchColumn() === 0;
+    // Excluir el traslado actual cuando estamos editando o aprobando.
+    if ($idExcluir !== null) {
+        $condicion .= " AND t.id_traslado <> :id_excluir";
     }
+
+    // Comprobar primero si el chofer está ocupado.
+    $sqlChofer = "SELECT COUNT(*)
+                  FROM traslado t
+                  WHERE $condicion
+                  AND t.ci_chofer = :ci_chofer";
+
+    $sentencia = $this->conexion->prepare($sqlChofer);
+    $sentencia->bindValue(':ci_chofer', $ciChofer);
+
+    if ($idExcluir !== null) {
+        $sentencia->bindValue(':id_excluir', $idExcluir);
+    }
+
+    $sentencia->execute();
+
+    if ((int) $sentencia->fetchColumn() > 0) {
+        $this->errorDisponibilidad = [
+            'codigo' => 'CHOFER_OCUPADO',
+            'error' => 'El chofer seleccionado ya tiene un traslado aprobado o en proceso.'
+        ];
+
+        return false;
+    }
+
+    // Comprobar si el enfermero está ocupado.
+    $sqlEnfermero = "SELECT COUNT(*)
+                     FROM traslado t
+                     INNER JOIN transporta tr
+                         ON tr.id_traslado = t.id_traslado
+                     INNER JOIN transportable tb
+                         ON tb.id_transportable = tr.id_transportable
+                     WHERE $condicion
+                     AND tb.ci_enfermero = :ci_enfermero";
+
+    $sentencia = $this->conexion->prepare($sqlEnfermero);
+    $sentencia->bindValue(':ci_enfermero', $ciEnfermero);
+
+    if ($idExcluir !== null) {
+        $sentencia->bindValue(':id_excluir', $idExcluir);
+    }
+
+    $sentencia->execute();
+
+    if ((int) $sentencia->fetchColumn() > 0) {
+        $this->errorDisponibilidad = [
+            'codigo' => 'ENFERMERO_OCUPADO',
+            'error' => 'El enfermero seleccionado ya tiene un traslado aprobado o en proceso.'
+        ];
+
+        return false;
+    }
+
+    // Comprobar si el vehículo está ocupado.
+    $sqlVehiculo = "SELECT COUNT(*)
+                    FROM traslado t
+                    WHERE $condicion
+                    AND t.matricula = :matricula";
+
+    $sentencia = $this->conexion->prepare($sqlVehiculo);
+    $sentencia->bindValue(':matricula', $matricula);
+
+    if ($idExcluir !== null) {
+        $sentencia->bindValue(':id_excluir', $idExcluir);
+    }
+
+    $sentencia->execute();
+
+    if ((int) $sentencia->fetchColumn() > 0) {
+        $this->errorDisponibilidad = [
+            'codigo' => 'VEHICULO_OCUPADO',
+            'error' => 'El vehículo seleccionado ya está asignado a otro traslado aprobado o en proceso.'
+        ];
+
+        return false;
+    }
+
+    return true;
+}
+
 
         // ======================================================
     // OBTENER TODOS LOS TRASLADOS
