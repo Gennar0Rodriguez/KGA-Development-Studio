@@ -397,17 +397,12 @@ public function crear(
     bool $esAdmin = false
 ): bool {
 
-    // Registrar en qué etapa se encuentra la creación.
-    $etapa = 'inicio';
-
     try {
 
         // Determinar qué tipo de elemento se va a transportar.
         $tipoTransportable = $datos['tipo_transportable'] ?? 'paciente';
 
         if (!in_array($tipoTransportable, ['paciente', 'organo'], true)) {
-            $etapa = 'validacion_tipo';
-            error_log("DIAGNOSTICO TRASLADO: tipo de transportable inválido.");
             return false;
         }
 
@@ -417,15 +412,12 @@ public function crear(
             $ciPaciente = trim($datos['ci_paciente'] ?? '');
             $nombrePaciente = trim($datos['paciente'] ?? '');
 
+            // La CI debe tener exactamente ocho dígitos.
             if (!preg_match('/^[0-9]{8}$/', $ciPaciente)) {
-                $etapa = 'validacion_ci_paciente';
-                error_log("DIAGNOSTICO TRASLADO: CI del paciente inválida.");
                 return false;
             }
 
             if ($nombrePaciente === '') {
-                $etapa = 'validacion_nombre_paciente';
-                error_log("DIAGNOSTICO TRASLADO: nombre del paciente vacío.");
                 return false;
             }
 
@@ -436,13 +428,13 @@ public function crear(
                                    AND nombre_paciente = :nombre";
 
             $sentenciaValidar = $this->conexion->prepare($sqlValidarPaciente);
+
             $sentenciaValidar->bindValue(':ci', $ciPaciente);
             $sentenciaValidar->bindValue(':nombre', $nombrePaciente);
+
             $sentenciaValidar->execute();
 
             if ($sentenciaValidar->fetchColumn() < 1) {
-                $etapa = 'paciente_no_encontrado';
-                error_log("DIAGNOSTICO TRASLADO: paciente no encontrado.");
                 return false;
             }
 
@@ -452,26 +444,13 @@ public function crear(
                 empty(trim($datos['nombre_elemento'] ?? '')) ||
                 empty(trim($datos['descripcion_elemento'] ?? ''))
             ) {
-                $etapa = 'validacion_elemento';
-                error_log("DIAGNOSTICO TRASLADO: datos del órgano incompletos.");
                 return false;
             }
         }
 
         // El enfermero es obligatorio para ambos tipos.
         if (empty($datos['ci_enfermero'])) {
-            $etapa = 'validacion_enfermero';
-            error_log("DIAGNOSTICO TRASLADO: falta el enfermero.");
             return false;
-        }
-
-        // Comprobar los recursos necesarios para ambos tipos.
-        foreach (['ci_chofer', 'matricula', 'id_destino'] as $campo) {
-            if (empty($datos[$campo])) {
-                $etapa = 'validacion_' . $campo;
-                error_log("DIAGNOSTICO TRASLADO: falta el campo " . $campo);
-                return false;
-            }
         }
 
         // La fecha del traslado no puede ser anterior a hoy.
@@ -479,23 +458,19 @@ public function crear(
             empty($datos['fecha']) ||
             !$this->validarFechaTraslado($datos['fecha'])
         ) {
-            $etapa = 'validacion_fecha';
-            error_log("DIAGNOSTICO TRASLADO: fecha inválida.");
             return false;
         }
 
-        // Iniciar la transacción.
-        $etapa = 'inicio_transaccion';
         $this->conexion->beginTransaction();
 
         /*
-         * Los administradores crean traslados aprobados.
-         * Por eso deben comprobar que los recursos estén libres.
+         * Si el administrador crea el traslado directamente
+         * como aprobado, los recursos deben estar disponibles.
+         *
+         * Las solicitudes de empleados quedan pendientes y
+         * no ocupan recursos hasta que sean aprobadas.
          */
         if ($esAdmin) {
-
-            // Bloquear chofer, enfermero y vehículo.
-            $etapa = 'bloqueo_recursos';
 
             if (
                 !$this->bloquearRecursos(
@@ -504,19 +479,9 @@ public function crear(
                     $datos['matricula']
                 )
             ) {
-                error_log(
-                    "DIAGNOSTICO TRASLADO: bloquearRecursos devolvió false. " .
-                    "Chofer: {$datos['ci_chofer']}, " .
-                    "Enfermero: {$datos['ci_enfermero']}, " .
-                    "Vehículo: {$datos['matricula']}"
-                );
-
                 $this->conexion->rollBack();
                 return false;
             }
-
-            // Comprobar que ninguno esté ocupado.
-            $etapa = 'comprobacion_disponibilidad';
 
             if (
                 !$this->recursosDisponibles(
@@ -525,33 +490,22 @@ public function crear(
                     $datos['matricula']
                 )
             ) {
-                error_log(
-                    "DIAGNOSTICO TRASLADO: recursosDisponibles devolvió false. " .
-                    "Chofer: {$datos['ci_chofer']}, " .
-                    "Enfermero: {$datos['ci_enfermero']}, " .
-                    "Vehículo: {$datos['matricula']}"
-                );
-
                 $this->conexion->rollBack();
                 return false;
             }
         }
 
-        // Generar identificadores únicos.
-        $etapa = 'generacion_identificadores';
-
         $idTraslado = $this->generarIdTraslado();
         $idTransportable = $this->generarIdTransportable();
 
-        // Definir los estados según el tipo de usuario.
+        // El administrador crea traslados aprobados.
+        // Los empleados crean solicitudes pendientes.
         $estadoSolicitud = $esAdmin ? 'aprobado' : 'pendiente';
         $estadoTraslado = $esAdmin ? 'aprobado' : 'pendiente';
 
         // ----------------------------------------------
         // INSERTAR TRASLADO
         // ----------------------------------------------
-
-        $etapa = 'insertar_traslado';
 
         $sqlTraslado = "INSERT INTO traslado (
                             id_traslado,
@@ -587,7 +541,9 @@ public function crear(
         $sentencia->bindValue(':id_destino', $datos['id_destino']);
         $sentencia->bindValue(':fecha', $datos['fecha']);
 
-        $hora = !empty($datos['hora']) ? $datos['hora'] : null;
+        $hora = !empty($datos['hora'])
+            ? $datos['hora']
+            : null;
 
         $sentencia->bindValue(
             ':hora',
@@ -603,6 +559,7 @@ public function crear(
         $sentencia->bindValue(':estado_solicitud', $estadoSolicitud);
 
         $observaciones = $datos['observaciones'] ?? '';
+
         $sentencia->bindValue(':observaciones', $observaciones);
 
         $sentencia->execute();
@@ -611,7 +568,11 @@ public function crear(
         // INSERTAR TRANSPORTABLE
         // ----------------------------------------------
 
-        $etapa = 'insertar_transportable';
+        /*
+         * Esta tabla se utiliza tanto para pacientes como
+         * para órganos. El enfermero queda relacionado
+         * con el transportable en ambos casos.
+         */
 
         $sqlTransportable = "INSERT INTO transportable (
                                 id_transportable,
@@ -638,8 +599,7 @@ public function crear(
 
         if ($tipoTransportable === 'paciente') {
 
-            $etapa = 'insertar_paciente';
-
+            // Guardar los datos en la tabla paciente.
             $sqlPaciente = "INSERT INTO paciente (
                                 id_transportable,
                                 ci_paciente,
@@ -658,6 +618,8 @@ public function crear(
 
             $sentencia = $this->conexion->prepare($sqlPaciente);
 
+            $ciPaciente = trim($datos['ci_paciente']);
+
             $oxigeno = (
                 ($datos['oxigeno'] ?? '') === 'Si' ||
                 ($datos['oxigeno'] ?? '') === '1'
@@ -665,7 +627,11 @@ public function crear(
 
             $sentencia->bindValue(':id', $idTransportable);
             $sentencia->bindValue(':ci_paciente', $ciPaciente);
-            $sentencia->bindValue(':nombre', $nombrePaciente);
+
+            $sentencia->bindValue(
+                ':nombre',
+                trim($datos['paciente'])
+            );
 
             $sentencia->bindValue(
                 ':oxigeno',
@@ -677,8 +643,7 @@ public function crear(
 
         } else {
 
-            $etapa = 'insertar_elemento';
-
+            // Guardar los datos en la tabla elemento.
             $sqlElemento = "INSERT INTO elemento (
                                 id_transportable,
                                 nombre_elemento,
@@ -694,10 +659,12 @@ public function crear(
             $sentencia = $this->conexion->prepare($sqlElemento);
 
             $sentencia->bindValue(':id', $idTransportable);
+
             $sentencia->bindValue(
                 ':nombre',
                 trim($datos['nombre_elemento'])
             );
+
             $sentencia->bindValue(
                 ':descripcion',
                 trim($datos['descripcion_elemento'])
@@ -709,8 +676,6 @@ public function crear(
         // ----------------------------------------------
         // RELACIONAR TRASLADO Y TRANSPORTABLE
         // ----------------------------------------------
-
-        $etapa = 'insertar_transporta';
 
         $sqlTransporta = "INSERT INTO transporta (
                             id_transportable,
@@ -742,8 +707,6 @@ public function crear(
 
         if (!$esAdmin) {
 
-            $etapa = 'notificaciones';
-
             require_once __DIR__ . '/Notificacion.php';
 
             $notificacion = new Notificacion();
@@ -759,6 +722,7 @@ public function crear(
                     $datos['matricula']
             );
 
+            // El traslado se guarda aunque falle una notificación.
             if (!$resultadoNotificacion) {
                 error_log(
                     "No se pudieron enviar todas las notificaciones de la solicitud."
@@ -766,14 +730,7 @@ public function crear(
             }
         }
 
-        // Confirmar todos los cambios.
-        $etapa = 'confirmar_transaccion';
-
         $this->conexion->commit();
-
-        error_log(
-            "DIAGNOSTICO TRASLADO: creación completada. ID: " . $idTraslado
-        );
 
         return true;
 
@@ -783,16 +740,13 @@ public function crear(
             $this->conexion->rollBack();
         }
 
-        error_log(
-            "ERROR CREAR TRASLADO | Etapa: " . $etapa .
-            " | Mensaje: " . $e->getMessage() .
-            " | Archivo: " . $e->getFile() .
-            " | Línea: " . $e->getLine()
-        );
+        // Registrar errores reales para facilitar su diagnóstico.
+        error_log("Error en crear traslado: " . $e->getMessage());
 
         return false;
     }
 }
+
 
         // ======================================================
     // APROBAR O RECHAZAR UNA SOLICITUD
@@ -884,17 +838,16 @@ public function crear(
                     $this->conexion->rollBack();
                     return false;
                 }
-
-                // Comprobar que ningún otro traslado los esté utilizando.
-            if (!$this->recursosDisponibles(
-                $datos['ci_chofer'],
-                $datos['ci_enfermero'],
-                $datos['matricula']
-            )) {
-                error_log("DIAGNOSTICO TRASLADO: recursos ocupados");
-                $this->conexion->rollBack();
-                return false;
-            }
+                // Comprobar que ningún otro traslado esté utilizando los recursos.
+                if (!$this->recursosDisponibles(
+                    $traslado['ci_chofer'],
+                    $traslado['ci_enfermero'],
+                    $traslado['matricula'],
+                    $idTraslado
+                )) {
+                    $this->conexion->rollBack();
+                    return false;
+                }
 
                 $estadoTraslado = 'aprobado';
 
