@@ -10,6 +10,7 @@ services:
       database:
         condition: service_healthy
     volumes:
+      - .:/var/www/html
       - documentos-volume:/var/www/html/API/uploads/documentos
 
   database:
