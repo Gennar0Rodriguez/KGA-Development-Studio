@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/../../backend/models/Respuesta.php';
 require_once __DIR__ . '/../../backend/models/Pregunta.php';

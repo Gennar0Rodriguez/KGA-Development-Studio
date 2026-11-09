@@ -1,5 +1,5 @@
 <?php
-define('SERVERNAME', 'localhost');
+define('SERVERNAME', 'database');
 define('USERNAME', 'root');
 define('PASSWORD', '');
 define('DBNAME', 'Proyecto');
@@ -21,6 +21,7 @@ class Database
 
         try {
             $this->conexion = new PDO($dsn, $user, $pass);
+            $this->conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
             throw new PDOException($e->getMessage(), $e->getCode());
         }

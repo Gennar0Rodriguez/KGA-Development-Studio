@@ -6,7 +6,7 @@ CREATE TABLE administrativo (
     ci_admin VARCHAR(8) PRIMARY KEY NOT NULL,
     nombre_admin VARCHAR(50) NOT NULL,
     apellido_admin VARCHAR(50) NOT NULL,
-    contraseña_admin VARCHAR(50) NOT NULL,
+    contrasena_admin VARCHAR(50) NOT NULL,
     cargo ENUM('administrador', 'empleado') NOT NULL
 );
 
@@ -47,7 +47,7 @@ CREATE TABLE pregunta (
     nombre_pregunta VARCHAR(50) NOT NULL,
     tipo ENUM('opcion multiple', 'texto') NOT NULL,
     PRIMARY KEY (id_pregunta, titulo_enc),
-    FOREIGN KEY (titulo_enc) REFERENCES encuesta(titulo_enc),
+    FOREIGN KEY (titulo_enc, id_categoria) REFERENCES encuesta(titulo_enc, id_categoria),
     FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
 
@@ -59,8 +59,8 @@ CREATE TABLE respuesta (
     informacion VARCHAR(50),
     tipo ENUM('opcion multiple', 'texto') NOT NULL,
     PRIMARY KEY (id_respuesta, id_pregunta, id_categoria, titulo_enc),
-    FOREIGN KEY (id_pregunta) REFERENCES pregunta(id_pregunta),
-    FOREIGN KEY (titulo_enc) REFERENCES encuesta(titulo_enc),
+    FOREIGN KEY (id_pregunta, titulo_enc) REFERENCES pregunta(id_pregunta, titulo_enc),
+    FOREIGN KEY (titulo_enc, id_categoria) REFERENCES encuesta(titulo_enc, id_categoria),
     FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
 
@@ -121,7 +121,7 @@ CREATE TABLE notifica (
     ci_chofer VARCHAR(8) NOT NULL,
     matricula VARCHAR(15) NOT NULL,
     id_destino VARCHAR(50) NOT NULL,
-    ci_admin VARCHAR(8),
+    ci_admin VARCHAR(8) NOT NULL,
     ci_emisor VARCHAR(8) NOT NULL,
     fecha_envio DATETIME NOT NULL,
     leido BOOLEAN,
@@ -129,7 +129,8 @@ CREATE TABLE notifica (
     descripcion_not VARCHAR(255) NOT NULL,
     ci_receptor VARCHAR(8) NOT NULL,
     PRIMARY KEY (numero_notificacion, id_traslado, ci_chofer, matricula, id_destino, ci_admin),
-    FOREIGN KEY (id_traslado) REFERENCES traslado(id_traslado) ON DELETE CASCADE,
+    FOREIGN KEY (id_traslado, ci_chofer, matricula, id_destino)
+    REFERENCES traslado(id_traslado, ci_chofer, matricula, id_destino) ON DELETE CASCADE,
     FOREIGN KEY (ci_chofer) REFERENCES chofer(ci_chofer) ON DELETE CASCADE,
     FOREIGN KEY (matricula) REFERENCES vehiculo(matricula) ON DELETE CASCADE,
     FOREIGN KEY (id_destino) REFERENCES destino(id_destino) ON DELETE CASCADE,
@@ -176,13 +177,14 @@ CREATE TABLE transporta (
     id_destino VARCHAR(50) NOT NULL,
     PRIMARY KEY (id_transportable, id_traslado, ci_chofer, matricula, id_destino),
     FOREIGN KEY (id_transportable) REFERENCES transportable(id_transportable) ON DELETE CASCADE,
-    FOREIGN KEY (id_traslado) REFERENCES traslado(id_traslado) ON DELETE CASCADE,
+    FOREIGN KEY (id_traslado, ci_chofer, matricula, id_destino)
+    REFERENCES traslado(id_traslado, ci_chofer, matricula, id_destino) ON DELETE CASCADE,
     FOREIGN KEY (ci_chofer) REFERENCES chofer(ci_chofer) ON DELETE CASCADE,
     FOREIGN KEY (matricula) REFERENCES vehiculo(matricula) ON DELETE CASCADE,
     FOREIGN KEY (id_destino) REFERENCES destino(id_destino) ON DELETE CASCADE
 );
 
-INSERT INTO administrativo (ci_admin, nombre_admin, apellido_admin, contraseña_admin, cargo) VALUES
+INSERT INTO administrativo (ci_admin, nombre_admin, apellido_admin, contrasena_admin, cargo) VALUES
 ('12345678', 'Ezequiel', 'Matta', 'Ari', 'administrador'),
 ('87654321', 'Joaquin', 'Fida', 'Trunks', 'administrador'),
 ('34567890', 'Ari', 'Matta', 'Eze', 'administrador'),

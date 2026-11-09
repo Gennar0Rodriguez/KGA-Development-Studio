@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../config/database.php';
 
 class Usuario
 {
@@ -11,7 +11,7 @@ class Usuario
     }
 
     public function crear(string $ci, string $nombre, string $apellido, string $pass, string $rol): bool {
-        $sql = 'INSERT INTO administrativo(ci_admin, nombre_admin, apellido_admin, contraseña_admin, cargo) VALUES (:ci, :nombre, :apellido, :password, :rol)';
+        $sql = 'INSERT INTO administrativo(ci_admin, nombre_admin, apellido_admin, contrasena_admin, cargo) VALUES (:ci, :nombre, :apellido, :password, :rol)';
 
         $sentencia = $this->conexion->prepare($sql);
         $sentencia->bindParam(':ci', $ci);
@@ -38,7 +38,7 @@ class Usuario
     }
 
     public function login(string $ci, string $pass): ?array {
-        $sql = "SELECT ci_admin, nombre_admin, apellido_admin, cargo FROM administrativo WHERE ci_admin = :ci_admin AND contraseña_admin = :contrasena_admin";
+        $sql = "SELECT ci_admin, nombre_admin, apellido_admin, cargo FROM administrativo WHERE ci_admin = :ci_admin AND contrasena_admin = :contrasena_admin";
         $sentencia = $this->conexion->prepare($sql);
         $sentencia->bindParam(":ci_admin", $ci);
         $sentencia->bindParam(":contrasena_admin", $pass);
@@ -53,7 +53,7 @@ class Usuario
             $sql = 'UPDATE administrativo 
                     SET nombre_admin = :nombre, 
                         apellido_admin = :apellido, 
-                        contraseña_admin = :pass, 
+                        contrasena_admin = :pass, 
                         cargo = :rol 
                     WHERE ci_admin = :ci';
 
