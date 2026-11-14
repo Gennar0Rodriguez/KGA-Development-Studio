@@ -1,4 +1,4 @@
-# 🏥 KGA Development Studio - Sistema de Gestión Hospitalaria (S.I.G.P.D.)
+# KGA Development Studio - Sistema de Gestión Hospitalaria (S.I.G.P.D.)
 
 KGA Development Studio es una solución de software integral orientada a la gestión y optimización de procesos hospitalarios, desarrollada como parte de los proyectos académicos y prácticos del curso de desarrollo de software.
 
@@ -6,13 +6,13 @@ El sistema centraliza el control de ambulancias, pacientes, traslados, encuestas
 
 ---
 
-## 🎯 Objetivo del Proyecto
+## Objetivo del Proyecto
 
 Diseñar e implementar una plataforma web que automatice y facilite la administración hospitalaria, garantizando un flujo de datos eficiente entre el personal médico, administrativo, pacientes y los servicios de transporte (ambulancias).
 
 ---
 
-## 🧠 Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 - *Frontend:* HTML, CSS y JavaScript.
 - *Backend:* PHP.
@@ -23,7 +23,7 @@ Diseñar e implementar una plataforma web que automatice y facilite la administr
 
 ---
 
-## 🌿 Gestión de Ramas (Branches)
+## Gestión de Ramas (Branches)
 
 El repositorio mantiene un flujo de trabajo ordenado mediante ramas orientadas a entregas y evolución del software:
 
@@ -37,7 +37,7 @@ El repositorio mantiene un flujo de trabajo ordenado mediante ramas orientadas a
 
 ---
 
-## 🏗️ Estructura del Proyecto
+## Estructura del Proyecto
 
 El sistema se organiza dentro del directorio principal KGA-Development-Studio/, siguiendo una estructura modular que separa las interfaces, los endpoints y la lógica de negocio.
 
@@ -69,7 +69,7 @@ KGA-Development-Studio/
 └── README.md
 
 
-> 📁 *Organización modular:*
+> *Organización modular:*
 >
 > - La carpeta frontend/ contiene las interfaces del sistema, sus estilos y los scripts JavaScript que gestionan la interacción con el usuario.
 > - La carpeta API/ contiene los endpoints PHP encargados de recibir y procesar las solicitudes del frontend.
@@ -115,12 +115,12 @@ http://localhost/kgade/KGA-Development-Studio/frontend/html/
 
 ---
 
-## 👨‍💻 Equipo de Desarrollo
+## Equipo de Desarrollo
 
 *KGA Development Studio* – Proyecto de Gestión Hospitalaria (S.I.G.P.D.).
 
 ---
 
-## 📖 Licencia
+## Licencia
 
 Este proyecto fue desarrollado con fines académicos y educativos. Todos los derechos reservados a sus autores.
